@@ -1,0 +1,29 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+/** 로컬 PC 에서 Chrome 을 띄워 에어서울 달력을 수집 (서버 API 가 Playwright 실행) */
+export default function CrawlButton({ pendingCount }: { pendingCount: number }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [logs, setLogs] = useState<string[] | null>(null);
+  async function run(mode: "all" | "requests") {
+    setBusy(true); setLogs(["Chrome 을 열어 에어서울 달력을 조회하는 중… (수십 초)"]);
+    try {
+      const res = await fetch("/api/crawl/airseoul", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode }) });
+      const j = await res.json();
+      setLogs([...(j.logs ?? []), res.ok ? `완료: ${j.saved ?? 0}건 저장${j.processed != null ? `, 요청 ${j.processed}건 처리` : ""}` : `실패: ${j.error}`]);
+      router.refresh();
+    } catch (e) { setLogs([`실패: ${(e as Error).message}`]); }
+    finally { setBusy(false); }
+  }
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        <button className="btn" disabled={busy} onClick={() => run("all")}>에어서울 전체 달력 지금 수집</button>
+        <button className="btn-ghost" disabled={busy || !pendingCount} onClick={() => run("requests")}>대기 요청 {pendingCount}건 처리</button>
+      </div>
+      {logs && <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded bg-neutral-50 p-2 text-[11px] text-neutral-600">{logs.join("\n")}</pre>}
+    </div>
+  );
+}
