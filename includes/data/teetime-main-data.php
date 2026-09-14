@@ -1,0 +1,332 @@
+<?php
+
+$heroData = [
+    'slides' => [
+        [
+            'title' => "당장 떠나고 싶은\n일본 골프 티타임",
+            'desc' => '실시간 티타임부터 특가 패키지까지 한 번에 비교해보세요.',
+            'image' => 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=1600',
+            'url' => '/pages/product/detail',
+        ],
+        [
+            'title' => "가까워서 더 좋은\n일본 인기 라운드",
+            'desc' => '오사카, 고베, 후쿠오카, 오키나와 인기 골프장을 지금 확인하세요.',
+            'image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1600',
+            'url' => '/pages/product/detail',
+        ],
+        [
+            'title' => "특가로 가볍게,\n명문 코스로 확실하게",
+            'desc' => '예산과 일정에 맞는 티타임을 더 빠르게 찾을 수 있어요.',
+            'image' => 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&q=80&w=1600',
+            'url' => '/pages/product/detail',
+        ],
+    ],
+    'booking' => [
+        'destinations' => [
+            'popular_regions' => ['#오사카', '#고베', '#후쿠오카', '#오키나와'],
+            'popular_packages' => [
+                '오사카 2박3일 티타임 특가',
+                '고베 명문 골프장 셀렉션',
+                '후쿠오카 가성비 라운드 패키지',
+            ],
+            'recommended_courses' => [
+                '#아리마 후지 컨트리 클럽',
+                '#오사카 로얄 힐즈',
+                '#후쿠오카 센트럴 CC',
+            ],
+        ],
+        'persons' => ['1', '2', '3', '4', '단체'],
+    ],
+];
+
+$teetimeMainData = [
+    'productTabs' => [
+        [
+            'id' => 'japan',
+            'label' => '일본',
+            'groups' => [
+                [
+                    'title' => '오사카 · 지금 가장 인기 있는 티타임',
+                    'description' => '가볍게 떠나기 좋은 거리와 안정적인 코스 컨디션으로 만족도가 높은 오사카 인기 골프장을 모았어요.',
+                    'hero_image' => 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80&w=1600',
+                    'items' => [
+                        [
+                            'region' => '일본/오사카 근교',
+                            'title' => '아리마 후지 컨트리 클럽',
+                            'badge' => '티타임',
+                            'price' => '₩219,000~',
+                            'image' => 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/효고',
+                            'title' => '오사카 로얄 힐즈',
+                            'badge' => '티타임',
+                            'price' => '₩249,000~',
+                            'image' => 'https://images.unsplash.com/photo-1592919505780-303950717480?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/고베 인근',
+                            'title' => '타카라즈카 프리미엄 코스',
+                            'badge' => '티타임',
+                            'price' => '₩289,000~',
+                            'image' => 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                    ],
+                ],
+                [
+                    'title' => '고베 · 품격 있게 즐기는 명문 코스',
+                    'description' => '자연 지형을 살린 레이아웃과 세련된 분위기로 만족도가 높은 고베 대표 코스를 엄선했어요.',
+                    'hero_image' => 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1600',
+                    'items' => [
+                        [
+                            'region' => '일본/고베',
+                            'title' => '고베 힐사이드 CC',
+                            'badge' => '티타임',
+                            'price' => '₩259,000~',
+                            'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/롯코',
+                            'title' => '롯코 마운틴 골프클럽',
+                            'badge' => '티타임',
+                            'price' => '₩309,000~',
+                            'image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/효고',
+                            'title' => '고베 클래식 링크스',
+                            'badge' => '티타임',
+                            'price' => '₩329,000~',
+                            'image' => 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                    ],
+                ],
+                [
+                    'title' => '후쿠오카 · 실속 있게 떠나는 골프 일정',
+                    'description' => '라운드와 휴식을 같이 챙기기 좋은 후쿠오카 인기 코스를 모았어요.',
+                    'hero_image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1600',
+                    'items' => [
+                        [
+                            'region' => '일본/후쿠오카',
+                            'title' => '후쿠오카 센트럴 CC',
+                            'badge' => '티타임',
+                            'price' => '₩189,000~',
+                            'image' => 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/하카타',
+                            'title' => '하카타 레이크 골프장',
+                            'badge' => '티타임',
+                            'price' => '₩209,000~',
+                            'image' => 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/오이타',
+                            'title' => '유후인 프리미엄 라운드',
+                            'badge' => '티타임',
+                            'price' => '₩279,000~',
+                            'image' => 'https://images.unsplash.com/photo-1526481280693-3bfa7568e0f3?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                    ],
+                ],
+                [
+                    'title' => '오키나와 · 리조트 무드 가득한 씨사이드 라운드',
+                    'description' => '탁 트인 바다 전망과 여행 기분까지 살려주는 오키나와 대표 티타임을 모았어요.',
+                    'hero_image' => 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&q=80&w=1600',
+                    'items' => [
+                        [
+                            'region' => '일본/오키나와',
+                            'title' => '오키나와 씨사이드 GC',
+                            'badge' => '티타임',
+                            'price' => '₩339,000~',
+                            'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/나하',
+                            'title' => '나하 리조트 골프클럽',
+                            'badge' => '티타임',
+                            'price' => '₩299,000~',
+                            'image' => 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                        [
+                            'region' => '일본/미야코지마',
+                            'title' => '미야코 아일랜드 코스',
+                            'badge' => '티타임',
+                            'price' => '₩359,000~',
+                            'image' => 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80&w=1200',
+                            'link' => '/pages/product/detail',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
+    'special' => [
+        'eyebrow' => 'SPECIAL OFFER',
+        'title' => '놓치기 아쉬운 특가 패키지',
+        'desc' => '이번 시즌 빠르게 마감되는 인기 상품만 모았어요.',
+        'items' => [
+            [
+                'label' => '실시간 특가',
+                'title' => '오사카 로얄 힐즈 2박 3일',
+                'location' => '일본 · 오사카',
+                'price' => '₩599,000~',
+                'image' => 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'label' => '추천 상품',
+                'title' => '고베 명문 코스 라운드 패키지',
+                'location' => '일본 · 고베',
+                'price' => '₩689,000~',
+                'image' => 'https://images.unsplash.com/photo-1592919505780-303950717480?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'label' => '실시간 특가',
+                'title' => '오사카 로얄 힐즈 2박 3일',
+                'location' => '일본 · 오사카',
+                'price' => '₩599,000~',
+                'image' => 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'label' => '추천 상품',
+                'title' => '고베 명문 코스 라운드 패키지',
+                'location' => '일본 · 고베',
+                'price' => '₩689,000~',
+                'image' => 'https://images.unsplash.com/photo-1592919505780-303950717480?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'label' => '한정 특가',
+                'title' => '후쿠오카 온천 골프 2색 여행',
+                'location' => '일본 · 후쿠오카',
+                'price' => '₩549,000~',
+                'image' => 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'label' => '베스트셀러',
+                'title' => '오키나와 씨사이드 골프 리조트',
+                'location' => '일본 · 오키나와',
+                'price' => '₩799,000~',
+                'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'label' => '주말 출발',
+                'title' => '도쿄 근교 프리미엄 티타임',
+                'location' => '일본 · 도쿄',
+                'price' => '₩739,000~',
+                'image' => 'https://images.unsplash.com/photo-1526481280693-3bfa7568e0f3?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+        ],
+    ],
+
+    'domesticCards' => [
+        'eyebrow' => 'KOREA GOLF',
+        'title' => '봄에 떠나는 한국 골프 여행',
+        'desc' => '가볍게 떠나기 좋은 국내 인기 골프 여행지를 모았어요.',
+        'items' => [
+            [
+                'title' => '제주 바다를 닮은 리조트 라운드',
+                'meta' => '제주 · 2박 3일',
+                'price' => '₩399,000~',
+                'image' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'title' => '강원 산악 코스 힐링 골프',
+                'meta' => '강원 · 1박 2일',
+                'price' => '₩289,000~',
+                'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'title' => '남해 바다 전망 프리미엄 라운드',
+                'meta' => '경남 · 2박 3일',
+                'price' => '₩459,000~',
+                'image' => 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'title' => '전남 감성 숙소 연계 골프 패키지',
+                'meta' => '전남 · 1박 2일',
+                'price' => '₩319,000~',
+                'image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+        ],
+    ],
+
+    'majorTour' => [
+        'eyebrow' => 'MAJOR TOUR',
+        'title' => '직관의 감동까지 담은 메이저 관람 투어',
+        'desc' => '세계적인 대회를 직접 보고, 주변 명문 코스까지 함께 즐기는 특별한 일정.',
+        'image' => 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&q=80&w=1600',
+        'link' => '/pages/product/detail',
+        'link_text' => '관람 투어 자세히 보기',
+    ],
+
+    'bucket' => [
+        'eyebrow' => ['전설의 코스', '골프 성지'],
+        'title' => "꼭 한번 가고 싶은 버킷리스트",
+        'desc' => '골퍼라면 한 번쯤 꿈꾸는 세계적인 명문 코스를 모았습니다.',
+        'items' => [
+            [
+                'country' => '영국',
+                'city' => '북아일랜드 다운 카운티',
+                'title' => '더 로열 카운티 다운 골프 클럽',
+                'price' => '₩1,079,200~',
+                'image' => 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'country' => '영국',
+                'city' => '스코틀랜드 카누스티',
+                'title' => '카누스티 골프 링크스',
+                'price' => '₩597,200~',
+                'image' => 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'country' => '미국',
+                'city' => '캘리포니아 페블비치',
+                'title' => '페블비치 골프 링크스',
+                'price' => '₩1,320,000~',
+                'image' => 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'country' => '스페인',
+                'city' => '마요르카',
+                'title' => '알카나다 골프클럽',
+                'price' => '₩482,000~',
+                'image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+            [
+                'country' => '미국',
+                'city' => '캘리포니아 몬터레이',
+                'title' => '사이프러스 포인트 클럽',
+                'price' => '₩1,840,000~',
+                'image' => 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80&w=1200',
+                'link' => '/pages/product/detail',
+            ],
+        ],
+    ],
+];

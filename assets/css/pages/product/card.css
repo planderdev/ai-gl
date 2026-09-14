@@ -1,0 +1,370 @@
+/* ========================================
+   Teetime / Card
+======================================== */
+
+.tb-list{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-24);
+  }
+  
+  .tb-card{
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-24);
+    background: var(--surface-1);
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease,
+      border-color var(--motion-fast) ease;
+  }
+  
+  .tb-card:hover{
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .tb-card__img{
+    display: block;
+    aspect-ratio: 1 / 0.74;
+    overflow: hidden;
+    background: var(--surface-3);
+  }
+  
+  .tb-card__img img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--motion-base) ease;
+  }
+  
+  .tb-card:hover .tb-card__img img{
+    transform: scale(1.04);
+  }
+  
+  .tb-card__body{
+    padding: var(--space-16);
+  }
+  
+  .tb-card__location{
+    margin: 0 0 var(--space-8);
+    font-size: var(--text-caption-size);
+    line-height: var(--leading-copy);
+    color: var(--text-muted);
+  }
+  
+  .tb-card__title{
+    margin: 0 0 var(--space-8);
+    font-size: var(--text-title-sm-size);
+    line-height: var(--leading-copy-snug);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--text-primary);
+    word-break: keep-all;
+  }
+  
+  .tb-card__title a{
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .tb-card__specs{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+  
+  .tb-card__status{
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 var(--space-8);
+    border-radius: var(--radius-8);
+    background: var(--purple-50);
+    color: var(--purple-600);
+    font-size: var(--text-label-xs-size);
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
+  }
+  
+  .tb-card__spec-text{
+    font-size: var(--text-body-sm-size);
+    line-height: var(--leading-copy);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  
+  .tb-card__airport{
+    margin: 0 0 var(--space-8);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--leading-copy);
+    color: var(--text-muted);
+  }
+  
+  .tb-card__badge-row{
+    margin-bottom: var(--space-8);
+  }
+  
+  .tb-card__badge{
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 var(--space-8);
+    border-radius: var(--radius-8);
+    background: var(--success);
+    color: var(--text-inverse);
+    font-size: var(--text-label-xs-size);
+    font-weight: var(--font-weight-extrabold);
+    white-space: nowrap;
+  }
+  
+  .tb-card__times{
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-bottom: var(--space-16);
+  }
+  
+  .tb-time-chip{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-sm);
+    padding: 0 var(--space-8);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+    font-size: var(--text-label-sm-size);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    transition:
+      border-color var(--motion-fast) ease,
+      background var(--motion-fast) ease,
+      color var(--motion-fast) ease;
+    white-space: nowrap;
+  }
+  
+  .tb-time-chip:hover,
+  .tb-time-chip.is-active{
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    color: var(--primary);
+  }
+  
+  .tb-card__footer{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+  }
+  
+  .tb-card__price{
+    min-width: 0;
+    font-size: var(--text-title-md-size);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--text-primary);
+    line-height: var(--leading-title);
+    white-space: nowrap;
+  }
+  
+  .tb-card__link{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+    min-height: 40px;
+    padding: 0 var(--space-16);
+    border-radius: var(--radius-16);
+    background: var(--primary);
+    color: var(--text-inverse);
+    font-size: var(--text-body-sm-size);
+    font-weight: var(--font-weight-extrabold);
+    text-decoration: none;
+    transition:
+      background var(--motion-fast) ease,
+      transform var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .tb-card__link:hover{
+    background: var(--primary-hover);
+  }
+  
+  .tb-card__link:active{
+    transform: translateY(1px);
+  }
+  
+  /* ========================================
+     Large Tablet
+  ======================================== */
+  @media (max-width: 1200px){
+    .tb-list{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* ========================================
+     Tablet
+  ======================================== */
+  @media (max-width: 991px){
+    .tb-list{
+      gap: var(--space-16);
+    }
+  
+    .tb-card{
+      border-radius: var(--radius-16);
+    }
+  
+    .tb-card__img{
+      aspect-ratio: 1 / 0.72;
+    }
+  
+    .tb-card__body{
+      padding: var(--space-16);
+    }
+  
+    .tb-card__title{
+      font-size: var(--text-body-xl-size);
+    }
+  
+    .tb-card__price{
+      font-size: var(--text-title-sm-size);
+    }
+  }
+  
+  /* ========================================
+     Mobile
+  ======================================== */
+  @media (max-width: 767px){
+    .tb-list{
+      grid-template-columns: 1fr;
+      gap: var(--space-16);
+    }
+  
+    .tb-card{
+      border-radius: var(--radius-16);
+    }
+  
+    .tb-card__img{
+      aspect-ratio: 1 / 0.7;
+    }
+  
+    .tb-card__body{
+      padding: var(--space-16);
+    }
+  
+    .tb-card__location{
+      font-size: var(--text-label-sm-size);
+    }
+  
+    .tb-card__title{
+      font-size: var(--text-body-lg-size);
+      line-height: var(--leading-copy);
+    }
+  
+    .tb-card__specs{
+      gap: var(--space-8);
+    }
+  
+    .tb-card__spec-text,
+    .tb-card__airport{
+      font-size: var(--text-caption-size);
+    }
+  
+    .tb-card__times{
+      gap: var(--space-8);
+      margin-bottom: var(--space-16);
+    }
+  
+    .tb-time-chip{
+      min-height: 30px;
+      font-size: var(--text-label-xs-size);
+    }
+  
+    .tb-card__footer{
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-12, var(--space-8));
+    }
+  
+    .tb-card__price{
+      font-size: var(--text-title-sm-size);
+      white-space: normal;
+    }
+  
+    .tb-card__link{
+      width: 100%;
+      min-width: 0;
+      min-height: 40px;
+    }
+  }
+  
+  /* ========================================
+     Small Mobile
+  ======================================== */
+  @media (max-width: 480px){
+    .tb-card__img{
+      aspect-ratio: 1 / 0.68;
+    }
+  
+    .tb-card__body{
+      padding: var(--space-16);
+    }
+  
+    .tb-card__title{
+      font-size: var(--text-body-lg-size);
+    }
+  
+    .tb-card__status,
+    .tb-card__badge{
+      min-height: 22px;
+      font-size: var(--text-label-xs-size);
+    }
+  
+    .tb-time-chip{
+      min-height: 28px;
+      padding: 0 var(--space-8);
+      font-size: var(--text-label-xs-size);
+    }
+  
+    .tb-card__price{
+      font-size: var(--text-body-xl-size);
+    }
+  
+    .tb-card__link{
+      min-height: 38px;
+      font-size: var(--text-caption-size);
+    }
+  }
+  
+  /* ========================================
+     Extra Small Mobile
+  ======================================== */
+  @media (max-width: 360px){
+    .tb-card__body{
+      padding: var(--space-16);
+    }
+  
+    .tb-card__title{
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .tb-card__specs,
+    .tb-card__times{
+      gap: var(--space-8);
+    }
+  
+    .tb-card__footer{
+      gap: var(--space-8);
+    }
+  
+    .tb-card__price{
+      font-size: var(--text-body-lg-size);
+    }
+  }

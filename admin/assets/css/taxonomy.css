@@ -1,0 +1,101 @@
+.taxonomy-tabs{
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+  
+  .taxonomy-tabs__link{
+    min-height: var(--input-height-sm);
+    padding: 0 var(--space-14);
+    border-radius: var(--radius-12);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-14);
+    font-weight: var(--font-weight-bold);
+    color: var(--admin-text);
+    transition:
+      background-color var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard),
+      color var(--duration-base) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-base) var(--ease-standard);
+  }
+  
+  .taxonomy-tabs__link:hover{
+    transform: translateY(calc(var(--space-2) * -0.5));
+    background: var(--admin-surface-soft);
+    border-color: var(--admin-border-strong);
+    box-shadow: var(--shadow-xs);
+  }
+  
+  .taxonomy-tabs__link.is-active{
+    background: var(--admin-btn-primary-bg);
+    border-color: var(--admin-primary);
+    color: var(--admin-text-inverse);
+    box-shadow: var(--shadow-primary);
+  }
+  
+  .taxonomy-layout{
+    display: grid;
+    grid-template-columns: 420px minmax(0, 1fr);
+    gap: var(--space-16);
+    margin-top: var(--space-16);
+    align-items: start;
+  }
+  
+  .taxonomy-form{
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+  }
+  
+  .taxonomy-list{
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+  
+  .taxonomy-item{
+    border: 1px solid var(--admin-border);
+    border-radius: var(--radius-18);
+    background: var(--admin-surface-muted);
+    padding: var(--space-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    box-shadow: var(--shadow-xs);
+  }
+  
+  .taxonomy-item__form{
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+  
+  .taxonomy-item__grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-12);
+  }
+  
+  .taxonomy-item__actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-8);
+    flex-wrap: wrap;
+  }
+  
+  @media (max-width: 1200px){
+    .taxonomy-layout{
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 768px){
+    .taxonomy-item__grid{
+      grid-template-columns: 1fr;
+    }
+  }

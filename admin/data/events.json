@@ -1,0 +1,14 @@
+[
+    {
+      "id": 1,
+      "title": "제주 골프 얼리버드 프로모션",
+      "status": "publish",
+      "event_type": "promotion",
+      "summary": "제주 인기 골프장 조기예약 특가",
+      "start_date": "2026-04-01",
+      "end_date": "2026-04-30",
+      "region": "제주",
+      "related_product_ids": [101],
+      "updated_at": "2026-03-31 12:00"
+    }
+  ]

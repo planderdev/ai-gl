@@ -1,0 +1,181 @@
+.pr-visual-filter{
+    margin: 0 0 var(--space-32);
+  }
+  
+  .pr-visual-filter__list{
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-16);
+  }
+  
+  .pr-visual-filter__btn{
+    flex: 1;
+    min-height: 84px;
+    padding: var(--space-8);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-16);
+    background: var(--bg-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    cursor: pointer;
+    transition:
+      background-color var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      transform var(--motion-fast) ease;
+  }
+  
+  .pr-visual-filter__btn:hover{
+    background: var(--surface);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  
+  .pr-visual-filter__btn.is-active{
+    background: var(--primary-50);
+    border-color: var(--primary);
+  }
+  
+  .pr-visual-filter__icon{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: var(--text-title-sm-size);
+    color: var(--text-strong);
+    flex-shrink: 0;
+  }
+  
+  .pr-visual-filter__label{
+    font-size: 13px;
+    line-height: var(--leading-copy-tight);
+    color: var(--text-strong);
+    text-align: center;
+    word-break: keep-all;
+  }
+  
+  /* =========================
+     Discount Type
+  ========================= */
+  
+  .pr-visual-filter__list--discount .pr-visual-filter__btn,
+  .pr-visual-filter__btn--discount{
+    width: 88px;
+    min-height: 72px;
+    gap: var(--space-8);
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .pr-visual-filter__btn--discount{
+    padding: var(--space-8);
+  }
+  
+  .pr-visual-filter__discount-top,
+  .pr-visual-filter__discount-bottom{
+    display: block;
+    font-size: var(--text-label-md-size);
+    line-height: var(--leading-title-relaxed);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-strong);
+    text-align: center;
+    word-break: keep-all;
+  }
+  
+  /* =========================
+     Responsive
+  ========================= */
+  
+  @media (max-width: 991px){
+    .pr-visual-filter__list{
+      gap: var(--space-8);
+    }
+  
+    .pr-visual-filter__btn{
+      width: calc((100% - (var(--space-8) * 4)) / 5);
+      min-width: 86px;
+    }
+  
+    .pr-visual-filter__list--discount .pr-visual-filter__btn,
+    .pr-visual-filter__btn--discount{
+      width: calc((100% - (var(--space-8) * 4)) / 5);
+      min-width: 86px;
+    }
+  }
+  
+  @media (max-width: 767px){
+    .pr-visual-filter__list{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-8);
+    }
+  
+    .pr-visual-filter__btn{
+      width: 100%;
+      min-width: 0;
+      min-height: 80px;
+      padding: var(--space-8);
+    }
+  
+    .pr-visual-filter__icon{
+      width: 24px;
+      height: 24px;
+      font-size: var(--text-title-xs-size);
+    }
+  
+    .pr-visual-filter__label{
+      font-size: 13px;
+      line-height: var(--leading-xs);
+    }
+  
+    .pr-visual-filter__list--discount .pr-visual-filter__btn,
+    .pr-visual-filter__btn--discount{
+      width: 100%;
+      min-width: 0;
+      min-height: 50px;
+      gap: var(--space-8);
+    }
+  
+    .pr-visual-filter__discount-top,
+    .pr-visual-filter__discount-bottom{
+      font-size: 13px;
+    }
+  }
+  
+  @media (max-width: 479px){
+    .pr-visual-filter{
+      margin-bottom: var(--space-24);
+    }
+  
+    .pr-visual-filter__list{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-8);
+    }
+  
+    .pr-visual-filter__btn{
+      width: 100%;
+      min-height: 72px;
+      border-radius: var(--radius-16);
+    }
+  
+    .pr-visual-filter__label{
+      font-size: 13px;
+      line-height: var(--leading-xs);
+    }
+  
+    .pr-visual-filter__list--discount .pr-visual-filter__btn,
+    .pr-visual-filter__btn--discount{
+      width: 100%;
+      min-height: 50px;
+    }
+  
+    .pr-visual-filter__discount-top,
+    .pr-visual-filter__discount-bottom{
+      font-size: 13px;
+      line-height: var(--leading-title);
+    }
+  }

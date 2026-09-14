@@ -1,0 +1,41 @@
+[
+    {
+      "id": 1,
+      "product_id": 1,
+      "product_title": "더 클래식 제주 CC",
+      "date": "2026-04-12",
+      "people": 4,
+      "total_price": 1280000,
+      "status": "confirmed",
+      "customer_name": "홍길동",
+      "customer_phone": "010-1234-5678",
+      "payment_method": "card",
+      "payment_status": "paid",
+      "payment_amount": 1280000,
+      "payment_date": "2026-03-31T14:20",
+      "cancel_reason": "",
+      "cancel_date": "",
+      "admin_memo": "VIP 고객, 오전 티 선호",
+      "refund_status": "none",
+      "refund_amount": 0,
+      "refund_date": "",
+      "refund_memo": "",
+      "status_logs": [
+        {
+          "status": "pending",
+          "label": "결제대기",
+          "changed_at": "2026-03-31 13:10"
+        },
+        {
+          "status": "paid",
+          "label": "결제완료",
+          "changed_at": "2026-03-31 14:20"
+        },
+        {
+          "status": "confirmed",
+          "label": "예약확정",
+          "changed_at": "2026-03-31 15:00"
+        }
+      ]
+    }
+  ]

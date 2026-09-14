@@ -1,0 +1,261 @@
+/* ========================================
+   Caddies Recommend Section
+======================================== */
+.caddies-recommend-section {
+    padding: var(--space-32) 0 var(--space-24);
+  }
+  
+  .caddies-recommend-head {
+    margin-bottom: var(--space-24);
+  }
+  
+  .caddies-recommend-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-bottom: var(--space-24);
+  }
+  
+  .caddies-recommend-tab-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text);
+    min-height: 44px;
+    padding: 0 var(--space-16);
+    border-radius: var(--radius-full);
+    font-size: var(--text-body-sm-size);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--tracking-tight-sm);
+    transition: 0.22s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  
+  .caddies-recommend-tab-btn:hover {
+    border-color: var(--primary-soft-2);
+    color: var(--primary);
+    background: var(--primary-50);
+  }
+  
+  .caddies-recommend-tab-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .caddies-recommend-panel {
+    display: none;
+  }
+  
+  .caddies-recommend-panel.active {
+    display: block;
+    animation: caddiesRecommendFade 0.28s ease;
+  }
+  
+  @keyframes caddiesRecommendFade {
+    from {
+      opacity: 0;
+      transform: translateY(var(--space-4));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .caddies-recommend-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-32);
+  }
+  
+  .caddies-recommend-column {
+    min-width: 0;
+  }
+  
+  /* ========================================
+     HERO
+  ======================================== */
+  .caddies-recommend-hero {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    margin-bottom: var(--space-16);
+  }
+  
+  .caddies-recommend-hero-thumb {
+    border-radius: var(--radius-16);
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    background: var(--surface-3);
+    margin-bottom: var(--space-16);
+  }
+  
+  .caddies-recommend-hero-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .caddies-recommend-hero-body h3 {
+    margin: 0 0 var(--space-8);
+  }
+  
+  /* ========================================
+     LIST
+  ======================================== */
+  .caddies-recommend-list {
+    display: grid;
+    gap: var(--space-12);
+  }
+  
+  .caddies-recommend-item {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+    gap: var(--space-16);
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .caddies-recommend-item-thumb {
+    width: 92px;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-16);
+    overflow: hidden;
+    background: var(--surface-3);
+  }
+  
+  .caddies-recommend-item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .caddies-recommend-item-body {
+    min-width: 0;
+  }
+  
+  .caddies-recommend-item-region {
+    display: block;
+    margin-bottom: var(--space-4);
+    font-size: var(--text-label-sm-size);
+    color: var(--text-subtle);
+  }
+  
+  .caddies-recommend-item-body h4 {
+    margin: 0 0 var(--space-8);
+    font-size: var(--text-body-lg-size);
+    font-weight: var(--font-weight-extrabold);
+  }
+  
+  .caddies-recommend-item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 0 var(--space-8);
+    border-radius: var(--radius-full);
+    background: var(--success);
+    color: var(--text-inverse);
+    font-size: var(--text-label-xs-size);
+    font-weight: var(--font-weight-extrabold);
+    white-space: nowrap;
+  }
+  
+  .caddies-recommend-item-price {
+    font-size: var(--text-body-lg-size);
+    font-weight: var(--font-weight-extrabold);
+    white-space: nowrap;
+  }
+  
+  /* ========================================
+     Tablet
+  ======================================== */
+  @media (max-width: 1200px) {
+    .caddies-recommend-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-24);
+    }
+  }
+  
+  /* ========================================
+     Mobile
+  ======================================== */
+  @media (max-width: 767px) {
+    .caddies-recommend-section {
+      padding: var(--space-32) 0 var(--space-24);
+    }
+  
+    /* 탭 스크롤 */
+    .caddies-recommend-tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: var(--space-4);
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  
+    .caddies-recommend-tabs::-webkit-scrollbar {
+      display: none;
+    }
+  
+    .caddies-recommend-tab-btn {
+      flex: 0 0 auto;
+      min-height: 40px;
+      font-size: var(--text-caption-size);
+    }
+  
+    /* 리스트 구조 변경 */
+    .caddies-recommend-item {
+      grid-template-columns: 72px minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: var(--space-12);
+      row-gap: var(--space-4);
+      align-items: start;
+    }
+  
+    /* 이미지: 1:1 유지 */
+    .caddies-recommend-item-thumb {
+      grid-column: 1;
+      grid-row: 1;
+      width: 72px;
+      aspect-ratio: 1 / 1;
+    }
+  
+    /* 텍스트 */
+    .caddies-recommend-item-body {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  
+    /* 가격 아래줄 */
+    .caddies-recommend-item-price {
+      grid-column: 2;
+      grid-row: 2;
+      font-size: var(--text-body-md-size);
+    }
+  }
+  
+  /* ========================================
+     Small Mobile
+  ======================================== */
+  @media (max-width: 575px) {
+    .caddies-recommend-item {
+      grid-template-columns: 64px minmax(0, 1fr);
+    }
+  
+    .caddies-recommend-item-thumb {
+      width: 64px;
+    }
+  
+    .caddies-recommend-item-body h4 {
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .caddies-recommend-item-price {
+      font-size: var(--text-body-sm-size);
+    }
+  }

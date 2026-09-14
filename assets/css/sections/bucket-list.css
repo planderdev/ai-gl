@@ -1,0 +1,410 @@
+/* ========================================
+   Bucket List Section
+======================================== */
+.bucket-list-section {
+  --site-max-local: 1260px;
+  --site-pad-local: var(--site-pad);
+  padding: var(--space-64) 0;
+  background-color: var(--bg-soft);
+}
+
+.bucket-list-shell {
+  width: min(
+    calc(100vw - var(--site-pad-local) * 2),
+    calc(
+      var(--site-max-local) +
+      (
+        (100vw - min(var(--site-max-local), calc(100vw - var(--site-pad-local) * 2))) / 2
+      )
+    )
+  );
+  margin-left: auto;
+  margin-right: 0;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--space-32); /* 36px -> 근사치 */
+  align-items: stretch;
+}
+
+.bucket-list-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: var(--space-40) 0 var(--space-32);
+}
+
+.bucket-list-head { 
+}
+
+.bucket-list-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-bottom: var(--space-24);
+}
+
+.bucket-list-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-16);
+  font-size: var(--text-caption-size);
+  line-height: var(--leading-none);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--tracking-tight-sm);
+  color: var(--text-inverse);
+}
+
+.bucket-list-badge.badge-1 {
+  background: var(--accent);
+}
+
+.bucket-list-badge.badge-2 {
+  background: var(--warning);
+}
+
+.bucket-list-head h2 {
+  margin: 0 0 18px;
+  font-size: var(--text-hero-md-size);
+  line-height: var(--leading-2xs);
+  letter-spacing: var(--tracking-tight-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text);
+}
+
+.bucket-list-head p {
+  margin: 0;
+  font-size: var(--text-body-md-size);
+  line-height: var(--leading-section-copy);
+  color: var(--sub);
+}
+
+.bucket-list-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.bucket-list-prev,
+.bucket-list-next {
+  width: 42px; /* 토큰 없음, 유지 */
+  height: 42px; /* 토큰 없음, 유지 */
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  font-size: var(--text-title-md-size);
+  cursor: pointer;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bucket-list-prev:hover,
+.bucket-list-next:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.bucket-list-prev.swiper-button-disabled,
+.bucket-list-next.swiper-button-disabled {
+  opacity: 0.38;
+  cursor: default;
+  transform: none;
+}
+
+.bucket-list-slider-wrap {
+  min-width: 0;
+}
+
+.bucket-list-slider {
+  width: 100%;
+  overflow: hidden;
+}
+
+.bucket-list-slider .swiper-wrapper {
+  align-items: stretch;
+}
+
+.bucket-list-slider .swiper-slide {
+  width: 412px;
+  height: auto;
+  padding: 2rem 0;
+}
+
+.bucket-list-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-24); /* 22px -> 근사치 */
+  background: var(--surface-1);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: 0.25s ease;
+}
+
+.bucket-list-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-md);
+}
+
+.bucket-list-card-thumb {
+  aspect-ratio: 1.42 / 1;
+  overflow: hidden;
+  background: var(--surface-3);
+}
+
+.bucket-list-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.bucket-list-card:hover .bucket-list-card-thumb img {
+  transform: scale(1.05);
+}
+
+.bucket-list-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px 20px 22px;
+  min-height: 174px;
+}
+
+.bucket-list-card-location {
+  display: block;
+  margin-bottom: 10px;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--leading-copy);
+  color: var(--text-subtle);
+}
+
+.bucket-list-card-body h3 {
+  margin: 0;
+  font-size: var(--text-title-xs-size); /* 기존 --fs-19 제거 */
+  line-height: var(--leading-copy);
+  letter-spacing: var(--tracking-tight-md);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text);
+}
+
+.bucket-list-card-price {
+  display: block;
+  margin-top: auto;
+  padding-top: 26px;
+  font-size: var(--text-title-sm-size);
+  line-height: var(--leading-title);
+  letter-spacing: var(--tracking-tight-md);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text);
+  text-align: right;
+}
+
+.bucket-list-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-8);
+  margin-top: var(--space-24);
+}
+
+.bucket-list-pagination .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  margin: 0 !important;
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  opacity: 1;
+  transition: 0.2s ease;
+}
+
+.bucket-list-pagination .swiper-pagination-bullet-active {
+  width: 20px;
+  background: var(--primary);
+}
+
+
+/* ========================================
+   Bucket List Responsive (FINAL)
+======================================== */
+
+/* -------------------------------
+   desktop down
+-------------------------------- */
+@media (max-width: 1200px){
+    .bucket-list-shell{
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+  
+    .bucket-list-head{
+      max-width: 200px;
+    }
+  
+    .bucket-list-slider .swiper-slide{
+      width: 360px;
+    }
+  }
+  
+  
+  /* -------------------------------
+     tablet
+  -------------------------------- */
+  @media (max-width: 991px){
+  
+    .bucket-list-section{
+      padding: var(--space-56) 0;
+    }
+  
+    .bucket-list-shell{
+      width: 100%;
+      margin: 0 auto;
+      grid-template-columns: 1fr;
+      gap: var(--space-32);
+    }
+  
+    .bucket-list-copy{
+      padding: 0 var(--space-16);
+    }
+  
+    .bucket-list-head{
+      max-width: 100%;
+    }
+  
+    .bucket-list-head h2{
+      font-size: var(--text-title-xl-size);
+    }
+  
+    .bucket-list-nav{
+      margin-top: var(--space-20);
+    }
+  
+    .bucket-list-slider .swiper-slide{
+      width: 320px;
+      padding: 1.5rem 0;
+    }
+  }
+  
+  
+  /* -------------------------------
+     mobile
+  -------------------------------- */
+  @media (max-width: 767px){
+  
+    .bucket-list-section{
+      padding: var(--space-48) 0;
+    }
+  
+    .bucket-list-shell{ 
+      margin: 0 auto;
+      gap: var(--space-24);
+    }
+  
+    .bucket-list-head h2{
+      font-size: var(--text-title-lg-size);
+      line-height: var(--leading-title);
+    }
+  
+    .bucket-list-head p{
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .bucket-list-badges{
+      margin-bottom: var(--space-16);
+    }
+  
+    .bucket-list-nav{
+      justify-content: flex-start;
+    }
+  
+    .bucket-list-prev,
+    .bucket-list-next{
+      width: 38px;
+      height: 38px;
+    }
+  
+    .bucket-list-slider .swiper-slide{
+      width: 280px;
+      padding: 1.2rem 0;
+    }
+  
+    .bucket-list-card-body{
+      padding: 16px 16px 18px;
+      min-height: auto;
+    }
+  
+    .bucket-list-card-price{
+      padding-top: var(--space-16);
+      font-size: var(--text-title-xs-size);
+    }
+  }
+  
+  
+  /* -------------------------------
+     small mobile
+  -------------------------------- */
+  @media (max-width: 575px){
+  
+  
+    .bucket-list-head h2{
+      font-size: var(--text-title-md-size);
+    }
+  
+    .bucket-list-slider .swiper-slide{
+      width: 240px;
+    }
+  
+    .bucket-list-card-body{
+      padding: 14px;
+    }
+  
+    .bucket-list-card-location{
+      font-size: var(--text-caption-size);
+    }
+  
+    .bucket-list-card-body h3{
+      font-size: var(--text-body-md-size);
+    }
+  
+    .bucket-list-card-price{
+      font-size: var(--text-body-lg-size);
+    }
+  }
+  
+  
+  /* -------------------------------
+     extra small
+  -------------------------------- */
+  @media (max-width: 420px){
+   
+  
+    .bucket-list-slider .swiper-slide{
+      width: 220px;
+    }
+  
+    .bucket-list-prev,
+    .bucket-list-next{
+      width: 34px;
+      height: 34px;
+    }
+  
+    .bucket-list-card-body{
+      padding: 12px;
+    }
+  
+    .bucket-list-card-price{
+      padding-top: var(--space-12);
+    }
+  }
+  

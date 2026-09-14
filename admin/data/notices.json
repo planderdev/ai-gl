@@ -1,0 +1,72 @@
+[
+    {
+      "id": 101,
+      "title": "3월 예약 프로세스 개편 안내",
+      "category": "booking",
+      "status": "published",
+      "author": "관리자",
+      "is_pinned": true,
+      "summary": "예약 확인 및 결제 안내 절차가 일부 개편되어 사전 공지드립니다.",
+      "content": "<p>안녕하세요. ai-gl.ai 운영팀입니다.</p><p>보다 빠른 예약 확인을 위해 예약 접수 후 결제 안내 절차가 일부 개편되었습니다.</p><ul><li>예약 접수 후 확인 시간 단축</li><li>결제 안내 메시지 자동 발송</li><li>예약 확정 알림 개선</li></ul><p>이용에 참고 부탁드립니다.</p>",
+      "publish_at": "2026-03-28 09:00:00",
+      "created_at": "2026-03-27 15:30:00",
+      "updated_at": "2026-03-28 09:00:00",
+      "attachment_name": "예약프로세스-안내.pdf"
+    },
+    {
+      "id": 102,
+      "title": "고객센터 운영시간 변경 안내",
+      "category": "service",
+      "status": "published",
+      "author": "운영팀",
+      "is_pinned": true,
+      "summary": "주말 운영시간이 조정되어 공지드립니다.",
+      "content": "<p>고객센터 주말 운영시간이 아래와 같이 변경됩니다.</p><p>토/일 10:00 ~ 17:00</p>",
+      "publish_at": "2026-03-20 10:00:00",
+      "created_at": "2026-03-19 18:20:00",
+      "updated_at": "2026-03-20 10:00:00",
+      "attachment_name": ""
+    },
+    {
+      "id": 103,
+      "title": "봄 시즌 일본 골프 패키지 오픈",
+      "category": "event",
+      "status": "published",
+      "author": "마케팅팀",
+      "is_pinned": false,
+      "summary": "일본 지역 중심의 봄 시즌 특가 패키지가 오픈되었습니다.",
+      "content": "<p>봄 시즌 한정 골프 패키지가 오픈되었습니다.</p><p>자세한 내용은 이벤트 페이지를 확인해 주세요.</p>",
+      "publish_at": "2026-03-15 09:30:00",
+      "created_at": "2026-03-14 17:20:00",
+      "updated_at": "2026-03-15 09:30:00",
+      "attachment_name": ""
+    },
+    {
+      "id": 104,
+      "title": "시스템 점검 예정 안내",
+      "category": "system",
+      "status": "scheduled",
+      "author": "개발팀",
+      "is_pinned": false,
+      "summary": "4월 첫째 주 새벽 시간대 시스템 점검이 예정되어 있습니다.",
+      "content": "<p>안정적인 서비스 제공을 위해 아래 시간 동안 점검이 진행됩니다.</p><p>2026-04-03 02:00 ~ 05:00</p>",
+      "publish_at": "2026-04-01 09:00:00",
+      "created_at": "2026-03-30 12:00:00",
+      "updated_at": "2026-03-30 12:00:00",
+      "attachment_name": "점검안내문.docx"
+    },
+    {
+      "id": 105,
+      "title": "제주 상품 운영정책 업데이트 초안",
+      "category": "general",
+      "status": "draft",
+      "author": "관리자",
+      "is_pinned": false,
+      "summary": "제주 지역 상품 운영정책 개편을 위한 내부 작성 초안입니다.",
+      "content": "<p>아직 임시 저장 상태인 문서입니다.</p>",
+      "publish_at": "2026-04-10 10:00:00",
+      "created_at": "2026-03-31 08:20:00",
+      "updated_at": "2026-03-31 08:20:00",
+      "attachment_name": ""
+    }
+  ]

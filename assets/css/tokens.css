@@ -1,0 +1,361 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+  /* ========================================
+     Typography / Font Weight
+  ======================================== */
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* ========================================
+     Primitive Font Size
+  ======================================== */
+  --font-size-2xs: 12px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-base: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 17px;
+  --font-size-2xl: 18px;
+  --font-size-3xl: 20px;
+  --font-size-4xl: 22px;
+  --font-size-5xl: 24px;
+  --font-size-6xl: 26px;
+  --font-size-7xl: 28px;
+  --font-size-7xl-alt: 30px;
+  --font-size-7xl-plus: 32px;
+  --font-size-8xl: 34px;
+  --font-size-9xl: 38px;
+  --font-size-10xl: 40px;
+  --font-size-11xl: 42px;
+  --font-size-12xl: 46px;
+  --font-size-13xl: 48px;
+  --font-size-14xl: 52px;
+  --font-size-15xl: 56px;
+  --font-size-16xl: 62px;
+  --font-size-17xl: 72px;
+  --font-size-hero-fluid: clamp(42px, 5vw, 76px);
+  --font-size-hero-subtitle-fluid: clamp(18px, 2vw, 26px);
+
+  /* ========================================
+     Semantic Font Size
+  ======================================== */
+  --text-label-xs-size: var(--font-size-sm);
+  --text-label-sm-size: var(--font-size-md);
+  --text-label-md-size: var(--font-size-lg);
+  --text-caption-size: var(--font-size-sm);
+
+  --text-body-sm-size: var(--font-size-md);
+  --text-body-md-size: var(--font-size-base);
+  --text-body-lg-size: var(--font-size-lg);
+  --text-body-xl-size: var(--font-size-xl);
+
+  --text-title-xs-size: var(--font-size-2xl);
+  --text-title-sm-size: var(--font-size-3xl);
+  --text-title-md-size: var(--font-size-4xl);
+  --text-title-lg-size: var(--font-size-5xl);
+  --text-title-xl-size: var(--font-size-6xl);
+
+  --text-heading-sm-size: var(--font-size-6xl);
+  --text-heading-sm-alt-size: var(--font-size-7xl);
+  --text-heading-sm-plus-size: var(--font-size-7xl-plus);
+  --text-heading-md-size: var(--font-size-8xl);
+  --text-heading-lg-size: var(--font-size-9xl);
+
+  --text-display-xs-size: var(--font-size-10xl);
+  --text-display-sm-size: var(--font-size-11xl);
+  --text-display-md-size: var(--font-size-12xl);
+  --text-display-lg-size: var(--font-size-13xl);
+  --text-display-xl-size: var(--font-size-14xl);
+
+  --text-hero-sm-size: var(--font-size-15xl);
+  --text-hero-md-size: var(--font-size-16xl);
+  --text-hero-lg-size: var(--font-size-17xl);
+  --text-hero-fluid-size: var(--font-size-hero-fluid);
+  --text-hero-subtitle-fluid-size: var(--font-size-hero-subtitle-fluid);
+
+  /* ========================================
+     Line Height
+  ======================================== */
+  --leading-ultra-tight: 0.95;
+  --leading-display-tight: 1.1;
+  --leading-none: 1;
+  --leading-2xs: 1.2;
+  --leading-xs: 1.4;
+  --leading-sm: 1.6;
+  --leading-title-tight: 1.1;
+  --leading-heading-tight: 1.15;
+  --leading-hero: 1.18;
+  --leading-title: 1.2;
+  --leading-title-relaxed: 1.25;
+  --leading-heading: 1.3;
+  --leading-copy-tight: 1.35;
+  --leading-copy-snug: 1.4;
+  --leading-copy: 1.45;
+  --leading-body: 1.5;
+  --leading-body-relaxed: 1.6;
+  --leading-body-loose: 1.65;
+  --leading-section-copy: 1.7;
+  --leading-tight: var(--leading-title);
+  --leading-snug: var(--leading-copy-snug);
+  --leading-normal: var(--leading-body);
+  --leading-relaxed: var(--leading-body-relaxed);
+
+  /* ========================================
+     Letter Spacing
+  ======================================== */
+  --tracking-tight-sm: -0.02em;
+  --tracking-tight-md: -0.03em;
+  --tracking-tight-lg: -0.04em;
+  --tracking-tight-xl: -0.05em;
+  --tracking-tight-2xl: -0.06em;
+  --tracking-tight-3xl: -0.07em;
+  --tracking-wide-sm: 0.04em;
+  --tracking-tight: var(--tracking-tight-sm);
+  --tracking-wide: var(--tracking-wide-sm);
+
+  /* ========================================
+     Semantic Alias
+  ======================================== */
+  --title-hero: var(--text-hero-md-size);
+  --title-xl: var(--text-hero-sm-size);
+  --title-lg: var(--text-display-md-size);
+  --title-md: var(--text-heading-md-size);
+  --title-sm: var(--text-title-lg-size);
+  --title-xs: var(--text-title-xs-size);
+
+  --body-lg: var(--text-body-xl-size);
+  --body-md: var(--text-body-md-size);
+  --body-sm: var(--text-body-sm-size);
+  --body-xs: var(--text-label-sm-size);
+
+  /* ========================================
+     Layout
+  ======================================== */
+  --site-max: 1280px;
+  --site-pad: 24px;
+  --header-height: 88px;
+
+  /* ========================================
+     Color / Neutral
+  ======================================== */
+  --gray-0:   #ffffff;
+  --gray-50:  #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* ========================================
+     Brand / Primary
+  ======================================== */
+  --primary-50:  #eef4ff;
+  --primary-100: #dbe8ff;
+  --primary-200: #b7d0ff;
+  --primary-300: #7fa8ff;
+  --primary-400: #4a7dff;
+  --primary-500: #153781;
+  --primary-600: #102d66;
+  --primary-700: #0d2553;
+  --primary-800: #0a1c3f;
+  --primary-900: #061229;
+
+  /* ========================================
+     Blue
+  ======================================== */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+
+  /* ========================================
+     Green
+  ======================================== */
+  --green-50:  #ecfdf5;
+  --green-100: #d1fae5;
+  --green-200: #a7f3d0;
+  --green-300: #6ee7b7;
+  --green-400: #34d399;
+  --green-500: #18b45b;
+  --green-600: #059669;
+  --green-700: #047857;
+  --green-800: #065f46;
+  --green-900: #064e3b;
+
+  /* ========================================
+     Yellow
+  ======================================== */
+  --yellow-50:  #fefce8;
+  --yellow-100: #fef9c3;
+  --yellow-200: #fef08a;
+  --yellow-300: #fde047;
+  --yellow-400: #facc15;
+  --yellow-500: #eab308;
+  --yellow-600: #ca8a04;
+  --yellow-700: #a16207;
+  --yellow-800: #854d0e;
+  --yellow-900: #713f12;
+
+  /* ========================================
+     Purple
+  ======================================== */
+  --purple-50:  #f5f3ff;
+  --purple-100: #ede9fe;
+  --purple-200: #ddd6fe;
+  --purple-300: #c4b5fd;
+  --purple-400: #a78bfa;
+  --purple-500: #7c3aed;
+  --purple-600: #6d28d9;
+  --purple-700: #5b21b6;
+  --purple-800: #4c1d95;
+  --purple-900: #3b0764;
+
+  /* ========================================
+     Red / Error
+  ======================================== */
+  --red-50:  #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-300: #fca5a5;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+  --red-900: #7f1d1d;
+
+  /* ========================================
+     Surface / Text / Border
+  ======================================== */
+  --bg: var(--gray-0);
+  --bg-soft: var(--gray-50);
+  --bg-muted: var(--gray-100);
+  --bg-card: var(--gray-0);
+
+  --surface-1: var(--gray-0);
+  --surface-2: var(--gray-50);
+  --surface-3: var(--gray-100);
+
+  --text: var(--gray-900);
+  --text-strong: var(--gray-900);
+  --text-muted: var(--gray-500);
+  --text-subtle: var(--gray-500);
+  --text-disabled: var(--gray-400);
+  --text-inverse: var(--gray-0);
+  --text-brand: var(--primary-600);
+
+  --border: var(--gray-200);
+  --border-soft: var(--gray-100);
+  --border-strong: var(--gray-300);
+
+  --line: var(--gray-200);
+  --line-soft: var(--gray-100);
+  --sub: var(--gray-500);
+
+  /* semantic alias */
+  --surface: var(--bg);
+  --surface-strong: var(--bg-card);
+  --bg-subtle: var(--bg-soft);
+
+  --text-primary: var(--text);
+  --text-secondary: var(--gray-600);
+
+  --primary-subtle: var(--primary-50);
+  --primary-border: var(--primary-300);
+
+  --success-subtle: var(--green-50);
+  --info: var(--blue-600);
+  --info-subtle: var(--blue-50);
+  --danger-subtle: var(--red-50);
+
+  --overlay: var(--overlay-dark);
+
+
+  /* ========================================
+     Semantic
+  ======================================== */
+  --primary: var(--primary-500);
+  --primary-hover: var(--primary-600);
+  --primary-active: var(--primary-700);
+  --primary-soft: var(--primary-100);
+  --primary-soft-2: var(--primary-200);
+
+  --success: var(--green-500);
+  --warning: var(--yellow-500);
+  --accent: var(--purple-500);
+  --danger: var(--red-500);
+
+  --overlay-dark: rgba(17, 24, 39, 0.52);
+  --overlay-light: rgba(255, 255, 255, 0.72);
+
+  --white:#fff;
+
+
+  /* ========================================
+     Radius
+  ======================================== */
+  --radius-8: 8px;  
+  --radius-16: 16px;  
+  --radius-24: 24px;  
+  --radius-32: 32px; 
+  --radius-40: 40px; 
+  --radius-full: 999px;
+
+  /* ========================================
+     Shadow
+  ======================================== */
+  --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.10);
+  --shadow-xl: 0 20px 42px rgba(15, 23, 42, 0.12);
+
+  /* ========================================
+     Spacing / 8pt base
+  ======================================== */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-56: 56px;
+  --space-64: 64px;
+  --space-72: 72px;
+  --space-80: 80px;
+  --space-120: 120px;
+
+   /* control size */
+   --control-xs: 28px;
+   --control-sm: 32px;
+   --control-md: 40px;
+   --control-lg: 52px;
+ 
+   /* layer */
+   --z-base: 1;
+   --z-floating: 10;
+   --z-sticky: 20;
+   --z-modal: 100;
+   --z-toast: 110;
+ 
+   /* motion */
+   --motion-fast: .2s;
+   --motion-base: .3s;
+
+   --header-height-mobile: 64px;
+}

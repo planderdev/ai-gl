@@ -1,0 +1,36 @@
+{
+    "countries": [
+      { "id": 1, "name": "한국", "slug": "kr", "sort_order": 1, "is_active": 1 },
+      { "id": 2, "name": "일본", "slug": "jp", "sort_order": 2, "is_active": 1 },
+      { "id": 3, "name": "태국", "slug": "th", "sort_order": 3, "is_active": 1 },
+      { "id": 4, "name": "베트남", "slug": "vn", "sort_order": 4, "is_active": 1 },
+      { "id": 5, "name": "미국", "slug": "us", "sort_order": 5, "is_active": 1 }
+    ],
+    "regions": [
+      { "id": 1, "name": "제주", "slug": "jeju", "country": "한국", "sort_order": 1, "is_active": 1 },
+      { "id": 2, "name": "홋카이도", "slug": "hokkaido", "country": "일본", "sort_order": 2, "is_active": 1 },
+      { "id": 3, "name": "오사카", "slug": "osaka", "country": "일본", "sort_order": 3, "is_active": 1 },
+      { "id": 4, "name": "후쿠오카", "slug": "fukuoka", "country": "일본", "sort_order": 4, "is_active": 1 },
+      { "id": 5, "name": "오키나와", "slug": "okinawa", "country": "일본", "sort_order": 5, "is_active": 1 },
+      { "id": 6, "name": "캘리포니아", "slug": "california", "country": "미국", "sort_order": 6, "is_active": 1 }
+    ],
+    "themes": [
+      { "id": 1, "name": "토너먼트", "slug": "tournament", "sort_order": 1, "is_active": 1 },
+      { "id": 2, "name": "월드100", "slug": "world100", "sort_order": 2, "is_active": 1 },
+      { "id": 3, "name": "링크스", "slug": "links", "sort_order": 3, "is_active": 1 },
+      { "id": 4, "name": "사막형", "slug": "desert", "sort_order": 4, "is_active": 1 },
+      { "id": 5, "name": "산악형", "slug": "mountain", "sort_order": 5, "is_active": 1 },
+      { "id": 6, "name": "오션뷰", "slug": "ocean", "sort_order": 6, "is_active": 1 },
+      { "id": 7, "name": "리조트형", "slug": "resort", "sort_order": 7, "is_active": 1 },
+      { "id": 8, "name": "파크랜드", "slug": "parkland", "sort_order": 8, "is_active": 1 },
+      { "id": 9, "name": "트로피컬", "slug": "tropical", "sort_order": 9, "is_active": 1 }
+    ],
+    "badges": [
+      { "id": 1, "name": "추천", "slug": "recommended", "sort_order": 1, "is_active": 1 },
+      { "id": 2, "name": "베스트", "slug": "best", "sort_order": 2, "is_active": 1 },
+      { "id": 3, "name": "신규", "slug": "new", "sort_order": 3, "is_active": 1 },
+      { "id": 4, "name": "특가", "slug": "hotdeal", "sort_order": 4, "is_active": 1 },
+      { "id": 5, "name": "프리미엄", "slug": "premium", "sort_order": 5, "is_active": 1 },
+      { "id": 6, "name": "실시간 예약", "slug": "realtime", "sort_order": 6, "is_active": 1 }
+    ]
+  }

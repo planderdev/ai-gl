@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# 파일/폴더 실제 존재하면 그대로
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# .php 자동 연결
+RewriteRule ^(.+)$ $1.php [L]

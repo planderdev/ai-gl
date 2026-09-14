@@ -1,0 +1,461 @@
+/* ========================================
+   01. Booking Popups
+======================================== */
+.booking-layer{
+    display: none;
+    position: absolute;
+    top: calc(100% + var(--space-16));
+    left: 0;
+    width: 360px;
+    background: var(--surface);
+    color: var(--text-primary);
+    border-radius: var(--radius-16);
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+  }
+  
+  .booking-layer.is-open{
+    display: block;
+  }
+  
+  .person-layer{
+    left: auto;
+    right: 0;
+    width: 340px;
+  }
+  
+  .booking-layer-inner{
+    padding: var(--space-24);
+  }
+  
+  .booking-layer-section + .booking-layer-section{
+    margin-top: var(--space-24);
+  }
+  
+  .booking-layer-section strong{
+    display: block;
+    margin-bottom: var(--space-16);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--leading-copy);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+  }
+  
+  .chip-list{
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+  
+  .chip-btn{
+    min-height: var(--control-md);
+    padding: 0 var(--space-16);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-8);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: var(--text-body-sm-size);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    flex: 1;
+    transition: all var(--motion-fast) ease;
+  }
+  
+  .chip-btn:hover,
+  .chip-btn.is-active{
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-subtle);
+  }
+  
+  .package-list{
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+  }
+  
+  .package-item{
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+    border: 0;
+    background: var(--surface);
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+  }
+  
+  .package-item span{
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+  }
+  
+  .package-item em{
+    font-style: normal;
+    color: var(--text-muted);
+    line-height: var(--leading-copy);
+  }
+  
+  
+  /* ========================================
+     02. Calendar Modal
+  ======================================== */
+  .booking-modal{
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+  }
+  
+  .booking-modal.is-open{
+    display: block;
+  }
+  
+  .booking-modal-dim{
+    position: absolute;
+    inset: 0;
+    background: var(--overlay-dark);
+  }
+  
+  .booking-modal-dialog{
+    position: relative;
+    width: 360px;
+    max-width: calc(100vw - var(--space-32));
+    margin: 96px auto 0;
+    background: var(--surface);
+    border-radius: var(--radius-16);
+    padding: var(--space-24);
+    box-shadow: var(--shadow-xl);
+    z-index: 2;
+  }
+  
+  .booking-modal-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-16);
+  }
+  
+  .calendar-nav-btn{
+    width: var(--control-md);
+    height: var(--control-md);
+    border: 0;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: var(--text-title-md-size);
+    line-height: var(--leading-none);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-8);
+    transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+  }
+  
+  .calendar-nav-btn:hover{
+    background: var(--surface-3);
+  }
+  
+  .calendar-weekdays,
+  .calendar-grid{
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-8);
+  }
+  
+  .calendar-weekdays{
+    margin-bottom: var(--space-16);
+    color: var(--text-muted);
+    font-size: var(--text-caption-size);
+    line-height: var(--leading-copy);
+    text-align: center;
+  }
+  
+  .calendar-date{
+    height: var(--control-md);
+    border: 1px solid transparent;
+    border-radius: var(--radius-8);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: var(--text-body-sm-size);
+    cursor: pointer;
+    transition: all var(--motion-fast) ease;
+  }
+  
+  .calendar-date:hover:not(.disabled):not(.empty){
+    background: var(--surface-3);
+  }
+  
+  .calendar-date.selected{
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-subtle);
+    font-weight: var(--font-weight-bold);
+  }
+  
+  .calendar-date.disabled{
+    color: var(--text-disabled);
+    cursor: not-allowed;
+  }
+  
+  .calendar-date.empty{
+    visibility: hidden;
+  }
+  
+  .booking-modal-footer{
+    display: flex;
+    gap: var(--space-8);
+    margin-top: var(--space-24);
+  }
+  
+  .calendar-action-btn{
+    flex: 1;
+    height: 48px;
+    border-radius: var(--radius-8);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: var(--text-body-md-size);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--motion-fast) ease;
+  }
+  
+  .calendar-action-btn:hover{
+    background: var(--surface-2);
+  }
+  
+  .calendar-action-btn.confirm{
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-inverse);
+  }
+  
+  .calendar-action-btn.confirm:hover{
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+  
+  
+  /* ========================================
+     03. Booking Input
+  ======================================== */
+  .booking-input-wrap{
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .booking-input{
+    width: 100%;
+    height: var(--control-md);
+    padding: 0 40px 0 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-inverse);
+    font-size: var(--text-title-sm-size);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-title);
+    outline: none;
+  }
+  
+  .booking-input::placeholder{
+    color: rgba(255, 255, 255, 0.75);
+  }
+  
+  .booking-input-reset{
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--space-32);
+    height: var(--space-32);
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--motion-fast) ease;
+  }
+  
+  .booking-input-wrap.has-value .booking-input-reset{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .booking-input-reset:hover{
+    color: var(--text-inverse);
+  }
+  
+  
+  /* ========================================
+     04. Responsive
+  ======================================== */
+  
+  /* -------------------------------
+     tablet
+  -------------------------------- */
+  @media (max-width: 991px){
+    .booking-layer{
+      width: 320px;
+    }
+  
+    .person-layer{
+      width: 300px;
+    }
+  
+    .booking-layer-inner{
+      padding: var(--space-16);
+    }
+  
+    .chip-list {
+        display: flex; 
+        gap: var(--space-8);
+        flex-direction: column;
+    }
+
+    .chip-btn {
+        font-size: var(--text-body-md-size);
+        padding: var(--space-8);
+    }
+  
+    .booking-modal-dialog{
+      width: 340px;
+      margin-top: 80px;
+      padding: var(--space-16);
+    }
+  
+    .calendar-date{
+      height: 36px;
+      font-size: var(--text-caption-size);
+    }
+  }
+  
+  
+  /* -------------------------------
+     mobile
+  -------------------------------- */
+  @media (max-width: 767px){
+    .booking-layer{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: auto;
+      width: 100%;
+      z-index: 1000;
+      animation: slideUp .25s ease;
+    }
+  
+    .person-layer{
+      width: 100%;
+      right: 0;
+    }
+  
+    .booking-layer-inner{
+      padding: var(--space-16);
+    }
+  
+    .package-item{
+      gap: var(--space-16);
+    }
+  
+    .booking-modal-dialog{
+      width: calc(100% - 32px);
+      margin: 60px auto 0;
+      padding: var(--space-16);
+    }
+  
+    .calendar-weekdays,
+    .calendar-grid{
+      gap: var(--space-8);
+    }
+  
+    .calendar-date{
+      height: 34px;
+      font-size: var(--text-caption-size);
+    }
+  
+    .calendar-action-btn{
+      height: 44px;
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .booking-input{
+      font-size: var(--text-body-md-size);
+    }
+  }
+  
+  
+  /* -------------------------------
+     small mobile
+  -------------------------------- */
+  @media (max-width: 575px){
+    .booking-layer-inner{
+      padding: var(--space-16);
+    }
+  
+    .booking-layer-section strong{
+      margin-bottom: var(--space-16);
+      font-size: var(--text-body-sm-size);
+    }
+  
+   
+  
+    .booking-modal-dialog{
+      width: calc(100% - 24px);
+      padding: var(--space-16);
+    }
+  
+    .calendar-date{
+      height: 32px;
+    }
+  
+    .calendar-action-btn{
+      height: 42px;
+    }
+  }
+  
+  
+  /* -------------------------------
+     extra small
+  -------------------------------- */
+  @media (max-width: 420px){
+    .booking-layer-inner{
+      padding: var(--space-16);
+    }
+  
+ 
+  
+    .calendar-date{ 
+      font-size: var(--text-caption-size);
+    }
+  
+    .booking-modal-dialog{
+      margin-top: 40px;
+    }
+  }
+  
+  
+  /* -------------------------------
+     animation
+  -------------------------------- */
+  @keyframes slideUp{
+    from{
+      transform: translateY(100%);
+    }
+    to{
+      transform: translateY(0);
+    }
+  }
+  
+  @media (max-width: 767px){
+    #destinationLayer{
+      display: none !important;
+    }
+  }

@@ -1,0 +1,768 @@
+/* ========================================
+   01. Main Hero
+======================================== */
+.main-hero{
+    position: relative;
+    margin-bottom: var(--space-72);
+  }
+  
+  .hero-slider{
+    position: relative;
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+  }
+  
+  .hero-slider .swiper-slide{
+    position: relative;
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+  }
+  
+  .hero-slide-bg{
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    transform: scale(1.08);
+    transition: transform 6s ease, opacity 1.2s ease;
+    will-change: transform, opacity;
+  }
+  
+  .hero-slide-overlay{
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(8,16,30,.74) 0%, rgba(8,16,30,.46) 38%, rgba(8,16,30,.18) 68%, rgba(8,16,30,.08) 100%),
+      linear-gradient(180deg, rgba(255,255,255,.03) 0%, rgba(0,0,0,.18) 100%);
+  }
+  
+  .hero-content{
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .hero-copy{
+    max-width: 900px;
+    min-width: 0;
+    color: var(--text-inverse);
+    padding: 0 20px;
+  }
+  
+  .hero-copy h1,
+  .hero-copy p,
+  .hero-copy .hero-cta{
+    opacity: 0;
+    transform: translateY(30px);
+    will-change: transform, opacity;
+  }
+  
+  .hero-copy h1{
+    margin: 0;
+    font-size: var(--text-hero-fluid-size);
+    line-height: var(--leading-hero);
+    letter-spacing: var(--tracking-tight-sm);
+    font-weight: var(--font-weight-extrabold);
+    text-shadow: 0 8px 22px rgba(0,0,0,.28);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  
+  .hero-copy p{
+    margin: 28px 0 0;
+    font-size: var(--text-hero-subtitle-fluid-size);
+    line-height: var(--leading-body);
+    font-weight: var(--font-weight-semibold);
+    color: rgba(255,255,255,.96);
+    text-shadow: 0 4px 16px rgba(0,0,0,.24);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  
+  .hero-copy .hero-cta{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 148px;
+    min-height: 52px;
+    margin-top: 30px;
+    padding: 0 20px;
+    border: 1px solid rgba(255,255,255,.24);
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,.12);
+    backdrop-filter: blur(10px);
+    color: var(--text-inverse);
+    font-size: var(--text-body-md-size);
+    font-weight: var(--font-weight-extrabold);
+    text-decoration: none;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    white-space: nowrap;
+  }
+  
+  .hero-copy .hero-cta:hover{
+    background: rgba(255,255,255,.18);
+    border-color: rgba(255,255,255,.36);
+    transform: translateY(-2px);
+  }
+  
+  /* 활성 슬라이드 애니메이션 */
+  .hero-slider .swiper-slide.is-animated .hero-slide-bg{
+    transform: scale(1);
+  }
+  
+  .swiper-slide.is-animated .hero-copy h1{
+    animation: heroFadeUp .7s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: .08s;
+  }
+  
+  .swiper-slide.is-animated .hero-copy p{
+    animation: heroFadeUp .7s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: .16s;
+  }
+  
+  .swiper-slide.is-animated .hero-copy .hero-cta{
+    animation: heroFadeUp .7s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: .24s;
+  }
+  
+  @keyframes heroFadeUp{
+    0%{
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    100%{
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* fade 전환 품질 보정 */
+  .hero-slider.swiper-fade .swiper-slide{
+    pointer-events: none;
+  }
+  
+  .hero-slider.swiper-fade .swiper-slide-active{
+    pointer-events: auto;
+  }
+  
+  /* ========================================
+     02. Hero Controls
+  ======================================== */
+  .hero-nav{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 64px;
+    height: 64px;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.72);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, transform .2s ease;
+  }
+  
+  .hero-nav i{
+    font-size: var(--text-display-sm-size);
+  }
+  
+  .hero-nav:hover{
+    background: rgba(255,255,255,.16);
+    color: var(--text-inverse);
+  }
+  
+  .hero-prev{
+    left: 48px;
+  }
+  
+  .hero-next{
+    right: 48px;
+  }
+  
+  .hero-pagination{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 122px !important;
+    z-index: 6;
+    display: flex;
+    justify-content: center;
+    padding: 0 16px;
+  }
+  
+  .hero-pagination .swiper-pagination-bullet{
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,255,.42);
+    opacity: 1;
+    margin: 0 5px !important;
+    border-radius: var(--radius-full);
+    transition: width .25s ease, background .25s ease, opacity .25s ease;
+    flex: 0 0 auto;
+  }
+  
+  .hero-pagination .swiper-pagination-bullet-active{
+    width: 28px;
+    background: var(--gray-0);
+  }
+  
+  /* ========================================
+     03. Hero Booking Bar
+  ======================================== */
+  .hero-booking-wrap{
+    position: absolute;
+    left: 50%;
+    bottom: -42px;
+    transform: translateX(-50%);
+    z-index: 30;
+    width: 100%;
+    padding: 0 20px;
+    pointer-events: none;
+  }
+  
+  .hero-booking-bar{
+    position: relative;
+    z-index: 31;
+    width: min(1180px, 100%);
+    min-height: 120px;
+    background: var(--primary-hover);
+    border: 1px solid rgba(255,255,255,.52);
+    border-radius: var(--radius-16);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 40px rgba(0,0,0,.18);
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 220px;
+    align-items: center;
+    overflow: visible;
+    margin: 0 auto;
+    pointer-events: auto;
+  }
+  
+  .hero-booking-item{
+    position: relative;
+    min-height: 120px;
+    min-width: 0;
+    padding: 30px 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .hero-booking-item + .hero-booking-item::before{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 48px;
+    background: rgba(255,255,255,.45);
+  }
+  
+  .hero-booking-item label{
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-inverse);
+    font-size: var(--text-body-lg-size);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-tight-sm);
+  }
+  
+  .booking-trigger{
+    background: transparent;
+    border: 0;
+    color: var(--text-inverse);
+    font-size: var(--text-title-sm-size);
+    font-weight: var(--font-weight-semibold);
+    text-align: left;
+    padding: 0;
+    cursor: pointer;
+    min-width: 0;
+  }
+  
+  .booking-trigger span{
+    opacity: .75;
+  }
+  
+  .hero-booking-submit{
+    padding: 24px 26px;
+  }
+  
+  .hero-search-btn{
+    width: 100%;
+    height: 82px;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-inverse);
+    font-size: var(--text-heading-sm-size);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--tracking-tight-md);
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease, border-color .2s ease;
+  }
+  
+  .hero-search-btn:hover{
+    background: var(--primary-800);
+    border-color: var(--primary-800);
+  }
+  
+  /* ========================================
+     04. Responsive
+  ======================================== */
+  @media (max-width: 1400px){
+    .hero-prev{
+      left: 28px;
+    }
+  
+    .hero-next{
+      right: 28px;
+    }
+  
+    .hero-copy{
+      max-width: 840px;
+    }
+  
+    .hero-booking-bar{
+      grid-template-columns: 1.35fr 1fr 1fr 200px;
+    }
+  
+    .hero-booking-item{
+      padding: 28px 26px;
+    }
+  }
+  
+  @media (max-width: 1200px){
+    .main-hero{
+      margin-bottom: var(--space-64);
+    }
+  
+    .hero-slider,
+    .hero-slider .swiper-slide{
+      height: 580px;
+    }
+  
+    .hero-nav{
+      width: 58px;
+      height: 58px;
+    }
+  
+    .hero-prev{
+      left: 24px;
+    }
+  
+    .hero-next{
+      right: 24px;
+    }
+  
+    .hero-copy{
+      max-width: 760px;
+    }
+  
+    .hero-copy p{
+      margin-top: 24px;
+    }
+  
+    .hero-pagination{
+      bottom: 126px !important;
+    }
+  
+    .hero-booking-wrap{
+      bottom: -48px;
+      padding: 0 16px;
+    }
+  
+    .hero-booking-bar{
+      grid-template-columns: 1.2fr 1fr 1fr 180px;
+      min-height: 108px;
+    }
+  
+    .hero-booking-item{
+      min-height: 108px;
+      padding: 24px 22px;
+    }
+  
+    .hero-booking-item label{
+      font-size: var(--text-body-md-size);
+    }
+  
+    .booking-trigger{
+      font-size: var(--text-title-xs-size);
+    }
+  
+    .hero-booking-submit{
+      padding: 18px 18px;
+    }
+  
+    .hero-search-btn{
+      height: 72px;
+      font-size: var(--text-title-lg-size);
+    }
+  }
+  
+  @media (max-width: 991px){
+    .main-hero{
+      margin-bottom: var(--space-56);
+    }
+  
+    .hero-slider,
+    .hero-slider .swiper-slide{
+      height: 620px;
+    }
+  
+    .hero-content{
+      align-items: center;
+      padding-bottom: 0;
+    }
+  
+    .hero-copy{
+      max-width: 760px;
+      padding: 0 24px;
+    }
+  
+    .hero-copy h1{
+      font-size: var(--text-display-xl-size);
+    }
+  
+    .hero-copy p{
+      margin-top: 22px;
+      font-size: var(--text-title-xs-size);
+    }
+  
+    .hero-copy .hero-cta{
+      min-height: 50px;
+      margin-top: 24px;
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .hero-pagination{
+      bottom: 136px !important;
+    }
+  
+    .hero-booking-wrap{
+      bottom: -56px;
+      padding: 0 16px;
+    }
+  
+    .hero-booking-bar{
+      width: 100%;
+      grid-template-columns: 1fr 1fr;
+      padding: 10px 0;
+    }
+  
+    .hero-booking-item{
+      min-height: 100px;
+      padding: 24px 24px;
+    }
+  
+    .hero-booking-item + .hero-booking-item::before{
+      height: 40px;
+    }
+  
+    .hero-booking-submit{
+      grid-column: 1 / -1;
+      padding: 18px 24px 20px;
+    }
+  
+    .hero-search-btn{
+      height: 64px;
+      font-size: var(--text-title-md-size);
+    }
+  }
+  
+  @media (max-width: 767px){
+    .main-hero{
+      margin-bottom: var(--space-48);
+    }
+  
+    .hero-slider,
+    .hero-slider .swiper-slide{
+      height: 540px;
+    }
+  
+    .hero-slide-overlay{
+      background:
+        linear-gradient(180deg, rgba(8,16,30,.66) 0%, rgba(8,16,30,.28) 42%, rgba(8,16,30,.38) 100%),
+        linear-gradient(180deg, rgba(255,255,255,.03) 0%, rgba(0,0,0,.18) 100%);
+    }
+  
+    .hero-content{
+      align-items: flex-end;
+      padding-bottom: 116px;
+    }
+  
+    .hero-copy{
+      max-width: 100%;
+      padding: 0 20px;
+    }
+  
+    .hero-copy h1{
+      font-size: var(--text-heading-lg-size);
+      line-height: var(--leading-title-tight);
+      letter-spacing: var(--tracking-tight-lg);
+    }
+  
+    .hero-copy p{
+      margin-top: 18px;
+      font-size: var(--text-body-lg-size);
+      line-height: var(--leading-body-relaxed);
+    }
+  
+    .hero-copy .hero-cta{
+      min-width: 140px;
+      min-height: 48px;
+      margin-top: 22px;
+      padding: 0 18px;
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .hero-nav{
+      display: none;
+    }
+  
+    .hero-pagination{
+      bottom: 132px !important;
+    }
+  
+    .hero-booking-wrap{
+      position: relative;
+      left: auto;
+      bottom: auto;
+      transform: none;
+      margin-top: -34px;
+      padding: 0 16px;
+    }
+  
+    .hero-booking-bar{
+      width: 100%;
+      min-height: auto;
+      grid-template-columns: 1fr;
+      gap: 0;
+      border-radius: var(--radius-16);
+      padding: 0;
+    }
+  
+    .hero-booking-item{
+      min-height: auto;
+      padding: 22px 20px;
+    }
+  
+    .hero-booking-item + .hero-booking-item::before{
+      top: 0;
+      left: 20px;
+      right: 20px;
+      width: auto;
+      height: 1px;
+      transform: none;
+    }
+  
+    .hero-booking-item label{
+      margin-bottom: 8px;
+      font-size: var(--text-body-md-size);
+    }
+  
+    .booking-trigger{
+      font-size: var(--text-title-xs-size);
+    }
+  
+    .hero-booking-submit{
+      padding: 16px 20px 20px;
+    }
+  
+    .hero-search-btn{
+      height: 58px;
+      font-size: var(--text-title-sm-size);
+    }
+  }
+  
+  @media (max-width: 575px){
+    .main-hero{
+      margin-bottom: var(--space-40);
+    }
+  
+    .hero-slider,
+    .hero-slider .swiper-slide{
+      height: 520px;
+    }
+  
+    .hero-content{
+      padding-bottom: 112px;
+    }
+  
+    .hero-copy{
+      padding: 0 16px;
+    }
+  
+    .hero-copy h1{
+      font-size: var(--text-heading-md-size);
+    }
+  
+    .hero-copy p{
+      margin-top: 14px;
+      font-size: var(--text-body-md-size);
+    }
+  
+    .hero-copy .hero-cta{
+      min-height: 46px;
+      margin-top: 18px;
+      padding: 0 16px;
+    }
+  
+    .hero-pagination{
+      bottom: 124px !important;
+    }
+  
+    .hero-pagination .swiper-pagination-bullet{
+      width: 8px;
+      height: 8px;
+      margin: 0 4px !important;
+    }
+  
+    .hero-pagination .swiper-pagination-bullet-active{
+      width: 22px;
+    }
+  
+    .hero-booking-wrap{
+      margin-top: -28px;
+      padding: 0 12px;
+    }
+  
+    .hero-booking-item{
+      padding: 18px 16px;
+    }
+  
+    .hero-booking-item + .hero-booking-item::before{
+      left: 16px;
+      right: 16px;
+    }
+  
+    .hero-booking-submit{
+      padding: 14px 16px 16px;
+    }
+  
+    .hero-search-btn{
+      height: 54px;
+      font-size: var(--text-body-xl-size);
+    }
+  }
+  
+  @media (max-width: 480px){
+    .hero-slider,
+    .hero-slider .swiper-slide{
+      height: 500px;
+    }
+  
+    .hero-content{
+      padding-bottom: 108px;
+    }
+  
+    .hero-copy h1{
+      font-size: var(--text-heading-md-size);
+      line-height: var(--leading-title);
+    }
+  
+    .hero-copy p{
+      font-size: var(--text-body-md-size);
+    }
+  
+    .hero-pagination{
+      bottom: 120px !important;
+    }
+  
+    .hero-booking-wrap{
+      padding: 0 12px;
+    }
+  
+    .hero-booking-bar{
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 420px){
+    .hero-slider,
+    .hero-slider .swiper-slide{
+      height: 460px;
+    }
+  
+    .hero-content{
+      padding-bottom: 100px;
+    }
+  
+    .hero-copy{
+      padding: 0 14px;
+    }
+  
+    .hero-copy h1{
+      font-size: var(--text-title-xl-size);
+      line-height: var(--leading-title);
+    }
+  
+    .hero-copy p{
+      margin-top: 12px;
+      font-size: var(--text-body-sm-size);
+      line-height: var(--leading-body-relaxed);
+    }
+  
+    .hero-copy .hero-cta{
+      min-width: 132px;
+      min-height: 44px;
+      margin-top: 16px;
+      font-size: var(--text-caption-size);
+    }
+  
+    .hero-pagination{
+      bottom: 60px !important;
+    }
+  
+    .hero-pagination .swiper-pagination-bullet{
+      width: 7px;
+      height: 7px;
+    }
+  
+    .hero-pagination .swiper-pagination-bullet-active{
+      width: 20px;
+    }
+  
+    .hero-booking-wrap{
+      margin-top: -22px;
+      padding: 0 10px;
+    }
+  
+    .hero-booking-item{
+      padding: 16px 14px;
+    }
+  
+    .hero-booking-item + .hero-booking-item::before{
+      left: 14px;
+      right: 14px;
+    }
+  
+    .hero-booking-item label{
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .booking-trigger{
+      font-size: var(--text-body-md-size);
+    }
+  
+    .hero-booking-submit{
+      padding: 12px 14px 14px;
+    }
+  
+    .hero-search-btn{
+      height: 50px;
+      font-size: var(--text-body-lg-size);
+    }
+  }

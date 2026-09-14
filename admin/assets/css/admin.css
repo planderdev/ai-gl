@@ -1,0 +1,13 @@
+.admin-shell{
+    min-height: 100vh;
+    background: var(--admin-shell-bg);
+  }
+  
+  .admin-body{
+    min-height: 100vh;
+    color: var(--admin-text);
+  }
+  
+  .admin-section + .admin-section{
+    margin-top: var(--space-20);
+  }

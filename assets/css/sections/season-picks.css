@@ -1,0 +1,515 @@
+/* ========================================
+   Season Picks Section
+======================================== */
+.season-picks-section {
+    padding: var(--space-64) 0;
+    overflow: hidden;
+  }
+  
+  .season-picks-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
+    gap: var(--space-32);
+    align-items: stretch;
+    min-width: 0;
+  }
+  
+  .season-picks-visual {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-24);
+    min-height: 600px;
+    background: var(--red-100);
+    min-width: 0;
+  }
+  
+  .season-picks-visual-bg {
+    position: absolute;
+    inset: 0;
+  }
+  
+  .season-picks-visual-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  
+  .season-picks-badge {
+    position: relative;
+    z-index: 1;
+    width: clamp(220px, 58%, 300px);
+    min-height: clamp(280px, 56vw, 400px);
+    margin: 110px auto 0;
+    border: 1px solid var(--overlay-light);
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-24) var(--space-16);
+    box-sizing: border-box;
+  }
+  
+  .season-picks-badge-top {
+    margin: 0 0 var(--space-16);
+    font-size: var(--text-title-xs-size);
+    line-height: var(--leading-copy-snug);
+    font-weight: var(--font-weight-bold);
+    color: var(--white);
+    letter-spacing: var(--tracking-tight-md);
+    word-break: keep-all;
+  }
+  
+  .season-picks-badge-main {
+    display: block;
+    font-size: clamp(var(--text-display-md-size), 4vw, var(--text-hero-lg-size));
+    line-height: var(--leading-ultra-tight);
+    letter-spacing: var(--tracking-tight-3xl);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--white);
+    word-break: keep-all;
+  }
+  
+  .season-picks-content {
+    background: var(--bg-soft);
+    border-radius: var(--radius-24);
+    padding: var(--space-48) var(--space-48) var(--space-32);
+    min-width: 0;
+  }
+  
+  .season-picks-head {
+    margin-bottom: var(--space-32);
+  }
+  
+  .season-picks-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-bottom: var(--space-24);
+  }
+  
+  .season-picks-tags span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    font-size: var(--text-body-lg-size);
+    line-height: var(--leading-title);
+    font-weight: var(--font-weight-bold);
+    color: var(--text);
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  
+  .season-picks-head h2 {
+    margin: 0 0 var(--space-16);
+    font-size: var(--text-display-md-size);
+    line-height: var(--leading-title-tight);
+    letter-spacing: var(--tracking-tight-xl);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--text);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  
+  .season-picks-head p {
+    margin: 0;
+    font-size: var(--text-body-xl-size);
+    line-height: var(--leading-section-copy);
+    color: var(--sub);
+    word-break: keep-all;
+  }
+  
+  .season-picks-slider-wrap {
+    position: relative;
+    min-width: 0;
+  }
+  
+  .season-picks-slider {
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .season-picks-slider .swiper-wrapper {
+    align-items: stretch;
+  }
+  
+  .season-picks-slider .swiper-slide {
+    width: 222px;
+    height: auto;
+  }
+  
+  .season-picks-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+  }
+  
+  .season-picks-card-thumb {
+    border-radius: var(--radius-16);
+    overflow: hidden;
+    aspect-ratio: 1.18 / 1;
+    background: var(--surface-3);
+    margin-bottom: var(--space-16);
+  }
+  
+  .season-picks-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+  }
+  
+  .season-picks-card:hover .season-picks-card-thumb img {
+    transform: scale(1.04);
+  }
+  
+  .season-picks-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-width: 0;
+  }
+  
+  .season-picks-card-location {
+    font-size: var(--text-body-sm-size);
+    line-height: var(--leading-copy-snug);
+    color: var(--text-subtle);
+    word-break: keep-all;
+  }
+  
+  .season-picks-card-body h3 {
+    margin: 0;
+    font-size: var(--text-title-xs-size);
+    line-height: var(--leading-copy);
+    letter-spacing: var(--tracking-tight-md);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--text);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  
+  .season-picks-card-price {
+    display: block;
+    font-size: var(--text-title-sm-size);
+    line-height: var(--leading-title);
+    letter-spacing: var(--tracking-tight-md);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--text);
+    margin-top: auto;
+  }
+  
+  .season-picks-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-32);
+  }
+  
+  .season-picks-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    flex-wrap: wrap;
+  }
+  
+  .season-picks-pagination .swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    margin: 0 !important;
+    border-radius: var(--radius-full);
+    background: var(--border-strong);
+    opacity: 1;
+    transition: 0.2s ease;
+    flex: 0 0 auto;
+  }
+  
+  .season-picks-pagination .swiper-pagination-bullet-active {
+    width: 8px;
+    background: var(--blue-600);
+  }
+  
+  /* ========================================
+     Large Desktop Down
+  ======================================== */
+  @media (max-width: 1360px) {
+    .season-picks-layout {
+      grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+  
+    .season-picks-content {
+      padding: var(--space-40) var(--space-32) var(--space-28);
+    }
+  }
+  
+  /* ========================================
+     Large Tablet
+  ======================================== */
+  @media (max-width: 1200px) {
+    .season-picks-layout {
+      grid-template-columns: 1fr;
+    }
+  
+    .season-picks-visual {
+      min-height: 460px;
+    }
+  
+    .season-picks-badge {
+      margin: var(--space-40) auto;
+      width: clamp(220px, 42vw, 300px);
+      min-height: clamp(280px, 36vw, 380px);
+    }
+  
+    .season-picks-content {
+      padding: var(--space-40) var(--space-32) var(--space-32);
+    }
+  }
+  
+  /* ========================================
+     Tablet
+  ======================================== */
+  @media (max-width: 1024px) {
+    .season-picks-visual {
+      min-height: 400px;
+    }
+  
+    .season-picks-badge {
+      width: clamp(220px, 40vw, 260px);
+      min-height: clamp(280px, 34vw, 320px);
+    }
+  
+    .season-picks-head h2 {
+      font-size: var(--text-heading-xl-size);
+    }
+  
+    .season-picks-head p {
+      font-size: var(--text-body-lg-size);
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .season-picks-content {
+      padding: var(--space-32) var(--space-24) var(--space-24);
+    }
+  
+    .season-picks-head {
+      margin-bottom: var(--space-24);
+    }
+  
+    .season-picks-head h2 {
+      font-size: var(--text-heading-lg-size);
+    }
+  
+    .season-picks-head p {
+      font-size: var(--text-body-lg-size);
+    }
+  
+    .season-picks-slider .swiper-slide {
+      width: 230px;
+    }
+  }
+  
+  /* ========================================
+     Mobile
+  ======================================== */
+  @media (max-width: 768px) {
+    .season-picks-section {
+      padding: var(--space-32) 0 var(--space-24);
+    }
+  
+    .season-picks-layout {
+      gap: var(--space-16);
+    }
+  
+    .season-picks-card {
+        gap: var(--space-16);
+    }
+    .season-picks-visual {
+      min-height: 360px;
+      border-radius: var(--radius-24);
+    }
+  
+    .season-picks-badge {
+      width: min(220px, calc(100% - 32px));
+      min-height: 290px;
+      margin: var(--space-32) auto;
+      padding: var(--space-24) var(--space-16);
+    }
+  
+    .season-picks-badge-top {
+      margin-bottom: var(--space-16);
+      font-size: var(--text-body-md-size);
+    }
+  
+    .season-picks-badge-main {
+      font-size: var(--text-display-xl-size);
+    }
+  
+    .season-picks-content {
+      border-radius: var(--radius-24);
+      padding: var(--space-24) var(--space-16) var(--space-24);
+    }
+  
+    .season-picks-tags {
+      gap: var(--space-8);
+      margin-bottom: var(--space-16);
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-wrap: nowrap;
+      padding-bottom: var(--space-4);
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  
+    .season-picks-tags::-webkit-scrollbar {
+      display: none;
+    }
+  
+    .season-picks-tags span {
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .season-picks-head {
+      margin-bottom: var(--space-24);
+    }
+  
+    .season-picks-head h2 {
+      font-size: var(--text-heading-sm-size);
+    }
+  
+    .season-picks-head p {
+      font-size: var(--text-body-sm-size);
+      line-height: var(--leading-body-relaxed);
+    }
+  
+    .season-picks-slider .swiper-slide {
+      width: min(220px, 64vw);
+    }
+  
+    .season-picks-card-thumb {
+      border-radius: var(--radius-16);
+      margin-bottom: var(--space-16);
+    }
+  
+    .season-picks-card-body h3 {
+      font-size: var(--text-body-xl-size);
+    }
+  
+    .season-picks-card-price {
+      font-size: var(--text-title-xs-size); 
+    }
+  
+    .season-picks-controls {
+      margin-top: var(--space-24);
+    }
+  }
+  
+  /* ========================================
+     Small Mobile
+  ======================================== */
+  @media (max-width: 575px) {
+    .season-picks-section {
+      padding: var(--space-32) 0 var(--space-24);
+    }
+  
+    .season-picks-visual {
+      min-height: 320px;
+    }
+  
+    .season-picks-badge {
+      width: min(190px, calc(100% - 28px));
+      min-height: 250px;
+      margin: var(--space-24) auto;
+      padding: var(--space-16) 14px;
+    }
+  
+    .season-picks-badge-top {
+      font-size: var(--text-body-sm-size);
+    }
+  
+    .season-picks-badge-main {
+      font-size: var(--text-display-lg-size);
+    }
+  
+    .season-picks-content {
+      padding: var(--space-16);
+    }
+  
+    .season-picks-slider .swiper-slide {
+      width: min(200px, 68vw);
+    }
+  
+    .season-picks-card-thumb {
+      margin-bottom: var(--space-12);
+    }
+  
+    .season-picks-card-location {
+      font-size: var(--text-caption-size);
+    }
+  
+    .season-picks-card-body h3 {
+      font-size: var(--text-body-lg-size);
+    }
+  
+    .season-picks-card-price {
+      font-size: var(--text-body-xl-size);
+    }
+  }
+  
+  @media (max-width: 420px) {
+    .season-picks-visual {
+      min-height: 300px;
+    }
+  
+    .season-picks-badge {
+      width: min(170px, calc(100% - 24px));
+      min-height: 252px;
+      padding: 14px 12px;
+    }
+  
+    .season-picks-slider .swiper-slide {
+      width: min(188px, 72vw);
+    }
+  
+    .season-picks-head h2 {
+      font-size: var(--text-title-md-size);
+      line-height: var(--leading-title);
+    }
+  }
+  
+  @media (max-width: 360px) {
+    .season-picks-content {
+      padding: 18px 12px;
+    }
+  
+    .season-picks-badge {
+      width: min(158px, calc(100% - 20px));
+      min-height: 208px;
+    }
+  
+    .season-picks-badge-main {
+      font-size: var(--text-display-md-size);
+    }
+  
+    .season-picks-slider .swiper-slide {
+      width: min(176px, 74vw);
+    }
+  
+    .season-picks-card-body h3 {
+      font-size: var(--text-body-md-size);
+    }
+  
+    .season-picks-card-price {
+      font-size: var(--text-body-lg-size);
+    }
+  }
