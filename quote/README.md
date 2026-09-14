@@ -85,3 +85,12 @@ npm run crawl:airseoul -- --all --dry-run            # 전송 없이 확인
 - 접근 보호: `APP_PASSWORD`(Basic 인증, 아이디는 아무거나) — `src/proxy.ts`. 크롤러는 `CRAWLER_API_KEY` 헤더로 통과.
 - 크롤러는 배포 서버에서 실행되지 않는다(Chrome 없음). 로컬에서 `npm run crawl:airseoul -- --all --server https://ai-gl.vercel.app --api-key <CRAWLER_API_KEY>`.
 - 재배포: `vercel deploy --prod --yes`. 환경변수 확인: `vercel env ls`.
+
+## SGL 마스터 데이터 시드 (`scripts/seed-sgl-masters.ts`)
+```bash
+npm run seed:sgl -- "~/Downloads/0309 벳부 카메노이호텔 ... .xlsx"   # 파일 생략 시 마스터만
+npm run seed:blob -- --force                                        # 운영(Blob)에 반영
+```
+지역별 호텔(다카마쓰 3 · 벳부 2 · 마쓰야마 3 · 후지 1), 골프장(벳부GC 쯔루미/유후 계약요금, 마쓰야마 9곳(요금 미확보), 후지 6곳 2026.7~10 요금, 세부),
+차량 규칙(벳부 3박/4박, 시즈오카 렌터카)을 넣고, 0309 벳부 원가표가 있으면 타이베이(TI750/751) 벳부 상품 2개와 운임을 가져온다.
+역산·예상값은 memo/notes 에 "확인 필요"로 표시되어 있다. 골프장 기간표는 **먼저 매칭되는 기간이 적용**되므로 특별요금 기간을 일반 기간보다 앞에 둔다.

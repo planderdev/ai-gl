@@ -11,7 +11,8 @@
     "export:costsheet": "tsx scripts/export-costsheet.ts",
     "typecheck": "tsc --noEmit -p .",
     "crawl:airseoul": "tsx crawler/airseoul.ts",
-    "seed:blob": "tsx scripts/seed-blob.ts"
+    "seed:blob": "tsx scripts/seed-blob.ts",
+    "seed:sgl": "tsx scripts/seed-sgl-masters.ts"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
