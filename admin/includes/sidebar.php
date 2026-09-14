@@ -115,8 +115,12 @@ if (!function_exists('admin_sidebar_has_current_child')) {
                                     href="<?= e($childHref) ?>"
                                     class="admin-nav__child <?= $isChildCurrent ? 'is-current' : '' ?>"
                                     <?= $isChildCurrent ? 'aria-current="page"' : '' ?>
+                                    <?= !empty($child['external']) ? 'target="_blank" rel="noopener"' : '' ?>
                                 >
                                     <?= e($child['label']) ?>
+                                    <?php if (!empty($child['external'])): ?>
+                                        <i class="ri-external-link-line admin-nav__external" aria-hidden="true"></i>
+                                    <?php endif; ?>
                                 </a>
                             <?php endforeach; ?>
                         </div>

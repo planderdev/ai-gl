@@ -1,5 +1,8 @@
 <?php
 
+// 견적·원가표 시스템(Next.js, quote/ 디렉터리) 주소 — 별도 배포이므로 새 탭으로 연다
+$quoteSystemUrl = defined('QUOTE_SYSTEM_URL') ? QUOTE_SYSTEM_URL : 'https://ai-gl.vercel.app';
+
 $adminMenu = [
     [
         'key' => 'dashboard',
@@ -112,6 +115,33 @@ $adminMenu = [
             [
                 'label' => '배너관리',
                 'href' => admin_url('pages/content/banner-list.php'),
+            ],
+        ],
+    ],
+    [
+        'key' => 'quote',
+        'label' => '견적 시스템',
+        'icon' => 'ri-file-excel-2-line',
+        'children' => [
+            [
+                'label' => '견적 대시보드',
+                'href' => $quoteSystemUrl . '/',
+                'external' => true,
+            ],
+            [
+                'label' => '상품·원가표',
+                'href' => $quoteSystemUrl . '/products',
+                'external' => true,
+            ],
+            [
+                'label' => '항공 운임',
+                'href' => $quoteSystemUrl . '/fares',
+                'external' => true,
+            ],
+            [
+                'label' => '견적 마스터 데이터',
+                'href' => $quoteSystemUrl . '/masters',
+                'external' => true,
             ],
         ],
     ],
