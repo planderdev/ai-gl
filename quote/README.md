@@ -60,30 +60,28 @@ src/app/(pages)      대시보드 / 상품·원가표 / 항공 운임 / 마스�
 scripts              CLI(import/export)
 ```
 
-## 에어서울 운임 크롤러 (`crawler/airseoul.ts`, `src/lib/crawler/airseoul.ts`)
-에어서울 예약 1단계 화면의 달력이 쓰는 내부 API `POST /I/KO/searchRouteMinFare.do` (`language=KO&departure=ICN&arrival=TAK&paxCnt=1`)가
-노선의 날짜별 **편도 총액(성인 1인, 세금 포함) 최저가**를 약 2년치 한 번에 돌려준다. ICN–TAK 는 하루 1편이므로
-`outboundAmount` = RS741(ICN→TAK), `returnAmount` = RS742(TAK→ICN) 운임과 같다. 금액 0 = 운항없음(또는 판매종료).
+## 항공 운임 크롤러 (`crawler/fares.ts`, `src/lib/crawler/`)
+공급자 레지스트리(`providers.ts`)에 항공사별 수집 방식을 두고, 편명 접두(RS/7C)로 자동 선택한다. 둘 다 홈페이지의 **최저가 달력 API** 를 실제 Chrome 창(headed, 새 컨텍스트)에서 호출한다 — 헤드리스·쿠키 재사용은 봇 차단에 걸린다. 과거 날짜는 저장하지 않는다.
 
-- 서버 밖에서 직접 호출하면 Cloudflare 챌린지(403)에 막히므로 **Playwright + 설치된 Chrome 창(headed)** 으로 페이지를 연 뒤 페이지 안에서 fetch 한다.
-  헤드리스나 프로필/쿠키 재사용은 챌린지에 걸리므로 매번 새 컨텍스트로 연다(1~2초 내 자동 통과).
-- 과거 날짜는 달력이 0 을 돌려주므로 오늘(KST) 이후만 저장한다.
+| 공급자 | 노선/편명 | API | 특징 |
+|---|---|---|---|
+| 에어서울 `airseoul` | ICN–TAK RS741 / TAK–ICN RS742 | `POST /I/KO/searchRouteMinFare.do` (form) | 약 2년치 한 번에. outbound/returnAmount, 금액 0 = 운항없음 |
+| 제주항공 `jejuair` | ICN–MYJ 7C1704 / MYJ–ICN 7C1703 | `POST sec.jejuair.net/ko/ibe/booking/searchlowestFareCalendarInPeriod.json` (JSON, `Channel-Code: WPC`) | 최대 90일/호출이라 구간 분할. 총액 = fareAmount + taxesAndFeesAmount |
 
 ```bash
-npm run crawl:airseoul -- --all                      # 오늘 이후 전체 → /api/fares
-npm run crawl:airseoul -- --once                     # 대기 요청 1건 처리(요청 done/failed 보고)
-npm run crawl:airseoul -- --loop 300                 # 5분마다 요청 큐 폴링
-npm run crawl:airseoul -- --all --dry-run            # 전송 없이 확인
-# --server http://host:3000  --api-key KEY  --route ICN-TAK:RS741:RS742  --headless(차단됨, 실험용)
+npm run crawl -- --all                       # 두 공급자 전체, 오늘~180일
+npm run crawl:jejuair -- --all --days 240    # 제주항공만
+npm run crawl -- --once | --loop 300         # 요청 큐 처리(편명으로 공급자 선택)
+# --server URL --api-key KEY --dry-run --route ICN-FUK:RS...:RS...
 ```
-화면에서는 **항공 운임 → 에어서울 크롤러** 카드의 버튼이 `POST /api/crawl/airseoul` `{mode:"all"|"requests"}` 를 호출해 같은 일을 서버(로컬 PC)에서 수행한다.
-다른 노선을 추가하려면 `DEFAULT_ROUTES`(또는 CLI `--route`)에 `출발-도착:출발편:귀국편` 을 넣는다.
+화면: 항공 운임 → 크롤러 카드에서 공급자·기간을 골라 `POST /api/crawl/{airseoul|jejuair|all}` `{mode:"all"|"requests", days}`. 배포 서버에서는 501(로컬에서 CLI 실행).
+새 항공사를 추가하려면 `src/lib/crawler/<airline>.ts` 에 수집 함수를 만들고 `providers.ts` 에 등록한다.
 
 ## 배포 (Vercel)
 - 프로젝트: `planderdevs-projects/ai-gl` → https://ai-gl.vercel.app
 - 저장소: Vercel Blob(비공개 스토어 `ai-gl-data`) — `BLOB_READ_WRITE_TOKEN` 이 있으면 `src/lib/store/blob-collection.ts` 가 `.data` 대신 사용. 최초 데이터는 `npm run seed:blob`(로컬 `.data` 업로드, `--force` 로 덮어쓰기).
 - 접근 보호: `APP_PASSWORD`(Basic 인증, 아이디는 아무거나) — `src/proxy.ts`. 크롤러는 `CRAWLER_API_KEY` 헤더로 통과.
-- 크롤러는 배포 서버에서 실행되지 않는다(Chrome 없음). 로컬에서 `npm run crawl:airseoul -- --all --server https://ai-gl.vercel.app --api-key <CRAWLER_API_KEY>`.
+- 크롤러는 배포 서버에서 실행되지 않는다(Chrome 없음). 로컬에서 `npm run crawl -- --all --server https://ai-gl.vercel.app --api-key <CRAWLER_API_KEY>`.
 - 재배포: `vercel deploy --prod --yes`. 환경변수 확인: `vercel env ls`.
 
 ## SGL 마스터 데이터 시드 (`scripts/seed-sgl-masters.ts`)

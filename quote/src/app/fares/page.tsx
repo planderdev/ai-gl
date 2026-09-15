@@ -51,8 +51,8 @@ export default async function FaresPage({ searchParams }: PageProps<"/fares">) {
       </div>
       <aside className="space-y-4">
         <div className="card space-y-2">
-          <h2 className="font-bold">에어서울 크롤러</h2>
-          <p className="text-xs text-neutral-500">예약 화면 달력의 날짜별 편도 총액(RS741 ICN→TAK / RS742 TAK→ICN)을 수집합니다. Cloudflare 때문에 Chrome 창이 잠깐 열립니다. CLI: <code>npm run crawl:airseoul -- --all</code></p>
+          <h2 className="font-bold">항공 운임 크롤러</h2>
+          <p className="text-xs text-neutral-500">에어서울(RS741/742 다카마쓰)과 제주항공(7C1704/1703 마쓰야마)의 최저가 달력에서 날짜별 편도 총액을 수집합니다. 봇 차단 때문에 Chrome 창이 잠깐 열립니다. CLI: <code>npm run crawl -- --all</code></p>
           <CrawlButton pendingCount={reqs.filter((r) => r.status === "pending").length} />
         </div>
         <div className="card" id="requests">

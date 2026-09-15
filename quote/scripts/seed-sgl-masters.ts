@@ -84,6 +84,7 @@ const COURSES: GolfCourse[] = [
 ];
 
 const VEHICLES: VehicleRule[] = [
+  { id: "veh-마쓰야마-셔틀", name: "마쓰야마 골프전용 셔틀 (4인 기준)", region: "마쓰야마", feesByWeekday: flat(0), memo: "공항⇒호텔⇔골프장⇔호텔⇒공항 골프전용 셔틀. 1인 요금 미확보 — 입력 필요(0원으로 등록). 에히메현 무료 셔틀(한국 여권)은 공항↔시내만", updatedAt: now },
   { id: "veh-벳부-3박", name: "벳부 차량+지원비 (3박4일, 4인 기준)", region: "벳부", feesByWeekday: flat(120000), memo: "0309 벳부 원가표: 1인 120,000원(오이타공항↔호텔↔골프장 송영)", updatedAt: now },
   { id: "veh-벳부-4박", name: "벳부 차량+지원비 (4박5일, 4인 기준)", region: "벳부", feesByWeekday: flat(140000), memo: "0309 벳부 원가표: 1인 140,000원", updatedAt: now },
   { id: "veh-후지-렌터카-80h", name: "시즈오카 렌터카 80시간 (4인 기준)", region: "후지(시즈오카)", feesByWeekday: flat(120000), memo: "13,000엔/1인(환율 9.2 기준 약 120,000원). 2인 소형 +3,000엔, 3인 소형밴 +4,000엔. 주유·고속도로 불포함", updatedAt: now },
@@ -156,11 +157,30 @@ async function importBeppu(file: string) {
   console.log(`벳부 상품 ${out.length}개, 운임 ${fareRows.size}건 저장`);
 }
 
+/** 마쓰야마 3박4일 54홀 (제주항공 7C1704/1703) — 확정서 일정표(M-20240229-1) 패턴 */
+async function seedMatsuyamaProduct() {
+  const id = "prd-마쓰야마-도큐레이-3박-54홀-제주항공";
+  if (await products().get(id)) { console.log("마쓰야마 상품 이미 존재 — 유지"); return; }
+  const settings = await getSettings();
+  const dateFrom = new Date(Date.now() + 9 * 3600_000 + 86400_000).toISOString().slice(0, 10);
+  const product: Product = {
+    id, name: "마쓰야마 도큐레이호텔 3박4일 54홀 (제주항공 7C1704/1703)", region: "마쓰야마", airline: "7C",
+    outbound: { flightNo: "7C1704", origin: "ICN", destination: "MYJ", dep: "13:05", arr: "14:40" }, inbound: { flightNo: "7C1703", origin: "MYJ", destination: "ICN", dep: "15:40", arr: "17:35" },
+    nights: 3, golfPlan: [0, 18, 18, 18], hotelId: "hotel-도큐레이-호텔-마쓰야마", hotelLabel: "도큐레이호텔 3박\n(조식포함)",
+    golfCourseIds: ["golf-마쓰야마국제cc", "golf-마쓰야마씨사이드cc", "golf-치산호조cc"], vehicleRuleId: "veh-마쓰야마-셔틀",
+    exchangeRate: settings.exchangeRate, margins: settings.margins, dateFrom, dateTo: addDays(dateFrom, 179),
+    groupFares: {}, groupTaxByMonth: {}, overrides: {}, legend: "**노란색날짜 : 스팟특가** · 4일차 골프 후 15:40 출발(18홀 미완료 가능)", createdAt: now, updatedAt: now,
+  };
+  await products().upsert(product);
+  console.log(`마쓰야마 상품 생성: ${product.dateFrom}~${product.dateTo}`);
+}
+
 async function main() {
   await hotels().upsertMany(HOTELS);
   await golfCourses().upsertMany(COURSES);
   await vehicleRules().upsertMany(VEHICLES);
   console.log(`호텔 ${HOTELS.length}, 골프장 ${COURSES.length}, 차량규칙 ${VEHICLES.length} 저장`);
+  await seedMatsuyamaProduct();
   const file = process.argv[2];
   if (file) await importBeppu(file);
 }

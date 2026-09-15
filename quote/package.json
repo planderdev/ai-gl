@@ -10,9 +10,11 @@
     "import:costsheet": "tsx scripts/import-costsheet.ts",
     "export:costsheet": "tsx scripts/export-costsheet.ts",
     "typecheck": "tsc --noEmit -p .",
-    "crawl:airseoul": "tsx crawler/airseoul.ts",
     "seed:blob": "tsx scripts/seed-blob.ts",
-    "seed:sgl": "tsx scripts/seed-sgl-masters.ts"
+    "seed:sgl": "tsx scripts/seed-sgl-masters.ts",
+    "crawl": "tsx crawler/fares.ts",
+    "crawl:airseoul": "tsx crawler/fares.ts --provider airseoul",
+    "crawl:jejuair": "tsx crawler/fares.ts --provider jejuair"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
