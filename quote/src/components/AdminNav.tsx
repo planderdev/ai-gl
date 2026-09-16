@@ -3,40 +3,46 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-/** 캐디스 Admin 사이드바와 같은 구조(admin-nav). 현재 경로에 맞춰 그룹을 열고 강조 */
-const MENU = [
+/** 캐디스 Admin(admin/includes/menu-data.php)과 같은 메뉴 구조 + 견적 시스템 */
+type Child = { label: string; href: string; external?: boolean };
+type Group = { key: string; label: string; icon: string; href?: string; children?: Child[] };
+const MENU: Group[] = [
   { key: "dashboard", label: "대시보드", icon: "ri-dashboard-line", href: "/" },
-  { key: "quote", label: "견적·원가표", icon: "ri-file-excel-2-line", children: [
-    { label: "상품(원가표) 목록", href: "/products" },
-    { label: "새 상품 만들기", href: "/products/new" },
-    { label: "원가표 엑셀 가져오기", href: "/products/new#import" },
-    { label: "전체 원가표 다운로드", href: "/api/export", external: true },
+  { key: "product", label: "상품관리", icon: "ri-golf-ball-line", children: [
+    { label: "전체 상품", href: "/cms/products" }, { label: "골프장 등록", href: "/cms/products/new?type=golf_course" }, { label: "패키지 등록", href: "/cms/products/new?type=travel_package" },
+    { label: "호텔 관리", href: "/cms/hotels" }, { label: "국가 관리", href: "/cms/taxonomy-countries" }, { label: "지역 관리", href: "/cms/taxonomy-regions" }, { label: "테마 관리", href: "/cms/taxonomy-themes" }, { label: "배지 관리", href: "/cms/taxonomy-badges" },
   ] },
-  { key: "fares", label: "항공 운임", icon: "ri-flight-takeoff-line", children: [
-    { label: "운임 조회", href: "/fares" },
-    { label: "크롤링 요청·API", href: "/fares#requests" },
+  { key: "event", label: "이벤트관리", icon: "ri-megaphone-line", children: [{ label: "이벤트 목록", href: "/cms/events" }, { label: "이벤트 등록", href: "/cms/events/new" }] },
+  { key: "booking", label: "예약관리", icon: "ri-calendar-check-line", children: [{ label: "예약 목록", href: "/cms/bookings" }, { label: "예약 캘린더", href: "/cms/bookings/calendar" }, { label: "예약 등록", href: "/cms/bookings/new" }] },
+  { key: "customer", label: "고객관리", icon: "ri-user-3-line", children: [{ label: "고객 목록", href: "/cms/customers" }, { label: "고객 등록", href: "/cms/customers/new" }] },
+  { key: "content", label: "콘텐츠관리", icon: "ri-file-list-3-line", children: [{ label: "공지사항", href: "/cms/notices" }, { label: "FAQ", href: "/cms/faqs" }, { label: "배너관리", href: "/cms/banners" }] },
+  { key: "quote", label: "견적 시스템", icon: "ri-file-excel-2-line", children: [
+    { label: "상품(원가표) 목록", href: "/products" }, { label: "새 상품 만들기", href: "/products/new" }, { label: "원가표 엑셀 가져오기", href: "/products/new#import" }, { label: "전체 원가표 다운로드", href: "/api/export", external: true },
+    { label: "항공 운임·크롤러", href: "/fares" }, { label: "호텔·골프장·차량 단가", href: "/masters" },
   ] },
-  { key: "masters", label: "마스터 데이터", icon: "ri-database-2-line", children: [
-    { label: "호텔", href: "/masters#hotels" },
-    { label: "골프장 요금표", href: "/masters#golf" },
-    { label: "차량+지원비", href: "/masters#vehicles" },
-    { label: "환율·마진·공휴일", href: "/masters#settings" },
-  ] },
+  { key: "setting", label: "설정", icon: "ri-settings-3-line", children: [{ label: "기본 설정", href: "/cms/settings/general" }, { label: "결제 설정", href: "/cms/settings/payment" }, { label: "취소/환불 설정", href: "/cms/settings/cancellation" }, { label: "API 설정", href: "/cms/settings/api" }] },
 ];
 
 export default function AdminNav() {
   const path = usePathname();
-  const isCur = (href: string) => { const p = href.split("#")[0]; return p === "/" ? path === "/" : path === p || (p !== "/products" && path.startsWith(p + "/")) || (p === "/products" && path.startsWith("/products/") && !path.startsWith("/products/new")); };
+  const isCur = (href: string) => {
+    const p = href.split(/[?#]/)[0];
+    if (p === "/") return path === "/";
+    if (href.includes("?") || href.includes("#")) return false;
+    if (/\/new$/.test(p)) return path === p;
+    return path === p || path.startsWith(p + "/");
+  };
+  const groupCur = (g: Group) => (g.children ?? []).some((c) => !c.external && (isCur(c.href) || path === c.href.split(/[?#]/)[0] || path.startsWith(c.href.split(/[?#]/)[0] + "/")));
   const [open, setOpen] = useState<Record<string, boolean>>({});
   return (
-    <nav className="admin-nav" aria-label="견적 시스템 메뉴">
+    <nav className="admin-nav" aria-label="관리자 메뉴">
       {MENU.map((m) => {
         if (!m.children) return (
           <div key={m.key} className={`admin-nav__group ${isCur(m.href!) ? "is-current" : ""}`}>
             <Link href={m.href!} className={`admin-nav__single ${isCur(m.href!) ? "is-current" : ""}`}><i className={m.icon} aria-hidden /> <span>{m.label}</span></Link>
           </div>
         );
-        const hasCur = m.children.some((c) => !c.external && isCur(c.href));
+        const hasCur = groupCur(m);
         const isOpen = open[m.key] ?? hasCur;
         return (
           <div key={m.key} className={`admin-nav__group ${isOpen ? "is-open" : ""} ${hasCur ? "is-current" : ""}`}>
@@ -47,7 +53,7 @@ export default function AdminNav() {
             <div className="admin-nav__children">
               {m.children.map((c) => c.external
                 ? <a key={c.href} href={c.href} className="admin-nav__child">{c.label} <i className="ri-download-2-line ml-auto text-sm opacity-60" /></a>
-                : <Link key={c.href} href={c.href} className={`admin-nav__child ${isCur(c.href) && !c.href.includes("#") ? "is-current" : ""}`}>{c.label}</Link>)}
+                : <Link key={c.href} href={c.href} className={`admin-nav__child ${isCur(c.href) ? "is-current" : ""}`}>{c.label}</Link>)}
             </div>
           </div>
         );

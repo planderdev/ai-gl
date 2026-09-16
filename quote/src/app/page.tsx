@@ -4,6 +4,8 @@ import { products, quoteProduct } from "@/lib/products/service";
 import { fareRequests, fares } from "@/lib/fares/service";
 import { golfCourses, hotels, vehicleRules } from "@/lib/masters/service";
 import { golfPlanLabel } from "@/lib/pricing/engine";
+import { collectionById } from "@/lib/cms/schema";
+import { listItems } from "@/lib/cms/service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,13 @@ export default async function Dashboard() {
   const [list, allFares, reqs, h, g, v] = await Promise.all([products().list(), fares().list(), fareRequests().list(), hotels().list(), golfCourses().list(), vehicleRules().list()]);
   const quotes = (await Promise.all(list.map((p) => quoteProduct(p.id)))).filter((q): q is NonNullable<typeof q> => !!q);
   const pending = reqs.filter((r) => r.status === "pending" || r.status === "in_progress");
+  const [cmsProducts, cmsBookings, cmsCustomers, cmsEvents] = await Promise.all(["products", "bookings", "customers", "events"].map((id) => listItems(collectionById(id)!)));
+  const cmsCards = [
+    { label: "상품", value: cmsProducts.length, sub: `공개 ${cmsProducts.filter((x) => x.status === "publish").length}`, href: "/cms/products", icon: "ri-golf-ball-line" },
+    { label: "예약", value: cmsBookings.length, sub: `확정 ${cmsBookings.filter((x) => x.status === "confirmed").length} · 대기 ${cmsBookings.filter((x) => x.status === "pending").length}`, href: "/cms/bookings", icon: "ri-calendar-check-line" },
+    { label: "고객", value: cmsCustomers.length, sub: `VIP ${cmsCustomers.filter((x) => x.grade === "vip").length}`, href: "/cms/customers", icon: "ri-user-3-line" },
+    { label: "이벤트", value: cmsEvents.length, sub: `공개 ${cmsEvents.filter((x) => x.status === "publish").length}`, href: "/cms/events", icon: "ri-megaphone-line" },
+  ];
   const missing = quotes.reduce((a, q) => a + q.missing.length, 0);
   const latest = allFares.map((f) => f.capturedAt).sort().at(-1);
   return (
@@ -28,6 +37,14 @@ export default async function Dashboard() {
         ]}
         actions={<><Link href="/products/new" className="admin-btn admin-btn--primary"><i className="ri-add-line" /> 새 상품</Link><a href="/api/export" className="admin-btn admin-btn--light"><i className="ri-file-excel-2-line" /> 전체 원가표</a></>}
       />
+      <div className="grid gap-4 md:grid-cols-4">
+        {cmsCards.map((c) => (
+          <Link key={c.label} href={c.href} className="admin-card flex items-start gap-3 p-5 transition hover:-translate-y-0.5">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--admin-primary-soft)] text-xl text-[var(--admin-primary)]"><i className={c.icon} /></span>
+            <span className="min-w-0"><span className="block text-[13px] font-bold text-[var(--admin-text-muted)]">{c.label}</span><span className="block text-2xl font-extrabold tracking-tight text-[var(--admin-text-strong)]">{c.value}</span><span className="block text-xs text-[var(--admin-text-soft)]">{c.sub}</span></span>
+          </Link>
+        ))}
+      </div>
       <section className="admin-card">
         <div className="admin-card__head"><div><h2>상품 · 원가표</h2><p className="admin-card__desc">시트 하나가 상품 하나입니다. 이름을 누르면 날짜별 요금표를 편집할 수 있습니다.</p></div><Link href="/products" className="admin-btn admin-btn--light admin-btn--xs">전체 보기</Link></div>
         <div className="admin-card__body admin-card__body--flush overflow-x-auto">

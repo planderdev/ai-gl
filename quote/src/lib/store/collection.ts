@@ -4,7 +4,7 @@ import { resolveDataDir } from "./data-dir";
 import { BlobCollection, blobReadJson, blobWriteJson } from "./blob-collection";
 
 /** Vercel Blob 토큰이 있으면 Blob, 아니면 로컬 JSON 파일 */
-export const useBlob = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+export const isBlobEnabled = () => !!process.env.BLOB_READ_WRITE_TOKEN;
 
 /** 파일 기반 컬렉션(id 키). 인터페이스를 유지한 채 Supabase 구현으로 교체 가능. */
 export interface Collection<T extends { id: string }> {
@@ -51,18 +51,18 @@ class FileCollection<T extends { id: string }> implements Collection<T> {
 const g = globalThis as unknown as { __aiglCollections?: Map<string, Collection<{ id: string }>> };
 export function collection<T extends { id: string }>(name: string): Collection<T> {
   g.__aiglCollections ??= new Map();
-  if (!g.__aiglCollections.has(name)) g.__aiglCollections.set(name, useBlob() ? new BlobCollection<T>(name) : new FileCollection<T>(path.join(resolveDataDir(), `${name}.json`)));
+  if (!g.__aiglCollections.has(name)) g.__aiglCollections.set(name, isBlobEnabled() ? new BlobCollection<T>(name) : new FileCollection<T>(path.join(resolveDataDir(), `${name}.json`)));
   return g.__aiglCollections.get(name) as unknown as Collection<T>;
 }
 
 /** 단일 문서(설정 등) */
 export async function readDoc<T>(name: string, fallback: T): Promise<T> {
-  if (useBlob()) { try { return { ...fallback, ...((await blobReadJson<T>(name)) ?? {}) }; } catch { return fallback; } }
+  if (isBlobEnabled()) { try { return { ...fallback, ...((await blobReadJson<T>(name)) ?? {}) }; } catch { return fallback; } }
   try { return { ...fallback, ...(JSON.parse(await fs.readFile(path.join(resolveDataDir(), `${name}.json`), "utf8")) as T) }; }
   catch { return fallback; }
 }
 export async function writeDoc<T>(name: string, doc: T): Promise<T> {
-  if (useBlob()) { await blobWriteJson(name, doc); return doc; }
+  if (isBlobEnabled()) { await blobWriteJson(name, doc); return doc; }
   const file = path.join(resolveDataDir(), `${name}.json`);
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, JSON.stringify(doc, null, 2), "utf8");
