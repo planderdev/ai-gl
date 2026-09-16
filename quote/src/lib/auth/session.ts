@@ -30,6 +30,10 @@ export async function verifySessionToken(token: string | undefined | null): Prom
   } catch { return null; }
 }
 export const passwordRequired = () => !!process.env.APP_PASSWORD;
+/** 허용 계정 목록(LOGIN_ALLOWED_IDS, 콤마 구분). 비어 있으면 아무 이름이나 허용 */
+export const allowedIds = () => (process.env.LOGIN_ALLOWED_IDS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+export const isAllowedId = (id: string) => { const list = allowedIds(); return !list.length || list.includes(id.trim().toLowerCase()); };
+export const displayName = (id: string) => (id.includes("@") ? id.split("@")[0] : id);
 
 /** 서버 컴포넌트에서 현재 사용자 */
 export async function currentUser(): Promise<Session | null> {

@@ -19,7 +19,7 @@ export default function LoginForm({ next, passwordRequired }: { next: string; pa
   }
   return (
     <form onSubmit={submit} className="admin-login-form">
-      <div className="admin-field"><label className="admin-label" htmlFor="adminId">아이디(이름)</label><input id="adminId" value={name} onChange={(e) => setName(e.target.value)} className="admin-input admin-input--lg" placeholder="이름을 입력하세요" autoFocus required /></div>
+      <div className="admin-field"><label className="admin-label" htmlFor="adminId">아이디(이메일)</label><input id="adminId" type="text" autoComplete="username" value={name} onChange={(e) => setName(e.target.value)} className="admin-input admin-input--lg" placeholder="planderdev@gmail.com" autoFocus required /></div>
       {passwordRequired && <div className="admin-field"><label className="admin-label" htmlFor="adminPassword">비밀번호</label><input id="adminPassword" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="admin-input admin-input--lg" placeholder="비밀번호를 입력하세요" required /></div>}
       <label className="admin-login-form__check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /><span>로그인 상태 유지 (30일)</span></label>
       {err && <p className="text-sm text-[var(--admin-danger)]">{err}</p>}
