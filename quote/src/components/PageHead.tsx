@@ -5,7 +5,7 @@ export default function PageHead({ crumb, title, desc, actions, stats }: { crumb
   return (
     <section className="admin-page-head">
       <div className="min-w-0 flex-1">
-        {crumb && <div className="admin-breadcrumb"><span>견적 시스템</span><i className="ri-arrow-right-s-line" /><span className="admin-breadcrumb__current">{crumb}</span></div>}
+        {crumb && <div className="admin-breadcrumb"><span>AIGL 대시보드</span><i className="ri-arrow-right-s-line" /><span className="admin-breadcrumb__current">{crumb}</span></div>}
         <h1 className="admin-page-head__title">{title}</h1>
         {desc && <p className="admin-page-head__desc">{desc}</p>}
         {stats && stats.length > 0 && (

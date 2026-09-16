@@ -26,7 +26,7 @@ export default async function Dashboard() {
     <>
       <PageHead
         crumb="대시보드"
-        title="견적·원가표 대시보드"
+        title="AIGL 대시보드"
         desc="숙박·골프·차량·항공 원가와 마진을 날짜별로 계산해 원가표 엑셀을 만듭니다. 항공 운임은 에어서울 크롤러가 채웁니다."
         stats={[
           { label: "상품(원가표)", value: list.length },
