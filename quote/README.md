@@ -86,7 +86,7 @@ npm run crawl -- --once | --loop 300         # 요청 큐 처리(편명으로 �
 ## 배포 (Vercel)
 - 프로젝트: `planderdevs-projects/ai-gl` → https://ai-gl.vercel.app
 - 저장소: Vercel Blob(비공개 스토어 `ai-gl-data`) — `BLOB_READ_WRITE_TOKEN` 이 있으면 `src/lib/store/blob-collection.ts` 가 `.data` 대신 사용. 최초 데이터는 `npm run seed:blob`(로컬 `.data` 업로드, `--force` 로 덮어쓰기).
-- 접근 보호: `APP_PASSWORD`(Basic 인증, 아이디는 아무거나) — `src/proxy.ts`. 크롤러는 `CRAWLER_API_KEY` 헤더로 통과.
+- 접근 보호: `/login` 에서 이름을 입력하면 서명 쿠키 세션(30일)이 발급된다(`src/lib/auth/session.ts`, `src/proxy.ts`). `APP_PASSWORD` 를 설정하면 비밀번호도 요구. 서명 키는 `AUTH_SECRET`. 크롤러는 `CRAWLER_API_KEY` 헤더로 통과.
 - 크롤러는 배포 서버에서 실행되지 않는다(Chrome 없음). 로컬에서 `npm run crawl -- --all --server https://ai-gl.vercel.app --api-key <CRAWLER_API_KEY>`.
 - 재배포: `vercel deploy --prod --yes`. 환경변수 확인: `vercel env ls`.
 
