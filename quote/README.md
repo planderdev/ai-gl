@@ -102,7 +102,7 @@ rowspan 셀을 펼치고, 표 앞 텍스트의 "■나리타 송영 / ＜하네�
 ## SGL 마스터 데이터 시드 (`scripts/seed-sgl-masters.ts`)
 ```bash
 npm run seed:sgl -- "~/Downloads/0309 벳부 카메노이호텔 ... .xlsx"   # 파일 생략 시 마스터만
-npm run seed:blob -- --force                                        # 운영(Blob)에 반영
+npm run seed:blob -- --force                                        # 운영(Blob)에 반영 (fares·vehicle-fares 등 크롤링 산출물은 기본 제외, --only/--include-crawled)
 ```
 지역별 호텔(다카마쓰 3 · 벳부 2 · 마쓰야마 3 · 후지 1), 골프장(벳부GC 쯔루미/유후 계약요금, 마쓰야마 9곳(요금 미확보), 후지 6곳 2026.7~10 요금, 세부),
 차량 규칙(벳부 3박/4박, 시즈오카 렌터카)을 넣고, 0309 벳부 원가표가 있으면 타이베이(TI750/751) 벳부 상품 2개와 운임을 가져온다.
