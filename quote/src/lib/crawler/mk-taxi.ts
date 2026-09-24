@@ -6,23 +6,27 @@
  */
 import type { VehicleFare } from "@/types";
 
-export const MK_CITIES: { slug: string; label: string }[] = [
-  { slug: "tokyo", label: "도쿄" }, { slug: "kyoto", label: "교토" }, { slug: "osaka", label: "오사카" }, { slug: "sapporo", label: "삿포로" },
+export const MK_CITIES: { slug: string; label: string; path?: string }[] = [
+  { slug: "tokyo", label: "도쿄" }, { slug: "kyoto", label: "교토" }, { slug: "osaka", label: "오사카" }, { slug: "sapporo", label: "삿포로", path: "sapporo_hire.php" },
   { slug: "kobe", label: "고베" }, { slug: "shiga", label: "시가" }, { slug: "nagoya", label: "나고야" }, { slug: "fukuoka", label: "후쿠오카" }, { slug: "okinawa", label: "오키나와" },
 ];
-export const mkUrl = (slug: string) => `https://www.mk-group.co.jp/kr/shuttle/${slug}`;
+/** 도시별 실제 경로(사이트 내비 기준 `{city}.php`, 삿포로만 `sapporo_hire.php`) */
+export const mkUrl = (slug: string) => `https://www.mk-group.co.jp/kr/shuttle/${MK_CITIES.find((c) => c.slug === slug)?.path ?? `${slug}.php`}`;
 
-const strip = (html: string) => html.replace(/<br\s*\/?>/gi, " / ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+const strip = (html: string) => html.replace(/<br\s*\/?>/gi, " / ").replace(/<\/?t[dh]\b[^>]*>/gi, " ").replace(/\/th>|\/td>/g, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").replace(/\s*\/\s*$/, "").trim();
 const priceOf = (s: string): number | null => { const m = s.replace(/[,，]/g, "").match(/(\d{3,})/); return m ? Number(m[1]) : null; };
+/** 차종(클래스) 셀 판정 — 차 이름·정원 표기 */
+const VEHICLE_RE = /HV\b|Hybrid|Alphard|ALPHARD|Vellfire|Hi-?Ace|HiAce|Grandcabin|Benz|Mercedes|MAYBACH|Maybach|BMW|LEXUS|Lexus|Toyota|Nissan|Camry|NOAH|Voxy|Serena|Sienta|Crown|CENTURY|Century|센츄리|MIRAI|Gran ?Ace|Rolls|Standard|표준형|미니밴|타입|승차정원|하이에스|알파드|세레나/i;
+const isVehicle = (t: string) => VEHICLE_RE.test(t);
 
 interface ParsedTable { header: string[]; rows: string[][] }
-/** rowspan 을 펼쳐 2차원 문자열 배열로 */
+/** 셀 닫는 태그가 빠진 행도 읽고, rowspan 을 펼쳐 2차원 문자열 배열로 */
 function parseTable(html: string): ParsedTable | null {
   const trs = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => m[1]);
   const grid: string[][] = [];
   const carry: Record<number, { text: string; left: number }> = {};
   for (const tr of trs) {
-    const cells = [...tr.matchAll(/<(t[dh])\b([^>]*)>([\s\S]*?)<\/\1>/gi)].map((m) => ({ attrs: m[2], text: strip(m[3]) }));
+    const cells = [...tr.matchAll(/<(t[dh])\b([^>]*)>([\s\S]*?)(?=<t[dh]\b|$)/gi)].map((m) => ({ attrs: m[2], text: strip(m[3]) }));
     const row: string[] = [];
     let ci = 0, k = 0;
     while (k < cells.length || carry[ci]) {
@@ -34,7 +38,7 @@ function parseTable(html: string): ParsedTable | null {
       if (rs > 1) carry[ci] = { text: c.text, left: rs - 1 };
       ci++;
     }
-    grid.push(row);
+    if (row.some((x) => x)) grid.push(row);
   }
   if (grid.length < 2) return null;
   return { header: grid[0], rows: grid.slice(1) };
@@ -49,8 +53,13 @@ function expired(validity: string, today: string): boolean {
   return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` < today;
 }
 
+/**
+ * 표 배치 두 가지를 모두 처리한다.
+ *  - 가로형(도쿄·후쿠오카·오키나와): 헤더 = [라벨…, 차종…], 행 = 노선/지역 → 차종별 요금
+ *  - 세로형(교토·오사카·나고야·고베·시가·삿포로 1번 표): 헤더 = [편도 기준, 목적지…], 행 = 차종 → 목적지별 요금
+ */
 export function parseMkPage(rawHtml: string, city: { slug: string; label: string }, capturedAt = new Date().toISOString()): MkParseResult {
-  const html = rawHtml.replace(/<!--[\s\S]*?-->/g, ""); // 주석 처리된 옛 헤더/제목 제거
+  const html = rawHtml.replace(/<!--[\s\S]*?-->/g, "");
   const today = capturedAt.slice(0, 10);
   const fares: VehicleFare[] = [];
   const sections: string[] = [];
@@ -59,28 +68,38 @@ export function parseMkPage(rawHtml: string, city: { slug: string; label: string
   const tableRe = /<table[\s\S]*?<\/table>/gi;
   let m: RegExpExecArray | null;
   while ((m = tableRe.exec(html))) {
-    const before = strip(html.slice(lastEnd, m.index));
+    const before = strip(html.slice(lastEnd, m.index).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ""));
     lastEnd = m.index + m[0].length;
-    const sec = [...before.matchAll(/■\s*([^■＜＞※]{2,30}?)(?=\s{2,}|\s*＜|\s*高速|\s*고속|$)/g)].map((x) => x[1].trim()).pop();
-    const sub = [...before.matchAll(/＜([^＞]{2,40})＞/g)].map((x) => x[1].trim());
-    if (sec) section = sec;
-    for (const s of sub) { if (/\d{4}년|～|~/.test(s)) validity = s; else section = s; }
+    // 문서 순서대로 마커를 읽어 마지막 것이 이긴다: ■섹션, ＜섹션/기간＞, 【도시·구역】
+    for (const x of before.matchAll(/■\s*([^■＜＞※【】/]{2,30}?)(?=\s{2,}|\s*[＜【]|\s*高速|\s*고속|\s*\/|$)|[＜【]([^＞】]{2,40})[＞】]/g)) {
+      const v = (x[1] ?? x[2]).trim();
+      if (x[1] && /드라이버|서비스비|시간당/.test(v)) continue;
+      if (/\d{4}년|～|~/.test(v)) validity = v; else section = v;
+    }
     const t = parseTable(m[0]);
     if (!t || t.header.length < 2) continue;
-    if (validity && expired(validity, today)) continue; // 지난 요금표는 건너뜀
-    const label = `${section}${validity ? ` (${validity})` : ""}`;
+    if (validity && expired(validity, today)) continue;
+    const transposed = !t.header.slice(1).some(isVehicle) && t.rows.filter((r) => r[0]).some((r) => isVehicle(r[0]));
+    const secLabel = section || `${city.label} 공항 송영`;
+    const label = `${secLabel}${validity ? ` (${validity})` : ""}`;
     if (!sections.includes(label)) sections.push(label);
-    for (const row of t.rows) {
-      const route = row[0]; if (!route) continue;
-      const isExtra = /초과|30분/.test(route);
-      for (let i = 1; i < t.header.length; i++) {
-        const price = priceOf(row[i] ?? ""); if (price == null) continue;
-        const vehicleClass = t.header[i];
-        fares.push({
-          id: `mk-${city.slug}|${section}|${validity}|${route}|${vehicleClass}`.replace(/\s+/g, " "),
-          provider: `mk-${city.slug}`, providerLabel: `MK택시 ${city.label}`, area: city.label, section, validity: validity || undefined, route, vehicleClass, priceJpy: price,
-          unit: isExtra ? "30분당" : "1대", notes: "고속도로 통행료 별도 · 22:00~05:00 심야 25% 할증", sourceUrl: mkUrl(city.slug), capturedAt,
-        });
+    const push = (route: string, vehicleClass: string, raw: string, detail?: string) => {
+      const price = priceOf(raw); if (price == null || !route || !vehicleClass) return;
+      const isExtra = /초과|30분|1시간당/.test(route) || /초과|30분/.test(vehicleClass);
+      fares.push({
+        id: `mk-${city.slug}|${secLabel}|${validity}|${route}|${vehicleClass}`.replace(/\s+/g, " "),
+        provider: `mk-${city.slug}`, providerLabel: `MK택시 ${city.label}`, area: city.label, section: secLabel, validity: validity || undefined, route, vehicleClass, priceJpy: price,
+        unit: isExtra ? "30분당" : "1대", notes: [detail, /～|~/.test(raw) ? "표시 요금부터(～)" : "", "고속도로 통행료 별도"].filter(Boolean).join(" · "), sourceUrl: mkUrl(city.slug), capturedAt,
+      });
+    };
+    if (transposed) {
+      for (const row of t.rows) for (let j = 1; j < t.header.length; j++) push(t.header[j], row[0], row[j] ?? "");
+    } else {
+      let labelCols = 1;
+      while (labelCols < t.header.length - 1 && !isVehicle(t.header[labelCols])) labelCols++;
+      for (const row of t.rows) {
+        const route = row[0]; const detail = labelCols > 1 ? row.slice(1, labelCols).filter(Boolean).join(" · ") : undefined;
+        for (let j = labelCols; j < t.header.length; j++) push(route, t.header[j], row[j] ?? "", detail);
       }
     }
   }
