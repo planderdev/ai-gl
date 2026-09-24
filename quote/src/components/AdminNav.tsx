@@ -18,7 +18,7 @@ const MENU: Group[] = [
   { key: "content", label: "콘텐츠관리", icon: "ri-file-list-3-line", children: [{ label: "공지사항", href: "/cms/notices" }, { label: "FAQ", href: "/cms/faqs" }, { label: "배너관리", href: "/cms/banners" }] },
   { key: "quote", label: "견적 시스템", icon: "ri-file-excel-2-line", children: [
     { label: "상품(원가표) 목록", href: "/products" }, { label: "새 상품 만들기", href: "/products/new" }, { label: "원가표 엑셀 가져오기", href: "/products/new#import" }, { label: "전체 원가표 다운로드", href: "/api/export", external: true },
-    { label: "항공 운임·크롤러", href: "/fares" }, { label: "호텔·골프장·차량 단가", href: "/masters" },
+    { label: "항공 운임·크롤러", href: "/fares" }, { label: "차량 요금표(MK택시)", href: "/vehicles" }, { label: "호텔·골프장·차량 단가", href: "/masters" },
   ] },
   { key: "setting", label: "설정", icon: "ri-settings-3-line", children: [{ label: "기본 설정", href: "/cms/settings/general" }, { label: "결제 설정", href: "/cms/settings/payment" }, { label: "취소/환불 설정", href: "/cms/settings/cancellation" }, { label: "API 설정", href: "/cms/settings/api" }] },
 ];

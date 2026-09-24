@@ -77,6 +77,11 @@ npm run crawl -- --once | --loop 300         # 요청 큐 처리(편명으로 �
 화면: 항공 운임 → 크롤러 카드에서 공급자·기간을 골라 `POST /api/crawl/{airseoul|jejuair|all}` `{mode:"all"|"requests", days}`. 배포 서버에서는 501(로컬에서 CLI 실행).
 새 항공사를 추가하려면 `src/lib/crawler/<airline>.ts` 에 수집 함수를 만들고 `providers.ts` 에 등록한다.
 
+## 차량 요금표 크롤러 — MK택시 공항 송영 (`src/lib/crawler/mk-taxi.ts`, `/vehicles`)
+`https://www.mk-group.co.jp/kr/shuttle/{도시}` 의 정액 요금표(1대 기준 엔)를 fetch + HTML 표 파싱으로 수집한다(정적 페이지라 배포 서버에서도 실행 가능).
+rowspan 셀을 펼치고, 표 앞 텍스트의 "■나리타 송영 / ＜하네다 픽업＞ / ＜2026년 5월 21일～＞"를 섹션·적용기간으로 삼으며, 종료일이 지난 표는 건너뛴다.
+화면 `/vehicles` 에서 도시를 골라 "지금 수집"(`POST /api/crawl/vehicles/{mk-tokyo|…|all}`), 조회는 `GET /api/vehicle-fares?provider=mk-tokyo`. 저장은 `vehicle-fares` 컬렉션(공급자 단위 교체).
+
 ## 관리자 메뉴(CMS) — 캐디스 PHP 관리자 이관 (`src/lib/cms/`, `/cms/*`)
 안이슬 팀장의 PHP 관리자(`admin/`)가 관리하던 메뉴를 같은 구조로 옮겼다: 상품관리(전체 상품/골프장·패키지 등록/호텔/국가·지역·테마·배지), 이벤트관리, 예약관리(목록·캘린더·등록), 고객관리, 콘텐츠관리(공지·FAQ·배너), 설정(기본·결제·취소환불·API).
 - 스키마 `src/lib/cms/schema.ts`: 컬렉션마다 목록 컬럼·검색 필드·상태·폼 섹션/필드를 정의(PHP form.php 의 라벨·옵션 기준). 새 컬렉션은 여기에 추가하면 목록/등록/수정 화면과 API(`/api/cms/<collection>`)가 자동으로 생긴다.

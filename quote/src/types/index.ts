@@ -173,3 +173,20 @@ export interface QuoteContext {
   holidays: Set<string>;
   fares: Map<string, FlightFare>; // `${flightNo}_${date}`
 }
+
+/** 차량(택시·셔틀) 요금표 — 크롤링 원본 단위(1대 기준 엔) */
+export interface VehicleFare {
+  id: string; // `${provider}|${section}|${route}|${vehicleClass}`
+  provider: string; // mk-tokyo …
+  providerLabel: string; // MK택시 도쿄
+  area: string; // 도쿄
+  section: string; // 나리타 송영 / 하네다 샌딩 / 하네다 픽업
+  validity?: string; // 2026년 5월 21일～
+  route: string; // 도쿄도 23구⇒나리타 공항 / 大田(오오타)・品川(시나가와)
+  vehicleClass: string; // Rolls-Royce / Mercedes-Maybach GLS 600
+  priceJpy: number;
+  unit: string; // 1대 / 30분당
+  notes?: string;
+  sourceUrl: string;
+  capturedAt: string;
+}
