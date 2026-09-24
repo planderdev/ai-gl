@@ -61,7 +61,7 @@ scripts              CLI(import/export)
 ```
 
 ## 항공 운임 크롤러 (`crawler/fares.ts`, `src/lib/crawler/`)
-공급자 레지스트리(`providers.ts`)에 항공사별 수집 방식을 두고, 편명 접두(RS/7C)로 자동 선택한다. 둘 다 홈페이지의 **최저가 달력 API** 를 실제 Chrome 창(headed, 새 컨텍스트)에서 호출한다 — 헤드리스·쿠키 재사용은 봇 차단에 걸린다. 과거 날짜는 저장하지 않는다.
+공급자 레지스트리(`providers.ts`)에 항공사별 수집 방식을 두고, 편명 접두(RS/7C)로 자동 선택한다. **조회 기준 인원(pax)** 은 기본 4명이며(두 항공사 달력 API 의 paxCnt / passengers.count), 화면·CLI(`--pax`)·크롤링 요청(`pax`)에서 바꿀 수 있다. 운임에는 `meta.pax` 로 기준 인원이 남는다. 둘 다 홈페이지의 **최저가 달력 API** 를 실제 Chrome 창(headed, 새 컨텍스트)에서 호출한다 — 헤드리스·쿠키 재사용은 봇 차단에 걸린다. 과거 날짜는 저장하지 않는다.
 
 | 공급자 | 노선/편명 | API | 특징 |
 |---|---|---|---|
@@ -69,7 +69,8 @@ scripts              CLI(import/export)
 | 제주항공 `jejuair` | ICN–MYJ 7C1704 / MYJ–ICN 7C1703 | `POST sec.jejuair.net/ko/ibe/booking/searchlowestFareCalendarInPeriod.json` (JSON, `Channel-Code: WPC`) | 최대 90일/호출이라 구간 분할. 총액 = fareAmount + taxesAndFeesAmount |
 
 ```bash
-npm run crawl -- --all                       # 두 공급자 전체, 오늘~180일
+npm run crawl -- --all                       # 두 공급자 전체, 오늘~180일, 4인 기준
+npm run crawl -- --all --pax 6               # 6인 기준
 npm run crawl:jejuair -- --all --days 240    # 제주항공만
 npm run crawl -- --once | --loop 300         # 요청 큐 처리(편명으로 공급자 선택)
 # --server URL --api-key KEY --dry-run --route ICN-FUK:RS...:RS...

@@ -74,6 +74,7 @@ export interface FareRequest {
   flights: { flightNo: string; origin: string; destination: string }[];
   from: string;
   to: string;
+  pax?: number; // 조회 기준 인원(기본 4)
   status: FareRequestStatus;
   productId?: string;
   note?: string;

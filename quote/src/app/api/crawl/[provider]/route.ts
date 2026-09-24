@@ -8,15 +8,16 @@ export const maxDuration = 300;
 
 /**
  * POST /api/crawl/{airseoul|jejuair|all}  — 서버(로컬 PC)에서 Chrome 을 띄워 운임 수집.
- * body: { mode: "all" | "requests", from?, to?, days?(기본 180), headed?(기본 true) }
+ * body: { mode: "all" | "requests", from?, to?, days?(기본 180), pax?(기준 인원, 기본 4), headed?(기본 true) }
  *  - all: 공급자 노선 전체를 오늘 이후 days 일까지 저장
  *  - requests: 대기(pending) 요청을 모두 처리(편명으로 공급자 자동 선택)
  */
 export const POST = handle(async (req: Request, ctx: RouteContext<"/api/crawl/[provider]">) => {
   if (process.env.VERCEL) return fail("배포 서버에는 Chrome 이 없어 크롤러를 실행할 수 없습니다. 로컬 PC 에서 `npm run crawl -- --all --server <배포주소> --api-key <키>` 로 실행하세요.", 501);
   const id = decodeId((await ctx.params).provider);
-  const body = (await req.json().catch(() => ({}))) as { mode?: string; from?: string; to?: string; days?: number; headed?: boolean };
-  const opts = { headed: body.headed !== false, log: (m: string) => logs.push(`${new Date().toISOString().slice(11, 19)} ${m}`) };
+  const body = (await req.json().catch(() => ({}))) as { mode?: string; from?: string; to?: string; days?: number; headed?: boolean; pax?: number };
+  const pax = Math.min(9, Math.max(1, Number(body.pax) || 4));
+  const opts = { headed: body.headed !== false, pax, log: (m: string) => logs.push(`${new Date().toISOString().slice(11, 19)} ${m}`) };
   const logs: string[] = [];
   try {
     if (body.mode === "requests") {
@@ -30,7 +31,7 @@ export const POST = handle(async (req: Request, ctx: RouteContext<"/api/crawl/[p
           const matched = resolveRoutes(flightNos);
           if (!matched.length) throw new Error(`처리할 수 없는 편명: ${flightNos.join(",")}`);
           let fares: Awaited<ReturnType<typeof matched[0]["provider"]["crawl"]>> = [];
-          for (const { provider, route } of matched) fares = fares.concat((await provider.crawl(route, r.from, r.to, opts)).filter((f) => flightNos.includes(f.flightNo)));
+          for (const { provider, route } of matched) fares = fares.concat((await provider.crawl(route, r.from, r.to, { ...opts, pax: r.pax ?? pax })).filter((f) => flightNos.includes(f.flightNo)));
           const rows = await upsertFares(fares);
           saved += rows.length;
           await updateFareRequest(r.id, { status: "done", completedAt: new Date().toISOString(), resultCount: rows.length });

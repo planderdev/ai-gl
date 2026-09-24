@@ -18,9 +18,11 @@ export default async function FaresPage({ searchParams }: PageProps<"/fares">) {
   const byDate = new Map<string, Record<string, (typeof items)[number]>>();
   for (const f of items) { if (!byDate.has(f.date)) byDate.set(f.date, {}); byDate.get(f.date)![f.flightNo] = f; }
   const base = process.env.SITE_URL ?? "http://localhost:3000";
+  const paxOf = (f: { meta?: Record<string, unknown> }) => (typeof f.meta?.pax === "number" ? `${f.meta.pax}인` : f.meta?.provider ? "1인" : "");
+  const paxSet = [...new Set(items.filter((f) => f.source === "crawler").map((f) => `${f.flightNo} ${paxOf(f)}`).filter(Boolean))].sort();
   return (
     <>
-    <PageHead crumb="항공 운임" title="항공 운임 (인디비)" desc="편명·날짜별 1인 총액(세금 포함) 운임입니다. 에어서울 크롤러가 채우고, 필요하면 수동 입력으로 덮어씁니다." stats={[{ label: "조회 결과", value: items.length }, { label: "대기 요청", value: reqs.filter((r) => r.status === "pending").length }]} />
+    <PageHead crumb="항공 운임" title="항공 운임 (인디비)" desc={`편명·날짜별 1인 총액(세금 포함) 운임입니다. 크롤러는 지정한 인원(기본 4명)이 함께 탈 수 있는 좌석의 최저가를 가져오므로, 인원이 많을수록 값이 높아질 수 있습니다.${paxSet.length ? ` 현재 조회 기준: ${paxSet.join(", ")}` : ""}`} stats={[{ label: "조회 결과", value: items.length }, { label: "대기 요청", value: reqs.filter((r) => r.status === "pending").length }]} />
     <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
       <div className="space-y-4">
         <div className="card space-y-3">
@@ -41,7 +43,7 @@ export default async function FaresPage({ searchParams }: PageProps<"/fares">) {
                 <tr key={d} className="hover:bg-neutral-50">
                   <td className="td text-center">{d}</td><td className="td text-center">{weekdayLabel(d)}</td>
                   {flights.map((f) => { const x = m[f]; return <td key={f} className={`td ${x?.status === "ok" ? "" : "text-neutral-400"}`}>{x ? (x.status === "ok" ? krw(x.fareKrw) : STATUS[x.status]) : "·"}</td>; })}
-                  <td className="td text-center text-[11px] text-neutral-400">{Object.values(m).map((x) => `${x.source}`).filter((v, i, a) => a.indexOf(v) === i).join(",")}</td>
+                  <td className="td text-center text-[11px] text-neutral-400">{Object.values(m).map((x) => `${x.source}${paxOf(x) ? `(${paxOf(x)})` : ""}`).filter((v, i, a) => a.indexOf(v) === i).join(",")}</td>
                 </tr>
               ))}
               {!items.length && <tr><td colSpan={flights.length + 3} className="py-6 text-center text-neutral-500">운임이 없습니다.</td></tr>}

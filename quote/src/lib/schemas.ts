@@ -22,6 +22,7 @@ export const fareRequestSchema = z.object({
   flights: z.array(z.object({ flightNo: z.string(), origin: z.string(), destination: z.string() })).min(1),
   from: date,
   to: date,
+  pax: z.number().int().min(1).max(9).optional(),
   productId: z.string().optional(),
   note: z.string().optional(),
 });

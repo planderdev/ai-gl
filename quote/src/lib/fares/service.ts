@@ -37,7 +37,7 @@ export async function listFares(q: { flightNo?: string; from?: string; to?: stri
     .sort((a, b) => a.date.localeCompare(b.date) || a.flightNo.localeCompare(b.flightNo));
 }
 
-export async function createFareRequest(input: Pick<FareRequest, "flights" | "from" | "to"> & Partial<Pick<FareRequest, "productId" | "note">>) {
+export async function createFareRequest(input: Pick<FareRequest, "flights" | "from" | "to"> & Partial<Pick<FareRequest, "productId" | "note" | "pax">>) {
   const req: FareRequest = { id: newId("freq"), status: "pending", createdAt: nowIso(), ...input };
   return fareRequests().upsert(req);
 }

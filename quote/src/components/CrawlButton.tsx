@@ -10,11 +10,12 @@ export default function CrawlButton({ pendingCount }: { pendingCount: number }) 
   const [busy, setBusy] = useState(false);
   const [provider, setProvider] = useState("all");
   const [days, setDays] = useState(180);
+  const [pax, setPax] = useState(4);
   const [logs, setLogs] = useState<string[] | null>(null);
   async function run(mode: "all" | "requests") {
     setBusy(true); setLogs(["Chrome 을 열어 항공사 달력을 조회하는 중… (노선당 수십 초)"]);
     try {
-      const res = await fetch(`/api/crawl/${mode === "requests" ? "all" : provider}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, days }) });
+      const res = await fetch(`/api/crawl/${mode === "requests" ? "all" : provider}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, days, pax }) });
       const j = await res.json();
       setLogs([...(j.logs ?? []), res.ok ? `완료: ${j.saved ?? 0}건 저장${j.processed != null ? `, 요청 ${j.processed}건 처리` : ""}` : `실패: ${j.error}`]);
       router.refresh();
@@ -25,10 +26,12 @@ export default function CrawlButton({ pendingCount }: { pendingCount: number }) 
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <select value={provider} onChange={(e) => setProvider(e.target.value)}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
+        <label className="text-xs text-[var(--admin-text-muted)]">기준 인원 <select value={pax} onChange={(e) => setPax(Number(e.target.value))}>{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{n}명</option>)}</select></label>
         <label className="text-xs text-[var(--admin-text-muted)]">기간 <input type="number" min={30} max={365} value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-20" /> 일</label>
         <button className="admin-btn admin-btn--primary" disabled={busy} onClick={() => run("all")}><i className="ri-refresh-line" /> 지금 수집</button>
         <button className="admin-btn admin-btn--light" disabled={busy || !pendingCount} onClick={() => run("requests")}>대기 요청 {pendingCount}건 처리</button>
       </div>
+      <p className="text-[11px] text-[var(--admin-text-soft)]">기준 인원은 제주항공 달력에 반영됩니다(좌석 부족 날짜는 “마감”). 에어서울 달력은 인원과 무관하게 1인 최저가를 돌려주므로 4인 좌석 확인은 예약 화면에서 별도로 필요합니다.</p>
       {logs && <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-[var(--admin-surface-muted)] p-2 text-[11px] text-[var(--admin-text-muted)]">{logs.join("\n")}</pre>}
     </div>
   );

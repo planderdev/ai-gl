@@ -7,14 +7,16 @@ import { addDays } from "@/lib/pricing/date";
 export const POST = handle(async (req: Request, ctx: RouteContext<"/api/products/[id]/fare-request">) => {
   const q = await quoteProduct(decodeId((await ctx.params).id));
   if (!q) return fail("not_found", 404);
-  const all = new URL(req.url).searchParams.get("all") === "1";
+  const sp = new URL(req.url).searchParams;
+  const all = sp.get("all") === "1";
+  const pax = Math.min(9, Math.max(1, Number(sp.get("pax")) || 4));
   const { product: p, missing } = q;
   if (!all && !missing.length) return json({ created: false, reason: "미수집 운임 없음" });
   const dates = all ? [p.dateFrom, addDays(p.dateTo, p.nights)] : [missing.map((m) => m.date).sort()[0], missing.map((m) => m.date).sort().at(-1)!];
   const reqDoc = await createFareRequest({
     flights: [p.outbound, p.inbound].map(({ flightNo, origin, destination }) => ({ flightNo, origin, destination })),
-    from: dates[0], to: dates[1], productId: p.id,
-    note: all ? `${p.name} 전체 재수집` : `${p.name} 미수집 ${missing.length}건`,
+    from: dates[0], to: dates[1], pax, productId: p.id,
+    note: `${all ? `${p.name} 전체 재수집` : `${p.name} 미수집 ${missing.length}건`} · ${pax}인 기준`,
   });
   return json({ created: true, request: reqDoc, missing: missing.length }, { status: 201 });
 });

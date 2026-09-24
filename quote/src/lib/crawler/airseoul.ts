@@ -8,7 +8,7 @@
  */
 import type { FareInput } from "@/lib/fares/service";
 
-export interface MinFareEntry { departureDate: string; outboundAmount: number; returnAmount: number; outboundTax: number; returnTax: number; currency: string }
+export interface MinFareEntry { departureDate: string; outboundAmount: number; returnAmount: number; outboundTax: number; returnTax: number; currency: string; paxCnt?: number }
 export interface RouteConfig { departure: string; arrival: string; outboundFlightNo: string; returnFlightNo: string }
 export const DEFAULT_ROUTES: RouteConfig[] = [{ departure: "ICN", arrival: "TAK", outboundFlightNo: "RS741", returnFlightNo: "RS742" }];
 
@@ -16,7 +16,9 @@ export const BASE = "https://flyairseoul.com";
 const yyyymmdd = (d: string) => d.replace(/-/g, "");
 const iso = (d: string) => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
 
-export interface FetchOptions { headed?: boolean; timeoutMs?: number; log?: (m: string) => void }
+export const DEFAULT_PAX = 4;
+/** pax = 조회 기준 인원(성인). 항공사 달력은 해당 인원이 함께 탈 수 있는 좌석의 최저가를 돌려준다(기본 4인) */
+export interface FetchOptions { headed?: boolean; timeoutMs?: number; log?: (m: string) => void; pax?: number }
 
 /** 한국 시간 기준 오늘(YYYY-MM-DD) */
 export const todayKst = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
@@ -48,7 +50,9 @@ export async function fetchMinFareCalendar(route: RouteConfig, opts: FetchOption
       await page.waitForTimeout(1000);
     }
     log(`page title: ${await page.title()}`);
-    const body = `language=KO&departure=${route.departure}&arrival=${route.arrival}&paxCnt=1`;
+    const pax = Math.min(9, Math.max(1, Math.round(opts.pax ?? DEFAULT_PAX)));
+    const body = `language=KO&departure=${route.departure}&arrival=${route.arrival}&paxCnt=${pax}`;
+    log(`기준 인원 ${pax}명 (에어서울 달력 API 는 인원과 무관하게 1인 최저가를 돌려줌 — 2026-09-24 확인)`);
     const res = await page.evaluate(async (body) => {
       const r = await fetch("/I/KO/searchRouteMinFare.do", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "X-Requested-With": "XMLHttpRequest" }, body });
       const text = await r.text();
@@ -59,7 +63,7 @@ export async function fetchMinFareCalendar(route: RouteConfig, opts: FetchOption
     }
     const list = (res.json.minFare as MinFareEntry[]).filter((x) => /^\d{8}$/.test(x.departureDate));
     log(`minFare ${list.length}일 (${list[0]?.departureDate} ~ ${list.at(-1)?.departureDate})`);
-    return list;
+    return list.map((x) => ({ ...x, paxCnt: pax }));
   } finally {
     await browser.close();
   }
@@ -81,7 +85,7 @@ export function calendarToFares(cal: MinFareEntry[], route: RouteConfig, opt: { 
       fareKrw: amount > 0 ? amount : null,
       status: amount > 0 ? "ok" : "no_flight",
       source: "crawler",
-      meta: { provider: "airseoul-minfare", tax, currency: e.currency, note: amount > 0 ? undefined : "달력 금액 0 (운항없음 또는 판매종료)" },
+      meta: { provider: "airseoul-minfare", pax: 1, paxRequested: e.paxCnt || undefined, tax, currency: e.currency, note: amount > 0 ? "달력 API 인원 미반영(1인 최저가 기준)" : "달력 금액 0 (운항없음 또는 판매종료)" },
     });
     if (!want || want.has(route.outboundFlightNo)) out.push(mk(route.outboundFlightNo, route.departure, route.arrival, e.outboundAmount, e.outboundTax));
     if (!want || want.has(route.returnFlightNo)) out.push(mk(route.returnFlightNo, route.arrival, route.departure, e.returnAmount, e.returnTax));

@@ -5,7 +5,7 @@
  *   npx tsx crawler/fares.ts --all --provider jejuair --days 180
  *   npx tsx crawler/fares.ts --once                            # 대기 요청 1건 처리(편명으로 공급자 자동 선택)
  *   npx tsx crawler/fares.ts --loop 300                        # 300초마다 요청 큐 폴링
- *   옵션: --server URL  --api-key KEY  --dry-run  --headless(차단됨, 실험용)  --route ICN-TAK:RS741:RS742 (추가 노선)
+ *   옵션: --pax 4(기준 인원)  --server URL  --api-key KEY  --dry-run  --headless(차단됨, 실험용)  --route ICN-TAK:RS741:RS742 (추가 노선)
  *   환경변수: AIGL_SERVER, CRAWLER_API_KEY
  */
 import { PROVIDERS, providerById, resolveRoutes } from "../src/lib/crawler/providers";
@@ -21,6 +21,7 @@ const server = (opt("--server", process.env.AIGL_SERVER) ?? "http://localhost:30
 const apiKey = opt("--api-key", process.env.CRAWLER_API_KEY);
 const headed = !flag("--headless");
 const dryRun = flag("--dry-run");
+const pax = Math.min(9, Math.max(1, Number(opt("--pax", "4")) || 4));
 const extraRoutes: RouteConfig[] = args.flatMap((a, i) => (a === "--route" ? [args[i + 1]] : [])).map((s) => { const [pair, out, ret] = s.split(":"); const [departure, arrival] = pair.split("-"); return { departure, arrival, outboundFlightNo: out, returnFlightNo: ret }; });
 const log = (m: string) => console.log(`[${new Date().toISOString().slice(11, 19)}] ${m}`);
 
@@ -49,7 +50,7 @@ async function runAll() {
   const to = opt("--to") ?? addDays(todayKst(), Number(opt("--days", "180")));
   for (const p of PROVIDERS.filter((p) => ids.includes("all") || ids.includes(p.id))) {
     for (const route of [...p.routes, ...extraRoutes.filter((r) => r.outboundFlightNo.startsWith(p.airline))]) {
-      const fares = await p.crawl(route, from, to, { headed, log });
+      const fares = await p.crawl(route, from, to, { headed, log, pax });
       log(`${p.label} ${route.departure}-${route.arrival}: ${summary(fares)}`);
       await upload(fares);
     }
@@ -65,7 +66,7 @@ async function runOnce(): Promise<boolean> {
     const matched = resolveRoutes(flightNos, extraRoutes);
     if (!matched.length) throw new Error(`처리할 수 없는 편명: ${flightNos.join(",")} (--route 로 노선 추가)`);
     let all: FareInput[] = [];
-    for (const { provider, route } of matched) all = all.concat((await provider.crawl(route, request.from, request.to, { headed, log })).filter((f) => flightNos.includes(f.flightNo)));
+    for (const { provider, route } of matched) all = all.concat((await provider.crawl(route, request.from, request.to, { headed, log, pax: request.pax ?? pax })).filter((f) => flightNos.includes(f.flightNo)));
     if (!all.length) throw new Error("달력 범위 밖이거나 결과 없음");
     await upload(all, request.id);
   } catch (e) {
@@ -77,7 +78,7 @@ async function runOnce(): Promise<boolean> {
 }
 
 async function main() {
-  log(`server=${server} providers=${PROVIDERS.map((p) => `${p.id}(${p.routes.map((r) => `${r.departure}-${r.arrival}`).join("/")})`).join(", ")} ${headed ? "headed" : "headless"}${dryRun ? " dry-run" : ""}`);
+  log(`pax=${pax} server=${server} providers=${PROVIDERS.map((p) => `${p.id}(${p.routes.map((r) => `${r.departure}-${r.arrival}`).join("/")})`).join(", ")} ${headed ? "headed" : "headless"}${dryRun ? " dry-run" : ""}`);
   if (flag("--all")) return runAll();
   if (flag("--loop")) { const sec = Number(opt("--loop", "300")) || 300; for (;;) { try { while (await runOnce()) { /* 큐 비울 때까지 */ } } catch (e) { log(`오류: ${(e as Error).message}`); } await new Promise((r) => setTimeout(r, sec * 1000)); } }
   if (opt("--provider") && !providerById(opt("--provider")!)) throw new Error(`알 수 없는 공급자: ${opt("--provider")} (${PROVIDERS.map((p) => p.id).join("|")})`);

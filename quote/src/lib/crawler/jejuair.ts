@@ -9,10 +9,10 @@
  */
 import type { FareInput } from "@/lib/fares/service";
 import type { FetchOptions, RouteConfig } from "./airseoul";
-import { todayKst } from "./airseoul";
+import { DEFAULT_PAX, todayKst } from "./airseoul";
 import { addDays } from "@/lib/pricing/date";
 
-export interface JejuLowFare { cvtDepartureDate: string; noFlights: boolean; isHoliday?: boolean; lowestFareAmount?: { fareAmount: number; taxesAndFeesAmount: number } | null }
+export interface JejuLowFare { cvtDepartureDate: string; noFlights: boolean; isHoliday?: boolean; lowestFareAmount?: { fareAmount: number; taxesAndFeesAmount: number } | null; pax?: number }
 export const JEJUAIR_ROUTES: RouteConfig[] = [{ departure: "ICN", arrival: "MYJ", outboundFlightNo: "7C1704", returnFlightNo: "7C1703" }];
 const MAIN = "https://www.jejuair.net/ko/main/base/index.do";
 const API = "https://sec.jejuair.net/ko/ibe/booking/searchlowestFareCalendarInPeriod.json";
@@ -33,18 +33,20 @@ export async function fetchJejuLowFares(origin: string, destination: string, fro
     const title = await page.title();
     log(`page title: ${title}`);
     if (/error/i.test(title)) throw new Error("제주항공 접속 차단(에러 페이지) — Chrome 창 모드로 다시 시도하세요");
+    const pax = Math.min(9, Math.max(1, Math.round(opts.pax ?? DEFAULT_PAX)));
+    log(`기준 인원 ${pax}명`);
     const out: JejuLowFare[] = [];
     for (let s = from; s <= to; s = addDays(s, WINDOW_DAYS + 1)) {
       const e = addDays(s, WINDOW_DAYS) < to ? addDays(s, WINDOW_DAYS) : to;
-      const res = await page.evaluate(async ({ api, o, d, s, e }) => {
-        const r = await fetch(api, { method: "POST", headers: { "Content-Type": "application/json", "Channel-Code": "WPC" }, body: JSON.stringify({ tripRoute: [{ searchStartDate: s, searchEndDate: e, originAirport: o, destinationAirport: d }], passengers: [{ type: "ADT", count: "1" }] }) });
+      const res = await page.evaluate(async ({ api, o, d, s, e, pax }) => {
+        const r = await fetch(api, { method: "POST", headers: { "Content-Type": "application/json", "Channel-Code": "WPC" }, body: JSON.stringify({ tripRoute: [{ searchStartDate: s, searchEndDate: e, originAirport: o, destinationAirport: d }], passengers: [{ type: "ADT", count: String(pax) }] }) });
         const text = await r.text();
         try { return { status: r.status, json: JSON.parse(text) }; } catch { return { status: r.status, json: null, text: text.slice(0, 200) }; }
-      }, { api: API, o: origin, d: destination, s, e });
+      }, { api: API, o: origin, d: destination, s, e, pax });
       const list: JejuLowFare[] = res.json?.data?.lowfares?.lowFareDateMarkets ?? [];
       if (res.json?.code !== "0000") throw new Error(`제주항공 응답 오류 (HTTP ${res.status}): ${JSON.stringify(res.json ?? res.text).slice(0, 200)}`);
       log(`${origin}→${destination} ${s}~${e}: ${list.length}일`);
-      out.push(...list);
+      out.push(...list.map((x) => ({ ...x, pax })));
       await page.waitForTimeout(400);
     }
     return out;
@@ -64,10 +66,12 @@ export function jejuToFares(list: JejuLowFare[], flightNo: string, origin: strin
     if (!/^\d{8}$/.test(d) || d < from || d > to || seen.has(d)) continue;
     seen.add(d);
     const amount = !x.noFlights && x.lowestFareAmount ? Math.round((x.lowestFareAmount.fareAmount ?? 0) + (x.lowestFareAmount.taxesAndFeesAmount ?? 0)) : 0;
+    // noFlights = 운항 없음. 운항은 있는데 금액 0 이면 해당 인원이 함께 탈 좌석이 없는 것(마감)
+    const status = amount > 0 ? "ok" : x.noFlights ? "no_flight" : "sold_out";
     out.push({
       flightNo, origin, destination, date: `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`,
-      fareKrw: amount > 0 ? amount : null, status: amount > 0 ? "ok" : "no_flight", source: "crawler",
-      meta: { provider: "jejuair-lowfare", fare: x.lowestFareAmount?.fareAmount, tax: x.lowestFareAmount?.taxesAndFeesAmount, isHoliday: x.isHoliday, note: amount > 0 ? undefined : "최저가 달력 운항없음/판매없음" },
+      fareKrw: amount > 0 ? amount : null, status, source: "crawler",
+      meta: { provider: "jejuair-lowfare", pax: x.pax, fare: x.lowestFareAmount?.fareAmount, tax: x.lowestFareAmount?.taxesAndFeesAmount, isHoliday: x.isHoliday, note: status === "ok" ? undefined : status === "no_flight" ? "최저가 달력 운항없음" : `${x.pax ?? 1}인 동시 예약 가능 좌석 없음(마감)` },
     });
   }
   return out;
