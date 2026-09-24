@@ -1,7 +1,23 @@
-import type { GolfCourse, Hotel, MoneyOrLabel, Product, QuoteContext, QuoteRow, RowOverride, Weekday } from "@/types";
+import type { FlightFare, GolfCourse, Hotel, MoneyOrLabel, Product, QuoteContext, QuoteRow, RowOverride, Weekday } from "@/types";
 import { addDays, dayTypeOf, eachDate, inRange, monthKey, weekdayLabel, weekdayOf } from "./date";
 
 export const fareKey = (flightNo: string, date: string) => `${flightNo}_${date}`;
+export const routeKey = (origin: string, destination: string, date: string) => `${origin}_${destination}_${date}`;
+const airlineOf = (flightNo: string) => flightNo.replace(/\d+$/, "").toUpperCase();
+/** 설정 편명의 운임이 없으면 같은 항공사·노선·날짜의 운임(계절 편명 변경 등) 중 최저를 쓴다 */
+export function lookupFare(ctx: QuoteContext, leg: { flightNo: string; origin: string; destination: string }, date: string): FlightFare | undefined {
+  const exact = ctx.fares.get(fareKey(leg.flightNo, date));
+  if (exact) return exact;
+  const alts = (ctx.routeFares?.get(routeKey(leg.origin, leg.destination, date)) ?? []).filter((f) => airlineOf(f.flightNo) === airlineOf(leg.flightNo));
+  if (!alts.length) return undefined;
+  const ok = alts.filter((f) => f.status === "ok" && f.fareKrw != null).sort((a, b) => (a.fareKrw ?? 0) - (b.fareKrw ?? 0));
+  return ok[0] ?? alts[0];
+}
+export function buildRouteIndex(fares: Iterable<FlightFare>): Map<string, FlightFare[]> {
+  const m = new Map<string, FlightFare[]>();
+  for (const f of fares) { const k = routeKey(f.origin, f.destination, f.date); m.set(k, [...(m.get(k) ?? []), f]); }
+  return m;
+}
 
 /** 요일별 1박 단가(시즌 구간 우선) */
 export function hotelNightRate(hotel: Hotel, date: string): number {
@@ -64,8 +80,8 @@ export function computeRow(product: Product, ctx: QuoteContext, date: string): Q
   const airSurchargeKrw = ov.airSurchargeKrw ?? 0;
 
   // 항공(인디비): 크롤링 운임 → 없으면 미정
-  const outFare = ctx.fares.get(fareKey(product.outbound.flightNo, date));
-  const inFare = ctx.fares.get(fareKey(product.inbound.flightNo, returnDate));
+  const outFare = lookupFare(ctx, product.outbound, date);
+  const inFare = lookupFare(ctx, product.inbound, returnDate);
   const toLabel = (f: typeof outFare): MoneyOrLabel | null =>
     !f ? null : f.status === "no_flight" ? "운항없음" : f.status === "sold_out" ? "마감" : f.status === "unknown" || f.fareKrw == null ? "미정" : f.fareKrw;
   const outboundFare = ov.outboundFare ?? toLabel(outFare);
@@ -123,8 +139,8 @@ export function missingFares(product: Product, ctx: QuoteContext): { flightNo: s
     const ov = product.overrides[d] ?? {};
     if (ov.hidden) continue;
     const r = addDays(d, product.nights);
-    const o = ctx.fares.get(fareKey(product.outbound.flightNo, d));
-    const i = ctx.fares.get(fareKey(product.inbound.flightNo, r));
+    const o = lookupFare(ctx, product.outbound, d);
+    const i = lookupFare(ctx, product.inbound, r);
     if (ov.outboundFare == null && (!o || o.status === "unknown")) out.push({ ...pick(product.outbound), date: d });
     if (ov.inboundFare == null && (!i || i.status === "unknown")) out.push({ ...pick(product.inbound), date: r });
   }

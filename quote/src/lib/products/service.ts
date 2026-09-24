@@ -2,7 +2,7 @@ import type { Product, QuoteContext } from "@/types";
 import { collection, newId, nowIso } from "@/lib/store/collection";
 import { golfCourses, getSettings, hotels, vehicleRules } from "@/lib/masters/service";
 import { fareMap } from "@/lib/fares/service";
-import { computeQuote, missingFares } from "@/lib/pricing/engine";
+import { buildRouteIndex, computeQuote, missingFares } from "@/lib/pricing/engine";
 
 export const products = () => collection<Product>("products");
 
@@ -16,7 +16,7 @@ export async function buildContext(p: Product): Promise<QuoteContext> {
   ]);
   const byId = new Map(allCourses.map((c) => [c.id, c]));
   const courses = p.golfCourseIds.map((id) => byId.get(id)).filter((c): c is NonNullable<typeof c> => !!c);
-  return { hotel, courses, vehicle, holidays: new Set(settings.holidays), fares };
+  return { hotel, courses, vehicle, holidays: new Set(settings.holidays), fares, routeFares: buildRouteIndex(fares.values()) };
 }
 
 export async function quoteProduct(id: string) {

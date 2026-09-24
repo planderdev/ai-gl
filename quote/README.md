@@ -67,7 +67,7 @@ scripts              CLI(import/export)
 |---|---|---|---|
 | 에어서울 `airseoul` | ICN–TAK RS741 / TAK–ICN RS742 | `POST /I/KO/searchRouteMinFare.do` (form) | 약 2년치 한 번에. outbound/returnAmount, 금액 0 = 운항없음 |
 | 제주항공 `jejuair` | ICN–MYJ 7C1704 / MYJ–ICN 7C1703 | `POST sec.jejuair.net/ko/ibe/booking/searchlowestFareCalendarInPeriod.json` (JSON, `Channel-Code: WPC`) | 최대 90일/호출이라 구간 분할. 총액 = fareAmount + taxesAndFeesAmount |
-| 진에어 `jinair` | ICN–KKJ LJ349/LJ350, ICN–TAK LJ359/LJ360 | 예약 화면에서 편도·성인 N명 조회 1회 → `POST /booking/getAirAvailabilityJson`(X-CSRF-TOKEN) 날짜별 호출, `GET /booking/bestfares` 로 좌석부족/운항없음 구분 | Cloudflare 매니지드 챌린지 → 자동화 흔적 제거 옵션 필요. 편별 좌석 기준이라 **인원이 정확히 반영**되고 노선당 수 분 소요 |
+| 진에어 `jinair` | ICN–KKJ LJ349/LJ350, ICN–TAK LJ359/LJ360 | 예약 화면에서 편도·성인 N명 조회 1회 → `POST /booking/getAirAvailabilityJson`(X-CSRF-TOKEN) 날짜별 호출, `GET /booking/bestfares` 로 좌석부족/운항없음 구분 | Cloudflare 매니지드 챌린지 → 자동화 흔적 제거 옵션 필요. **요청 빈도 제한(1015/429)** 이 있어 호출 간격 4초(`JINAIR_PACE_MS`)로 날짜당 1회 호출 → 180일·왕복 노선 하나에 약 25분. 429 시 70초 대기 후 재시도, 계속되면 미정으로 남김. 편별 좌석 기준이라 **인원이 정확히 반영**됨 |
 
 ```bash
 npm run crawl -- --all                       # 두 공급자 전체, 오늘~180일, 4인 기준
@@ -78,6 +78,8 @@ npm run crawl -- --once | --loop 300         # 요청 큐 처리(편명으로 �
 ```
 화면: 항공 운임 → 크롤러 카드에서 공급자·기간을 골라 `POST /api/crawl/{airseoul|jejuair|all}` `{mode:"all"|"requests", days}`. 배포 서버에서는 501(로컬에서 CLI 실행).
 새 항공사를 추가하려면 `src/lib/crawler/<airline>.ts` 에 수집 함수를 만들고 `providers.ts` 에 등록한다.
+계절에 따라 편명이 바뀌는 노선(진에어 ICN–KKJ: 하계 LJ349/350, 동계 LJ385/386)은 운임을 실제 편명으로 저장하고, 견적 엔진이 설정 편명의 운임이 없으면 **같은 항공사·노선·날짜의 운임**으로 대체한다(`lookupFare`).
+잘못 수집된 운임은 `npx tsx scripts/purge-fares.ts --prefix LJ --source crawler` 로 지운다(BLOB 토큰이 있으면 운영 대상).
 
 ## 차량 요금표 크롤러 — MK택시 공항 송영 (`src/lib/crawler/mk-taxi.ts`, `/vehicles`)
 `https://www.mk-group.co.jp/kr/shuttle/{도시}` 의 정액 요금표(1대 기준 엔)를 fetch + HTML 표 파싱으로 수집한다(정적 페이지라 배포 서버에서도 실행 가능).

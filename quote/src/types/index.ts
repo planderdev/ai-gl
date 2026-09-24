@@ -173,6 +173,8 @@ export interface QuoteContext {
   vehicle: VehicleRule | null;
   holidays: Set<string>;
   fares: Map<string, FlightFare>; // `${flightNo}_${date}`
+  /** 편명이 계절 등으로 바뀐 경우 대체 조회용: `${origin}_${destination}_${date}` → 같은 노선 운임들 */
+  routeFares?: Map<string, FlightFare[]>;
 }
 
 /** 차량(택시·셔틀) 요금표 — 크롤링 원본 단위(1대 기준 엔) */

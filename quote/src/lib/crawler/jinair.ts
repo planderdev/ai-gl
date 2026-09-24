@@ -11,6 +11,9 @@ import type { FareInput } from "@/lib/fares/service";
 import { DEFAULT_PAX, type FetchOptions, type RouteConfig } from "./airseoul";
 import { addDays, eachDate } from "@/lib/pricing/date";
 
+/** Cloudflare 요청 빈도 제한(1015/429)이 있어 호출 간격을 넉넉히 둔다(기본 4초 ≈ 15회/분). 429 를 만나면 70초 쉬고 재시도. */
+export const JINAIR_PACE_MS = Number(process.env.JINAIR_PACE_MS || 4000);
+const RATE_LIMIT_WAIT_MS = 70_000;
 export const JINAIR_ROUTES: RouteConfig[] = [
   { departure: "ICN", arrival: "KKJ", outboundFlightNo: "LJ349", returnFlightNo: "LJ350" },
   { departure: "ICN", arrival: "TAK", outboundFlightNo: "LJ359", returnFlightNo: "LJ360" },
@@ -58,10 +61,12 @@ export async function crawlJinRoute(route: RouteConfig, from: string, to: string
     for (let i = 1; i < pax; i++) { await page.evaluate("(() => { const b=[...document.querySelectorAll('button')].find(e => e.offsetParent && /plus/.test(e.getAttribute('onclick')||'') && /adultInput/.test(e.getAttribute('onclick')||'')); if (b) b.click(); })()"); await page.waitForTimeout(200); }
     await page.evaluate("(() => { const b=[...document.querySelectorAll('button')].find(e => e.offsetParent && /^확인$/.test((e.textContent||'').trim())); if (b) b.click(); })()");
     await page.waitForTimeout(500);
+    const csrfBefore = await page.evaluate("(document.querySelector('meta[name=_csrf]') && document.querySelector('meta[name=_csrf]').getAttribute('content')) || null") as string | null;
     await page.locator("button.preSearchBtn:visible").first().click();
     await page.waitForURL(/getAvailabilityList/, { timeout: 90_000 });
     await page.waitForTimeout(3000);
-    log(`조회 세션 확보: ${page.url()}`);
+    if (/Access denied|rate limited/i.test(await page.title())) throw new Error("진에어 요청 빈도 제한(Cloudflare 1015)에 걸렸습니다. 5~10분 뒤 다시 시도하세요");
+    log(`조회 세션 확보: ${page.url()} (호출 간격 ${JINAIR_PACE_MS / 1000}초)`);
 
     // 2) bestfares(1인 캐시) 창 단위 수집 — 좌석부족/운항없음 구분용
     const best = new Map<string, Map<string, number>>(); // routeKey → date(YYYYMMDD) → 1인 총액
@@ -70,25 +75,50 @@ export async function crawlJinRoute(route: RouteConfig, from: string, to: string
       for (let base = addDays(from, 10); addDays(base, -10) <= to; base = addDays(base, 21)) {
         const txt = await page.evaluate(`fetch('/booking/bestfares?route=${key}&tripType=OW&journeyStart=KOR&currency=KRW&baseDate=${base.replace(/-/g, "")}').then(r => r.text())`) as string;
         try { for (const [k, v] of Object.entries(JSON.parse(txt) as Record<string, string>)) { const n = Number(String(v).replace(/[^\d]/g, "")); if (n) m.set(k, n); } } catch { /* ignore */ }
-        await page.waitForTimeout(150);
+        await page.waitForTimeout(JINAIR_PACE_MS);
       }
     };
-    const csrf = await page.evaluate("document.querySelector('meta[name=_csrf]') && document.querySelector('meta[name=_csrf]').getAttribute('content')") as string | null;
+    const readCsrf = () => page.evaluate("(document.querySelector('meta[name=_csrf]') && document.querySelector('meta[name=_csrf]').getAttribute('content')) || (document.querySelector('input[name=_csrf]') && document.querySelector('input[name=_csrf]').value) || null") as Promise<string | null>;
+    let csrf = await readCsrf();
+    if (!csrf) { log(`CSRF 토큰 없음 — 결과 페이지 제목: ${await page.title()} / ${page.url()}`); csrf = csrfBefore ?? ""; }
     if (!csrf) throw new Error("CSRF 토큰을 찾지 못했습니다");
-    const avail = (o: string, d: string, date: string) => page.evaluate(`fetch('/booking/getAirAvailabilityJson',{method:'POST',headers:{'Content-Type':'application/json; charset=UTF-8','X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':'${csrf}','Accept':'application/json, text/javascript, */*; q=0.01'},body:JSON.stringify({searchType:'',origin1:'${o}',destination1:'${d}',travelDate1:'${date}',origin2:'',destination2:'',travelDate2:'',origin3:'',destination3:'',travelDate3:'',origin4:'',destination4:'',travelDate4:'',pointOfPurchase:'KR',adultPaxCount:'${pax}',childPaxCount:'0',infantPaxCount:'0',tripType:'OW',cpnNo:'',promoCode:'',refVal:'JINAIR',refPop:'',refChannel:'',refLang:''})}).then(r => r.text())`) as Promise<string>;
+    const avail = (o: string, d: string, date: string) => page.evaluate(`(async () => { const tok = (document.querySelector('meta[name=_csrf]') || {}).getAttribute ? document.querySelector('meta[name=_csrf]').getAttribute('content') : '${csrf}'; const r = await fetch('/booking/getAirAvailabilityJson',{method:'POST',headers:{'Content-Type':'application/json; charset=UTF-8','X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':tok,'Accept':'application/json, text/javascript, */*; q=0.01'},body:JSON.stringify({searchType:'',origin1:'${o}',destination1:'${d}',travelDate1:'${date}',origin2:'',destination2:'',travelDate2:'',origin3:'',destination3:'',travelDate3:'',origin4:'',destination4:'',travelDate4:'',pointOfPurchase:'KR',adultPaxCount:'${pax}',childPaxCount:'0',infantPaxCount:'0',tripType:'OW',cpnNo:'',promoCode:'',refVal:'JINAIR',refPop:'',refChannel:'',refLang:''})}); return JSON.stringify({ status: r.status, text: await r.text() }); })()`).then((s) => JSON.parse(s as string) as { status: number; text: string });
 
     for (const [o, d, defaultFlight] of [[route.departure, route.arrival, route.outboundFlightNo], [route.arrival, route.departure, route.returnFlightNo]] as const) {
       await loadBest(o, d);
-      let ok = 0, closed = 0, none = 0, fail = 0;
+      let ok = 0, closed = 0, none = 0, fail = 0, rateLimited = 0;
       const flightsSeen = new Set<string>();
       for (const date of eachDate(from, to)) {
         const ymd = date.replace(/-/g, "");
         let j: AvailJson | null = null;
-        try { j = JSON.parse(await avail(o, d, ymd)) as AvailJson; } catch { fail++; await page.waitForTimeout(800); continue; }
+        let raw = { status: 0, text: "" };
+        let parsed = false;
+        for (let attempt = 0; attempt < 3 && !parsed; attempt++) {
+          try { raw = await avail(o, d, ymd); } catch { raw = { status: 0, text: "" }; }
+          if (raw.status === 429 || /rate limited|Error 1015/i.test(raw.text)) { rateLimited++; log(`${o}→${d} ${date} 요청 빈도 제한(429) — ${RATE_LIMIT_WAIT_MS / 1000}초 대기 후 재시도 ${attempt + 1}/3`); await page.waitForTimeout(RATE_LIMIT_WAIT_MS); continue; }
+          try { j = JSON.parse(raw.text) as AvailJson; parsed = true; } catch { break; }
+        }
+        if (!parsed || !j) {
+          fail++;
+          if (fail <= 3) log(`${o}→${d} ${date} 응답 파싱 실패 HTTP ${raw.status}: ${raw.text.replace(/\s+/g, " ").slice(0, 160)}`);
+          out.push({ flightNo: defaultFlight, origin: o, destination: d, date, fareKrw: null, status: "unknown", source: "crawler", meta: { provider: "jinair-availability", pax, note: `조회 실패 HTTP ${raw.status}` } });
+          if (rateLimited >= 3) { log(`${o}→${d}: 빈도 제한이 계속되어 ${date} 이후는 미정으로 남기고 중단`); break; }
+          await page.waitForTimeout(JINAIR_PACE_MS);
+          continue;
+        }
         const od = j.result?.originDestinationInfo?.[0];
         const trips = od?.tripInfo ?? [];
+        if (j.errorCode || j.errorMsg || !j.result) {
+          // 세션 만료·오류 응답: 마감으로 오인하지 않도록 미정으로 남기고 처음 몇 건만 로그
+          fail++;
+          if (fail <= 3) log(`${o}→${d} ${date} 오류 응답 HTTP ${raw.status}: ${j.errorCode ?? ""} ${j.errorMsg ?? ""} ${!j.result ? "(result 없음) " + raw.text.replace(/\s+/g, " ").slice(0, 200) : ""}`);
+          out.push({ flightNo: defaultFlight, origin: o, destination: d, date, fareKrw: null, status: "unknown", source: "crawler", meta: { provider: "jinair-availability", pax, note: `조회 오류: ${j.errorCode ?? ""} ${j.errorMsg ?? ""}`.trim() } });
+          await page.waitForTimeout(JINAIR_PACE_MS);
+          continue;
+        }
         if (!od || !trips.length) {
           const ref = best.get(o + d)?.get(ymd);
+          if (closed + none < 3) log(`${o}→${d} ${date} 편 없음 (bestFareInfo: ${(od?.bestFareInfo ?? []).map((b) => `${b.flightDate.slice(5)}:${b.bestFare}`).join(" ") || "-"}, 1인캐시: ${ref ?? "-"})`);
           out.push({ flightNo: defaultFlight, origin: o, destination: d, date, fareKrw: null, status: ref ? "sold_out" : "no_flight", source: "crawler", meta: { provider: "jinair-availability", pax, bestFare1pax: ref, note: ref ? `${pax}인 동시 예약 가능 좌석 없음(마감) · 1인 최저 ${ref.toLocaleString("ko-KR")}원` : "조회 결과 없음(운항없음)" } });
           ref ? closed++ : none++;
         } else {
@@ -106,9 +136,9 @@ export async function crawlJinRoute(route: RouteConfig, from: string, to: string
             total > 0 ? ok++ : closed++;
           }
         }
-        await page.waitForTimeout(250);
+        await page.waitForTimeout(JINAIR_PACE_MS);
       }
-      log(`${o}→${d}: 운임 ${ok} · 마감 ${closed} · 운항없음 ${none}${fail ? ` · 실패 ${fail}` : ""} · 편명 ${[...flightsSeen].join(",") || "-"}`);
+      log(`${o}→${d}: 운임 ${ok} · 마감 ${closed} · 운항없음 ${none}${fail ? ` · 미정(실패) ${fail}` : ""} · 편명 ${[...flightsSeen].join(",") || "-"}`);
     }
     return out;
   } finally {
