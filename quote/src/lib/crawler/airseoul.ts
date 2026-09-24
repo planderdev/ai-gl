@@ -18,7 +18,15 @@ const iso = (d: string) => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
 
 export const DEFAULT_PAX = 4;
 /** pax = 조회 기준 인원(성인). 항공사 달력은 해당 인원이 함께 탈 수 있는 좌석의 최저가를 돌려준다(기본 4인) */
-export interface FetchOptions { headed?: boolean; timeoutMs?: number; log?: (m: string) => void; pax?: number }
+export interface FetchOptions {
+  headed?: boolean; timeoutMs?: number; log?: (m: string) => void; pax?: number;
+  /** 호출 간격(ms) — 빈도 제한이 있는 공급자(진에어)용 */
+  paceMs?: number;
+  /** 이미 최신 값이 있어 건너뛸 `${origin}_${destination}_${date}` 목록 */
+  skip?: Set<string>;
+  /** 크롤러가 빈도 제한으로 중단했는지 호출자에게 알려주는 공유 상태 */
+  state?: { rateLimited?: boolean };
+}
 
 /** 한국 시간 기준 오늘(YYYY-MM-DD) */
 export const todayKst = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);

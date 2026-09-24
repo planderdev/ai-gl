@@ -5,7 +5,7 @@
  *   npx tsx crawler/fares.ts --all --provider jejuair --days 180
  *   npx tsx crawler/fares.ts --once                            # 대기 요청 1건 처리(편명으로 공급자 자동 선택)
  *   npx tsx crawler/fares.ts --loop 300                        # 300초마다 요청 큐 폴링
- *   옵션: --pax 4(기준 인원)  --server URL  --api-key KEY  --dry-run  --headless(차단됨, 실험용)  --route ICN-TAK:RS741:RS742 (추가 노선)
+ *   옵션: --pax 4(기준 인원)  --pace 6(초, 진에어 호출 간격)  --skip-fresh 20(시간, 진에어 증분)  --server URL  --api-key KEY  --dry-run  --headless(차단됨, 실험용)  --route ICN-TAK:RS741:RS742 (추가 노선)
  *   환경변수: AIGL_SERVER, CRAWLER_API_KEY
  */
 import { PROVIDERS, providerById, resolveRoutes } from "../src/lib/crawler/providers";
@@ -22,6 +22,8 @@ const apiKey = opt("--api-key", process.env.CRAWLER_API_KEY);
 const headed = !flag("--headless");
 const dryRun = flag("--dry-run");
 const pax = Math.min(9, Math.max(1, Number(opt("--pax", "4")) || 4));
+const paceMs = opt("--pace") ? Number(opt("--pace")) * 1000 : undefined;
+const skipFreshHours = Number(opt("--skip-fresh", "20")); // 증분 공급자(진에어): 이 시간 안에 받은 값이 있는 날짜는 건너뜀(0 = 끔)
 const extraRoutes: RouteConfig[] = args.flatMap((a, i) => (a === "--route" ? [args[i + 1]] : [])).map((s) => { const [pair, out, ret] = s.split(":"); const [departure, arrival] = pair.split("-"); return { departure, arrival, outboundFlightNo: out, returnFlightNo: ret }; });
 const log = (m: string) => console.log(`[${new Date().toISOString().slice(11, 19)}] ${m}`);
 
@@ -44,16 +46,42 @@ async function upload(fares: FareInput[], requestId?: string) {
 }
 const summary = (f: FareInput[]) => `${f.length}건 (운임 ${f.filter((x) => x.status === "ok").length}, 운항없음 ${f.filter((x) => x.status !== "ok").length})`;
 
+/** 서버에 이미 있는 최신 운임(항공사 접두, 운임/마감/운항없음) → 건너뛸 날짜 집합 */
+async function freshSet(airline: string, from: string, to: string): Promise<Set<string>> {
+  if (!skipFreshHours || dryRun) return new Set();
+  try {
+    const { items } = await api(`/api/fares?from=${from}&to=${to}`) as { items: { flightNo: string; origin: string; destination: string; date: string; status: string; source: string; capturedAt: string }[] };
+    const since = Date.now() - skipFreshHours * 3600_000;
+    return new Set(items.filter((f) => f.flightNo.startsWith(airline) && f.source === "crawler" && f.status !== "unknown" && Date.parse(f.capturedAt) >= since).map((f) => `${f.origin}_${f.destination}_${f.date}`));
+  } catch (e) { log(`최신 운임 조회 실패(${(e as Error).message}) — 전체 조회`); return new Set(); }
+}
+
 async function runAll() {
   const ids = opt("--provider", "all")!.split(",");
   const from = opt("--from") ?? todayKst();
   const to = opt("--to") ?? addDays(todayKst(), Number(opt("--days", "180")));
   for (const p of PROVIDERS.filter((p) => ids.includes("all") || ids.includes(p.id))) {
-    for (const route of [...p.routes, ...extraRoutes.filter((r) => r.outboundFlightNo.startsWith(p.airline))]) {
-      const fares = await p.crawl(route, from, to, { headed, log, pax });
-      log(`${p.label} ${route.departure}-${route.arrival}: ${summary(fares)}`);
-      await upload(fares);
+    const routes = [...p.routes, ...extraRoutes.filter((r) => r.outboundFlightNo.startsWith(p.airline))];
+    const state: { rateLimited?: boolean } = {};
+    const skip = p.incremental ? await freshSet(p.airline, from, to) : undefined;
+    if (skip?.size) log(`${p.label}: 최근 ${skipFreshHours}시간 안에 받은 ${skip.size}개 (노선·날짜)는 건너뜀`);
+    const opts = { headed, log, pax, paceMs, skip, state };
+    try {
+      if (p.crawlMany) {
+        const fares = await p.crawlMany(routes, from, to, opts);
+        log(`${p.label} ${routes.map((r) => `${r.departure}-${r.arrival}`).join(", ")}: ${summary(fares)}`);
+        if (fares.length) await upload(fares);
+      } else {
+        for (const route of routes) {
+          const fares = await p.crawl(route, from, to, opts);
+          log(`${p.label} ${route.departure}-${route.arrival}: ${summary(fares)}`);
+          await upload(fares);
+        }
+      }
+    } catch (e) {
+      if (/1015|빈도 제한/.test((e as Error).message)) state.rateLimited = true; else throw e;
     }
+    if (state.rateLimited) { log(`${p.label}: 요청 빈도 제한으로 중단 — 1시간 이상 뒤 같은 명령을 다시 실행하면 남은 날짜만 이어서 수집합니다`); process.exitCode = 3; }
   }
 }
 

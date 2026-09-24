@@ -48,10 +48,25 @@ export const POST = handle(async (req: Request, ctx: RouteContext<"/api/crawl/[p
     const from = body.from ?? todayKst();
     const to = body.to ?? addDays(todayKst(), body.days ?? 180);
     let saved = 0;
-    for (const p of providers) for (const route of p.routes) {
-      const fares = await p.crawl(route, from, to, opts);
-      saved += (await upsertFares(fares)).length;
-      opts.log(`${p.label} ${route.departure}-${route.arrival}: ${fares.length}건 저장`);
+    for (const p of providers) {
+      const state: { rateLimited?: boolean } = {};
+      try {
+        if (p.crawlMany) {
+          const fares = await p.crawlMany(p.routes, from, to, { ...opts, state });
+          if (fares.length) saved += (await upsertFares(fares)).length;
+          opts.log(`${p.label} ${p.routes.map((r) => `${r.departure}-${r.arrival}`).join(", ")}: ${fares.length}건 저장`);
+        } else {
+          for (const route of p.routes) {
+            const fares = await p.crawl(route, from, to, { ...opts, state });
+            saved += (await upsertFares(fares)).length;
+            opts.log(`${p.label} ${route.departure}-${route.arrival}: ${fares.length}건 저장`);
+          }
+        }
+      } catch (e) {
+        if (!/1015|빈도 제한/.test((e as Error).message)) throw e;
+        state.rateLimited = true;
+      }
+      if (state.rateLimited) opts.log(`${p.label}: 요청 빈도 제한으로 중단 — 1시간 이상 뒤 다시 실행하세요(받은 값은 저장됨)`);
     }
     return json({ ok: true, saved, logs });
   } catch (e) {

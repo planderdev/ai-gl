@@ -2,7 +2,7 @@
 import type { FareInput } from "@/lib/fares/service";
 import { calendarToFares, DEFAULT_ROUTES, fetchMinFareCalendar, type FetchOptions, type RouteConfig } from "./airseoul";
 import { crawlJejuRoute, JEJUAIR_ROUTES } from "./jejuair";
-import { crawlJinRoute, JINAIR_ROUTES } from "./jinair";
+import { crawlJinRoute, crawlJinRoutes, JINAIR_ROUTES } from "./jinair";
 
 export interface FareProvider {
   id: "airseoul" | "jejuair" | "jinair";
@@ -11,6 +11,10 @@ export interface FareProvider {
   routes: RouteConfig[];
   /** from~to(YYYY-MM-DD) 기간의 왕복 편 운임 수집 */
   crawl(route: RouteConfig, from: string, to: string, opts?: FetchOptions): Promise<FareInput[]>;
+  /** 여러 노선을 한 세션으로 수집(있으면 우선 사용) */
+  crawlMany?(routes: RouteConfig[], from: string, to: string, opts?: FetchOptions): Promise<FareInput[]>;
+  /** 빈도 제한이 있어 최신 값이 있는 날짜를 건너뛰는 편이 좋은 공급자 */
+  incremental?: boolean;
 }
 
 export const PROVIDERS: FareProvider[] = [
@@ -19,7 +23,7 @@ export const PROVIDERS: FareProvider[] = [
     async crawl(route, from, to, opts) { const cal = await fetchMinFareCalendar(route, opts); return calendarToFares(cal, route, { from, to }); },
   },
   { id: "jejuair", label: "제주항공", airline: "7C", routes: JEJUAIR_ROUTES, crawl: (route, from, to, opts) => crawlJejuRoute(route, from, to, opts) },
-  { id: "jinair", label: "진에어", airline: "LJ", routes: JINAIR_ROUTES, crawl: (route, from, to, opts) => crawlJinRoute(route, from, to, opts) },
+  { id: "jinair", label: "진에어", airline: "LJ", routes: JINAIR_ROUTES, incremental: true, crawl: (route, from, to, opts) => crawlJinRoute(route, from, to, opts), crawlMany: (routes, from, to, opts) => crawlJinRoutes(routes, from, to, opts) },
 ];
 
 export const providerById = (id: string) => PROVIDERS.find((p) => p.id === id);
