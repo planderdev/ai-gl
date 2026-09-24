@@ -76,7 +76,12 @@ export async function crawlJinRoutes(routes: RouteConfig[], from: string, to: st
     await page.locator("button.preSearchBtn:visible").first().click();
     await page.waitForURL(/getAvailabilityList/, { timeout: 90_000 });
     await page.waitForTimeout(3000);
-    if (/Access denied|rate limited/i.test(await page.title())) { state.rateLimited = true; throw new JinRateLimitError(); }
+    if (/Access denied|rate limited/i.test(await page.title())) {
+      state.rateLimited = true;
+      const info = await page.evaluate("(() => { const t = document.body.innerText; const code = (t.match(/Error\\s*(\\d{4})/) || [])[1] || ''; const ray = (t.match(/Ray ID:?\\s*([0-9a-f]+)/i) || [])[1] || ''; return code + (ray ? ' ray ' + ray : ''); })()").catch(() => "") as string;
+      log(`진에어 차단 페이지: ${await page.title()} ${info ? `(Cloudflare ${info})` : ""}`);
+      throw new JinRateLimitError();
+    }
     log(`조회 세션 확보: ${page.url()} (호출 간격 ${pace / 1000}초, 노선 ${routes.map((r) => `${r.departure}-${r.arrival}`).join(", ")})`);
 
     // 2) bestfares(1인 캐시) 창 단위 수집 — 좌석부족/운항없음 구분용
