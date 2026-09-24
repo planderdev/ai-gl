@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const PROVIDERS = [{ id: "all", label: "전체(에어서울+제주항공)" }, { id: "airseoul", label: "에어서울 (RS741/742 다카마쓰)" }, { id: "jejuair", label: "제주항공 (7C1704/1703 마쓰야마)" }];
+const PROVIDERS = [{ id: "all", label: "전체(에어서울+제주항공+진에어)" }, { id: "airseoul", label: "에어서울 (RS741/742 다카마쓰)" }, { id: "jejuair", label: "제주항공 (7C1704/1703 마쓰야마)" }, { id: "jinair", label: "진에어 (기타큐슈·다카마쓰, 편별 좌석 조회)" }];
 
 /** 로컬 PC 에서 Chrome 을 띄워 항공사 최저가 달력을 수집 (서버 API 가 Playwright 실행) */
 export default function CrawlButton({ pendingCount }: { pendingCount: number }) {
@@ -31,7 +31,7 @@ export default function CrawlButton({ pendingCount }: { pendingCount: number }) 
         <button className="admin-btn admin-btn--primary" disabled={busy} onClick={() => run("all")}><i className="ri-refresh-line" /> 지금 수집</button>
         <button className="admin-btn admin-btn--light" disabled={busy || !pendingCount} onClick={() => run("requests")}>대기 요청 {pendingCount}건 처리</button>
       </div>
-      <p className="text-[11px] text-[var(--admin-text-soft)]">기준 인원은 제주항공 달력에 반영됩니다(좌석 부족 날짜는 “마감”). 에어서울 달력은 인원과 무관하게 1인 최저가를 돌려주므로 4인 좌석 확인은 예약 화면에서 별도로 필요합니다.</p>
+      <p className="text-[11px] text-[var(--admin-text-soft)]">기준 인원은 제주항공 달력과 진에어 편별 조회에 반영됩니다(좌석 부족 날짜는 “마감”). 진에어는 날짜마다 조회하므로 노선당 몇 분 걸립니다. 에어서울 달력은 인원과 무관하게 1인 최저가를 돌려주므로 4인 좌석 확인은 예약 화면에서 별도로 필요합니다.</p>
       {logs && <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-[var(--admin-surface-muted)] p-2 text-[11px] text-[var(--admin-text-muted)]">{logs.join("\n")}</pre>}
     </div>
   );

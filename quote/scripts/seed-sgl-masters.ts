@@ -175,12 +175,38 @@ async function seedMatsuyamaProduct() {
   console.log(`마쓰야마 상품 생성: ${product.dateFrom}~${product.dateTo}`);
 }
 
+/** 진에어 노선 상품 2개: 기타큐슈(벳부골프클럽 3박 72홀), 다카마쓰(사카이데 3박 54홀) */
+async function seedJinairProducts() {
+  const settings = await getSettings();
+  const dateFrom = new Date(Date.now() + 9 * 3600_000 + 86400_000).toISOString().slice(0, 10);
+  const defs: Product[] = [
+    {
+      id: "prd-벳부-골프클럽-3박-72홀-진에어-기타큐슈", name: "벳부골프클럽 3박4일 72홀 (진에어 LJ349/350 기타큐슈)", region: "벳부", airline: "LJ",
+      outbound: { flightNo: "LJ349", origin: "ICN", destination: "KKJ", dep: "15:45", arr: "17:15" }, inbound: { flightNo: "LJ350", origin: "KKJ", destination: "ICN", dep: "18:15", arr: "19:55" },
+      nights: 3, golfPlan: [0, 18, 36, 18], hotelId: "hotel-벳부골프호텔", hotelLabel: "벳부골프호텔 3박\n(클럽 내 로지, 조식)",
+      golfCourseIds: ["golf-벳부gc-쯔루미코스", "golf-벳부gc-유후코스", "golf-벳부gc-쯔루미코스"], vehicleRuleId: "veh-벳부-3박",
+      exchangeRate: settings.exchangeRate, margins: settings.margins, dateFrom, dateTo: addDays(dateFrom, 179), groupFares: {}, groupTaxByMonth: {}, overrides: {},
+      legend: "**노란색날짜 : 스팟특가** · 기타큐슈공항↔벳부GC 약 1시간 · 2일차 18H, 3일차 36H, 4일차 18H", createdAt: now, updatedAt: now,
+    },
+    {
+      id: "prd-다카마쓰-사카이데-3박-54홀-진에어", name: "다카마쓰 사카이데 그랜드호텔 3박 54홀 (진에어 LJ359/360)", region: "다카마쓰", airline: "LJ",
+      outbound: { flightNo: "LJ359", origin: "ICN", destination: "TAK", dep: "14:30", arr: "16:15" }, inbound: { flightNo: "LJ360", origin: "TAK", destination: "ICN", dep: "17:05", arr: "18:55" },
+      nights: 3, golfPlan: [0, 18, 18, 18], hotelId: "hotel-사카이데그랜드호텔", hotelLabel: "사카이데그랜드호텔 3박\n우다츠 그랜드호텔 3박\n루트인 3박",
+      golfCourseIds: ["golf-pkg-다카마쓰-사카이데-그랜드호텔-3박-54홀"], vehicleRuleId: "veh-다카마쓰",
+      exchangeRate: settings.exchangeRate, margins: settings.margins, dateFrom, dateTo: addDays(dateFrom, 179), groupFares: {}, groupTaxByMonth: {}, overrides: {},
+      legend: "**노란색날짜 : 스팟특가** · 진에어 오후편(에어서울 RS741/742 상품과 비교용)", createdAt: now, updatedAt: now,
+    },
+  ];
+  for (const p of defs) { if (await products().get(p.id)) { console.log(`${p.name} 이미 존재 — 유지`); continue; } await products().upsert(p); console.log(`상품 생성: ${p.name}`); }
+}
+
 async function main() {
   await hotels().upsertMany(HOTELS);
   await golfCourses().upsertMany(COURSES);
   await vehicleRules().upsertMany(VEHICLES);
   console.log(`호텔 ${HOTELS.length}, 골프장 ${COURSES.length}, 차량규칙 ${VEHICLES.length} 저장`);
   await seedMatsuyamaProduct();
+  await seedJinairProducts();
   const file = process.argv[2];
   if (file) await importBeppu(file);
 }

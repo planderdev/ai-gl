@@ -67,6 +67,7 @@ scripts              CLI(import/export)
 |---|---|---|---|
 | 에어서울 `airseoul` | ICN–TAK RS741 / TAK–ICN RS742 | `POST /I/KO/searchRouteMinFare.do` (form) | 약 2년치 한 번에. outbound/returnAmount, 금액 0 = 운항없음 |
 | 제주항공 `jejuair` | ICN–MYJ 7C1704 / MYJ–ICN 7C1703 | `POST sec.jejuair.net/ko/ibe/booking/searchlowestFareCalendarInPeriod.json` (JSON, `Channel-Code: WPC`) | 최대 90일/호출이라 구간 분할. 총액 = fareAmount + taxesAndFeesAmount |
+| 진에어 `jinair` | ICN–KKJ LJ349/LJ350, ICN–TAK LJ359/LJ360 | 예약 화면에서 편도·성인 N명 조회 1회 → `POST /booking/getAirAvailabilityJson`(X-CSRF-TOKEN) 날짜별 호출, `GET /booking/bestfares` 로 좌석부족/운항없음 구분 | Cloudflare 매니지드 챌린지 → 자동화 흔적 제거 옵션 필요. 편별 좌석 기준이라 **인원이 정확히 반영**되고 노선당 수 분 소요 |
 
 ```bash
 npm run crawl -- --all                       # 두 공급자 전체, 오늘~180일, 4인 기준

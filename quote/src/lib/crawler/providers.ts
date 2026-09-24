@@ -2,9 +2,10 @@
 import type { FareInput } from "@/lib/fares/service";
 import { calendarToFares, DEFAULT_ROUTES, fetchMinFareCalendar, type FetchOptions, type RouteConfig } from "./airseoul";
 import { crawlJejuRoute, JEJUAIR_ROUTES } from "./jejuair";
+import { crawlJinRoute, JINAIR_ROUTES } from "./jinair";
 
 export interface FareProvider {
-  id: "airseoul" | "jejuair";
+  id: "airseoul" | "jejuair" | "jinair";
   label: string;
   airline: string; // 편명 접두
   routes: RouteConfig[];
@@ -18,6 +19,7 @@ export const PROVIDERS: FareProvider[] = [
     async crawl(route, from, to, opts) { const cal = await fetchMinFareCalendar(route, opts); return calendarToFares(cal, route, { from, to }); },
   },
   { id: "jejuair", label: "제주항공", airline: "7C", routes: JEJUAIR_ROUTES, crawl: (route, from, to, opts) => crawlJejuRoute(route, from, to, opts) },
+  { id: "jinair", label: "진에어", airline: "LJ", routes: JINAIR_ROUTES, crawl: (route, from, to, opts) => crawlJinRoute(route, from, to, opts) },
 ];
 
 export const providerById = (id: string) => PROVIDERS.find((p) => p.id === id);
