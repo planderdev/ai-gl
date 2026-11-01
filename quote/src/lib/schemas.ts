@@ -97,6 +97,7 @@ export const vipApplySchema = z.object({
   phone: z.string().transform(normalizePhone).refine(isValidPhone, "휴대폰 번호를 정확히 입력해 주세요"),
   instagram: z.string().transform(normalizeInstagram).refine(isValidInstagram, "인스타그램 아이디를 확인해 주세요").default(""),
   regions: z.array(z.enum(VIP_REGIONS)).max(VIP_REGIONS.length).default([]),
+  usedBefore: z.boolean().default(false),
   privacyConsent: z.literal(true, "개인정보 수집·이용에 동의해 주세요"),
   marketingConsent: z.boolean().default(false),
   website: z.string().max(300).default(""), // 허니팟: 사람에게는 보이지 않는 입력란

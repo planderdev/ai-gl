@@ -1,33 +1,18 @@
-import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import type { Metadata } from "next";
 import Image from "next/image";
-import { dDayLabel, dDayOf, formatKst, nextRevealAt, ordinalLabel, VIP_ANNUAL_FEE, VIP_SUPPORT_TEL } from "@/lib/sgl-vip/config";
+import Link from "next/link";
+import { dDayLabel, dDayOf, formatKst, nextRevealAt, ordinalLabel, VIP_ANNUAL_FEE } from "@/lib/sgl-vip/config";
 import { listRevealedBenefits } from "@/lib/sgl-vip/service";
 import type { VipBenefit } from "@/types";
-import ApplyForm from "./ApplyForm";
-import { Icon, SglLogo } from "./Brand";
-import { AdReel, HeroSwing } from "./Media";
-import StickyCta from "./StickyCta";
-import { DdayText, RevealCountdown } from "./Timers";
-import "./sgl-vip.css";
+import { Icon, SglLogo } from "../Brand";
+import { AdReel, HeroSwing } from "../Media";
+import StickyCta from "../StickyCta";
+import { DdayText, RevealCountdown } from "../Timers";
 
 /** 광고 유입을 CDN 캐시로 받되 일요일 19시 공개가 1분 안에 반영되도록 한다 */
 export const revalidate = 60;
 
-const TITLE = "SGL VIP 사전신청 | 12월 26일 오픈";
-const DESCRIPTION = "SGL 1주년, 감사의 마음을 담아 SGL VIP가 12월 26일 오픈합니다. 연회비 10만원, 매주 일요일 19시 VIP 혜택 공개. 지금 사전신청하세요.";
-export const metadata: Metadata = {
-  // 링크 미리보기(카카오톡·인스타 DM)는 절대 주소가 필요하다. 운영 도메인을 연결하면 Vercel 이 이 값을 바꿔 준다
-  metadataBase: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "ai-gl.vercel.app"}`),
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/sgl-vip" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/sgl-vip", siteName: "SGL", locale: "ko_KR", type: "website" },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
-};
-export const viewport: Viewport = { themeColor: "#06140d" };
-
-const display = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--vip-display", display: "swap" });
+export const metadata: Metadata = { title: "SGL VIP 혜택 | 매주 일요일 19시 공개", alternates: { canonical: "/sgl-vip/benefits" } };
 
 function BenefitCard({ benefit, index }: { benefit: VipBenefit; index: number }) {
   return (
@@ -58,16 +43,14 @@ async function loadLanding() {
   return { benefits: await listRevealedBenefits(now), reveal: nextRevealAt(now), dday: dDayLabel(dDayOf(now)) };
 }
 
-export default async function SglVipPage() {
+export default async function SglVipBenefitsPage() {
   const { benefits, reveal, dday } = await loadLanding();
 
   return (
-    <div className={`vip ${display.variable}`}>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" precedence="default" />
-
+    <>
       <section className="vip-hero">
         <header className="vip-top">
-          <SglLogo className="vip-top__logo" />
+          <Link href="/sgl-vip" aria-label="SGL VIP 입장 페이지로"><SglLogo className="vip-top__logo" /></Link>
           <span className="vip-top__dday"><DdayText initial={dday} /></span>
         </header>
         <div className="vip-hero__copy">
@@ -81,8 +64,8 @@ export default async function SglVipPage() {
             <li><span>연회비</span><strong>{VIP_ANNUAL_FEE}</strong></li>
             <li><span>혜택 공개</span><strong>매주 일요일 19시</strong></li>
           </ul>
-          <a id="vip-hero-cta" className="vip-btn" href="#apply">사전신청하기 <Icon name="arrow" /></a>
-          <p className="vip-hero__foot">사전신청은 무료이며, 결제는 진행되지 않습니다.</p>
+          <Link id="vip-hero-cta" className="vip-btn" href="/sgl-vip">입장 코드 입력하기 <Icon name="arrow" /></Link>
+          <p className="vip-hero__foot">사전예약은 무료이며, 결제는 진행되지 않습니다.</p>
         </div>
         <div className="vip-hero__media"><HeroSwing /></div>
       </section>
@@ -109,7 +92,7 @@ export default async function SglVipPage() {
                 <div className="vip-lock__copy">
                   <p className="vip-tag vip-tag--dark"><Icon name="lock" /> {ordinalLabel(benefits.length + 1)} 혜택</p>
                   <h3>다음 혜택은 <br className="vip-only-mobile" />{formatKst(reveal)} 공개</h3>
-                  <p>사전신청하시면 공개되는 혜택과 가입 방법을 담당자가 함께 안내해 드려요.</p>
+                  <p>사전예약하시면 공개되는 혜택과 가입 방법을 담당자가 함께 안내해 드려요.</p>
                 </div>
                 <RevealCountdown target={reveal} />
               </aside>
@@ -124,7 +107,7 @@ export default async function SglVipPage() {
             <p className="vip-eyebrow">오픈까지</p>
             <h2>SGL VIP는<br />이렇게 시작됩니다.</h2>
             <ol className="vip-steps">
-              <li><span>지금</span><h3>사전신청</h3><p>연락처를 남겨주시면 담당자가 상세 내용을 안내해 드립니다.</p></li>
+              <li><span>지금</span><h3>사전예약</h3><p>입장 코드를 입력하고 정보를 남겨주시면 담당자가 상세 내용을 안내해 드립니다.</p></li>
               <li><span>매주 일요일 19시</span><h3>VIP 혜택 공개</h3><p>이 페이지에서 혜택을 하나씩 공개합니다.</p></li>
               <li><span>12월 26일</span><h3>SGL VIP 오픈</h3><p>연회비 {VIP_ANNUAL_FEE}</p></li>
             </ol>
@@ -136,28 +119,16 @@ export default async function SglVipPage() {
         </div>
       </section>
 
-      <section className="vip-apply" id="apply">
+      <section className="vip-apply vip-endcta" id="vip-endcta">
         <Image className="vip-apply__bg" src="/sgl-vip/fairway.jpg" alt="" fill sizes="100vw" />
-        <div className="vip-wrap vip-apply__grid">
-          <div className="vip-apply__copy">
-            <p className="vip-eyebrow">사전신청</p>
-            <h2>SGL VIP,<br />먼저 안내받으세요.</h2>
-            <p>남겨주신 연락처로 담당자가 VIP 혜택과 가입 방법을 상세히 안내해 드립니다.</p>
-          </div>
-          <div className="vip-formcard"><ApplyForm /></div>
+        <div className="vip-wrap vip-reveal">
+          <h2>입장 코드를 받으셨나요?</h2>
+          <p>코드를 입력하면 사전예약 정보를 남기실 수 있어요.<br />코드가 없으시면 광고 댓글에 &ldquo;26&rdquo;을 남겨주세요.</p>
+          <Link className="vip-btn" href="/sgl-vip">입장 코드 입력하기 <Icon name="arrow" /></Link>
         </div>
       </section>
 
-      <footer className="vip-footer">
-        <div className="vip-wrap">
-          <SglLogo className="vip-footer__logo" />
-          <p><span>에이지엘 주식회사</span> · <span>대표 방윤식</span> · <span>사업자등록번호 659-86-02339</span> · <span>관광사업 등록번호 2020-제주광역-2331</span></p>
-          <p>제주특별자치도 제주시 전농로 119, 909호 · <span>고객센터 <a href={`tel:${VIP_SUPPORT_TEL}`}>{VIP_SUPPORT_TEL}</a> (09:00~18:00)</span></p>
-          <p>© SGL. All rights reserved.</p>
-        </div>
-      </footer>
-
       <StickyCta dday={dday} fee={VIP_ANNUAL_FEE} />
-    </div>
+    </>
   );
 }

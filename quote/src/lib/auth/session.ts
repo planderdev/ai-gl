@@ -4,12 +4,12 @@
  */
 export const SESSION_COOKIE = "aigl_session";
 const enc = new TextEncoder();
-const secret = () => process.env.AUTH_SECRET || process.env.CRAWLER_API_KEY || "aigl-dev-secret";
+export const authSecret = () => process.env.AUTH_SECRET || process.env.CRAWLER_API_KEY || "aigl-dev-secret";
 const b64url = (buf: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const fromB64url = (s: string) => { const b = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (s.length % 4)) % 4)); return Uint8Array.from(b, (c) => c.charCodeAt(0)); };
 
 async function hmac(data: string) {
-  const key = await crypto.subtle.importKey("raw", enc.encode(secret()), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey("raw", enc.encode(authSecret()), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return b64url(await crypto.subtle.sign("HMAC", key, enc.encode(data)));
 }
 export interface Session { name: string; iat: number; exp: number }

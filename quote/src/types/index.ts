@@ -194,13 +194,14 @@ export interface VehicleFare {
   capturedAt: string;
 }
 
-/** SGL VIP 사전신청(CMS 컬렉션 vip-applications). id 는 휴대폰 번호 해시 → 번호당 한 건 */
+/** SGL VIP 사전예약(CMS 컬렉션 vip-applications). id 는 휴대폰 번호 해시 → 번호당 한 건 */
 export interface VipApplication {
   id: string;
   name: string;
   phone: string; // 010-1234-5678
   instagram: string;
   regions: string[];
+  used_sgl_before: boolean; // SGL 을 1번 이상 이용해 봤다고 체크
   status: "new" | "contacted" | "joined" | "cancelled";
   marketing_consent: boolean;
   privacy_consent_at: string;

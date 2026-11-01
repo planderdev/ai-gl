@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
-import { dDayLabel, dDayOf } from "@/lib/sgl-vip/config";
+import { dDayLabel, dDayOf, VIP_OPEN_AT } from "@/lib/sgl-vip/config";
 
 let tick = 0;
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -23,6 +23,24 @@ export function DdayText({ initial }: { initial: string }) {
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
+const splitTime = (left: number | null): [string, string][] => [
+  ["일", left == null ? "--" : pad(Math.floor(left / 86400))],
+  ["시간", left == null ? "--" : pad(Math.floor((left % 86400) / 3600))],
+  ["분", left == null ? "--" : pad(Math.floor((left % 3600) / 60))],
+  ["초", left == null ? "--" : pad(left % 60)],
+];
+
+/** 입장 페이지의 12월 26일 카운트다운 */
+export function OpenCountdown() {
+  const now = useNow();
+  const left = now == null ? null : Math.floor((VIP_OPEN_AT - now) / 1000);
+  if (left != null && left <= 0) return <p className="vip-open__done">SGL VIP가 오픈했습니다</p>;
+  return (
+    <div className="vip-open" role="timer" aria-label="SGL VIP 오픈까지 남은 시간">
+      {splitTime(left).map(([label, v]) => <div key={label} className="vip-open__cell"><b>{v}</b><span>{label}</span></div>)}
+    </div>
+  );
+}
 
 /** 다음 혜택 공개까지 남은 시간. 0 이 되면 새 혜택이 반영될 때까지 페이지 데이터를 다시 받는다(캐시 최대 1분) */
 export function RevealCountdown({ target }: { target: number }) {
@@ -37,15 +55,9 @@ export function RevealCountdown({ target }: { target: number }) {
     return () => clearInterval(id);
   }, [expired, router]);
   if (expired) return <p className="vip-count__soon">새 혜택을 공개하고 있어요. 잠시만 기다려 주세요.</p>;
-  const cells: [string, number | null][] = [
-    ["일", left == null ? null : Math.floor(left / 86400)],
-    ["시간", left == null ? null : Math.floor((left % 86400) / 3600)],
-    ["분", left == null ? null : Math.floor((left % 3600) / 60)],
-    ["초", left == null ? null : left % 60],
-  ];
   return (
     <div className="vip-count" role="timer">
-      {cells.map(([label, v]) => <div key={label} className="vip-count__cell"><b>{v == null ? "--" : pad(v)}</b><span>{label}</span></div>)}
+      {splitTime(left).map(([label, v]) => <div key={label} className="vip-count__cell"><b>{v}</b><span>{label}</span></div>)}
     </div>
   );
 }

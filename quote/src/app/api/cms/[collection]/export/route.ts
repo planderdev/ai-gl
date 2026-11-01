@@ -5,7 +5,7 @@ import { listItems } from "@/lib/cms/service";
 
 function cell(c: CollectionDef, col: ColumnDef, v: unknown) {
   if (Array.isArray(v)) return v.join(", ");
-  if (col.type === "boolean") return v ? "동의" : "";
+  if (col.type === "boolean") return v ? "예" : "";
   if (col.type === "status") return c.statusOptions?.find(([k]) => k === String(v))?.[1] ?? String(v ?? "");
   return v == null ? "" : String(v);
 }

@@ -11,7 +11,7 @@ export async function submitVipApplication(input: VipApplyInput) {
   const at = nowLocal();
   const item: VipApplication = {
     id: createHash("sha256").update(`sgl-vip:${input.phone}`).digest("hex").slice(0, 24),
-    name: input.name, phone: formatPhone(input.phone), instagram: input.instagram, regions: input.regions, status: "new",
+    name: input.name, phone: formatPhone(input.phone), instagram: input.instagram, regions: input.regions, used_sgl_before: input.usedBefore, status: "new",
     marketing_consent: input.marketingConsent, privacy_consent_at: at, marketing_consent_at: input.marketingConsent ? at : "", consent_version: VIP_CONSENT_VERSION,
     utm_source: input.utm_source, utm_medium: input.utm_medium, utm_campaign: input.utm_campaign, utm_content: input.utm_content, referrer: input.referrer,
     created_at: at, updated_at: at,
