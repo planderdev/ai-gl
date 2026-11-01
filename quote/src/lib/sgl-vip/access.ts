@@ -9,7 +9,7 @@ import { getSiteSettings } from "@/lib/cms/service";
  */
 export const VIP_ACCESS_COOKIE = "sgl_vip_access";
 export const VIP_ACCESS_MAX_AGE = 90 * 86400; // 초
-const DEFAULT_CODE = "SGL1226"; // 관리자 "VIP 입장 코드" 가 비어 있을 때
+const DEFAULT_CODE = "1226"; // 관리자 "VIP 입장 코드" 가 비어 있을 때
 
 const sign = (exp: string) => createHmac("sha256", authSecret()).update(`sgl-vip-access:${exp}`).digest("base64url");
 const normalize = (v: string) => v.replace(/\s/g, "").toUpperCase();
