@@ -9,7 +9,7 @@ async function main() {
   const force = args.includes("--force");
   const root = path.resolve(process.cwd(), args.includes("--root") ? args[args.indexOf("--root") + 1] : "..");
   for (const c of COLLECTIONS) {
-    if (!c.source && !c.seedItems) continue; // 사전예약처럼 시드가 없는 컬렉션
+    if (!c.source && !c.seedItems) continue; // 사전신청처럼 시드가 없는 컬렉션
     const raw = c.source ? JSON.parse(readFileSync(path.join(root, c.source), "utf8")) : c.seedItems;
     const list: Record<string, unknown>[] = c.sourceGroup ? raw[c.sourceGroup] ?? [] : raw;
     const store = cmsStore(c);

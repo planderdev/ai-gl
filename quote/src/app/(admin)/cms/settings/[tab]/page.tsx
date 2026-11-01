@@ -13,7 +13,7 @@ export default async function SettingsPage({ params }: PageProps<"/cms/settings/
   const value = await getSiteSettings();
   return (
     <>
-      <PageHead crumb="설정" title={tab.label} desc={tab.desc ?? "사이트 운영 설정입니다. 캐디스 관리자(PHP)의 settings.json 과 같은 키를 사용합니다."} actions={SETTINGS_TABS.map((t) => <Link key={t.id} href={`/cms/settings/${t.id}`} className={`admin-btn ${t.id === tab.id ? "admin-btn--primary" : "admin-btn--light"}`}>{t.label}</Link>)} />
+      <PageHead crumb="설정" title={tab.label} desc="사이트 운영 설정입니다. 캐디스 관리자(PHP)의 settings.json 과 같은 키를 사용합니다." actions={SETTINGS_TABS.map((t) => <Link key={t.id} href={`/cms/settings/${t.id}`} className={`admin-btn ${t.id === tab.id ? "admin-btn--primary" : "admin-btn--light"}`}>{t.label}</Link>)} />
       <SettingsForm sections={tab.sections} value={value} key={tab.id} />
     </>
   );

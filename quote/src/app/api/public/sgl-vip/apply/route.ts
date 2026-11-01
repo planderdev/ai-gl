@@ -1,16 +1,23 @@
-import { cookies } from "next/headers";
 import { fail, json } from "@/lib/api";
 import { vipApplySchema } from "@/lib/schemas";
-import { hasVipAccess, VIP_ACCESS_COOKIE } from "@/lib/sgl-vip/access";
-import { createRateLimiter } from "@/lib/sgl-vip/rate-limit";
 import { submitVipApplication } from "@/lib/sgl-vip/service";
 
-const isLimited = createRateLimiter(30);
+const WINDOW_MS = 10 * 60_000;
+const MAX_HITS = 30; // 통신사 NAT 뒤의 고객이 같은 IP 를 공유하므로 넉넉하게 둔다
+const hits = new Map<string, { count: number; resetAt: number }>();
 
-/** 공개 API(로그인 불필요, proxy matcher 에서 제외)이지만 입장 코드를 통과한 쿠키가 있어야 한다. 내부 오류 내용은 응답에 싣지 않는다 */
+/** 인스턴스별 간이 제한. 대량 공격 방어는 Vercel Firewall 몫이고, 여기서는 단순 반복 호출만 막는다 */
+function isLimited(ip: string, now: number) {
+  if (hits.size > 5000) hits.clear();
+  const h = hits.get(ip);
+  if (!h || h.resetAt < now) { hits.set(ip, { count: 1, resetAt: now + WINDOW_MS }); return false; }
+  return ++h.count > MAX_HITS;
+}
+
+/** 공개 API(로그인 불필요, proxy matcher 에서 제외). 내부 오류 내용은 응답에 싣지 않는다 */
 export async function POST(req: Request) {
-  if (isLimited(req)) return fail("too_many_requests", 429);
-  if (!hasVipAccess((await cookies()).get(VIP_ACCESS_COOKIE)?.value)) return fail("access_required", 403);
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isLimited(ip, Date.now())) return fail("too_many_requests", 429);
   const text = await req.text();
   if (text.length > 4000) return fail("too_large", 413);
   let body: unknown;

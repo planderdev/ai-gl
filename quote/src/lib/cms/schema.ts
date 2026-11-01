@@ -141,8 +141,8 @@ export const COLLECTIONS: CollectionDef[] = [
 
 COLLECTIONS.push(
   {
-    id: "vip-applications", label: "VIP 사전예약", singular: "사전예약", titleField: "name", searchFields: ["name", "phone", "instagram"],
-    desc: "입장 코드를 통과한 고객이 /sgl-vip/apply 에서 남긴 사전예약입니다. 같은 휴대폰 번호는 한 건만 접수됩니다.",
+    id: "vip-applications", label: "VIP 사전신청", singular: "사전신청", titleField: "name", searchFields: ["name", "phone", "instagram"],
+    desc: "SGL VIP 랜딩페이지(/sgl-vip)로 접수된 사전신청입니다. 같은 휴대폰 번호는 한 건만 접수됩니다.",
     statusField: "status", statusOptions: [["new", "신규"], ["contacted", "안내완료"], ["joined", "가입완료"], ["cancelled", "취소"]],
     columns: [{ key: "name", label: "이름" }, { key: "phone", label: "휴대폰" }, { key: "instagram", label: "인스타그램" }, { key: "regions", label: "관심 여행지" }, { key: "used_sgl_before", label: "SGL 이용", type: "boolean" }, { key: "marketing_consent", label: "마케팅 동의", type: "boolean" }, { key: "status", label: "상태", type: "status" }, { key: "utm_source", label: "유입" }, { key: "created_at", label: "신청일시", type: "date" }],
     defaults: { status: "new", regions: [], used_sgl_before: false, marketing_consent: false }, sortBy: { key: "created_at", dir: "desc" }, perRecord: true, exportable: true,
@@ -168,7 +168,7 @@ export const collectionById = (id: string) => COLLECTIONS.find((c) => c.id === i
 export const allFields = (c: CollectionDef) => c.sections.flatMap((s) => s.fields);
 
 /** 설정 탭(admin/pages/setting/*.php) — settings.json 의 평면 키 */
-export const SETTINGS_TABS: { id: string; label: string; desc?: string; sections: SectionDef[] }[] = [
+export const SETTINGS_TABS: { id: string; label: string; sections: SectionDef[] }[] = [
   { id: "general", label: "기본 설정", sections: [
     { title: "사이트 기본 정보", fields: [t("site_name", "사이트명"), sel("default_currency", "기본 통화", [["KRW", "KRW"], ["JPY", "JPY"], ["USD", "USD"]]), ta("site_description", "사이트 설명")] },
     { title: "운영 연락처", fields: [t("admin_email", "관리자 이메일"), t("contact_phone", "대표 연락처"), t("contact_kakao", "카카오 채널"), ta("booking_notice", "예약 안내 문구")] },
@@ -191,9 +191,6 @@ export const SETTINGS_TABS: { id: string; label: string; desc?: string; sections
     { title: "카카오 API", fields: [{ name: "kakao_javascript_key", label: "Kakao JavaScript Key", type: "password" }, { name: "kakao_rest_api_key", label: "Kakao REST API Key", type: "password" }] },
     { title: "메일 발송 설정", fields: [t("smtp_host", "SMTP Host"), t("smtp_port", "SMTP Port"), t("smtp_username", "SMTP Username"), { name: "smtp_password", label: "SMTP Password", type: "password" }] },
     { title: "문자 / 외부 연동", fields: [sel("sms_provider", "SMS Provider", [["none", "사용 안함"], ["solapi", "Solapi"], ["alimtalk", "알림톡"]]), { name: "sms_api_key", label: "SMS API Key", type: "password" }, { name: "sms_api_secret", label: "SMS API Secret", type: "password" }, { name: "external_booking_token", label: "외부 예약 연동 토큰", type: "password" }] },
-  ] },
-  { id: "vip", label: "VIP 입장 코드", desc: "고객이 /sgl-vip 에서 입력하는 코드입니다. 바꾸면 바로 적용되며, 이미 입장한 고객은 그대로 유지됩니다.", sections: [
-    { title: "SGL VIP 사전예약", fields: [{ name: "vip_access_code", label: "입장 코드", type: "password", help: "대소문자·공백은 구분하지 않습니다. 비워 두면 기본 코드가 적용됩니다." }] },
   ] },
 ];
 export const settingsTabById = (id: string) => SETTINGS_TABS.find((x) => x.id === id);

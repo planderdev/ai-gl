@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { formatPhone, isValidInstagram, isValidPhone, normalizeInstagram, normalizePhone, VIP_REGIONS, VIP_SUPPORT_TEL } from "@/lib/sgl-vip/config";
 import { Icon } from "./Brand";
-import { readSource } from "./Source";
 
 type Field = "name" | "phone" | "instagram" | "privacyConsent";
 
@@ -23,7 +22,9 @@ export default function ApplyForm() {
   const doneTitle = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    if (done) doneTitle.current?.focus();
+    if (!done) return;
+    document.documentElement.dataset.vipApplied = "1"; // 떠 있는 신청 버튼을 숨긴다
+    doneTitle.current?.focus();
   }, [done]);
 
   const clearError = (f: Field) => setErrors((e) => ({ ...e, [f]: undefined }));
@@ -46,16 +47,17 @@ export default function ApplyForm() {
     const first = Object.keys(next)[0];
     if (first) { document.getElementById(`vip-${first}`)?.focus(); return; }
     setBusy(true);
+    const q = new URLSearchParams(window.location.search);
     try {
       const res = await fetch("/api/public/sgl-vip/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, phone, instagram, regions, usedBefore, privacyConsent: privacy, marketingConsent: marketing, website, ...readSource(),
+          name, phone, instagram, regions, usedBefore, privacyConsent: privacy, marketingConsent: marketing, website,
+          utm_source: q.get("utm_source") ?? "", utm_medium: q.get("utm_medium") ?? "", utm_campaign: q.get("utm_campaign") ?? "", utm_content: q.get("utm_content") ?? "", referrer: document.referrer,
         }),
       });
       if (res.ok) { setDone(true); return; }
-      if (res.status === 403) { window.location.replace("/sgl-vip"); return; } // 입장 쿠키가 없거나 만료
       const body = (await res.json().catch(() => ({}))) as { fields?: Partial<Record<Field, string>> };
       if (res.status === 422 && body.fields) setErrors(body.fields);
       else if (res.status === 429) setFormError(`신청이 많아 잠시 제한되었어요. 몇 분 뒤 다시 시도하거나 고객센터(${VIP_SUPPORT_TEL})로 연락해 주세요.`);
@@ -70,7 +72,7 @@ export default function ApplyForm() {
   async function share() {
     const url = `${window.location.origin}/sgl-vip`;
     try {
-      if (navigator.share) await navigator.share({ title: "SGL VIP 사전예약", text: "SGL VIP가 12월 26일 오픈합니다. 사전예약하고 먼저 안내받으세요.", url });
+      if (navigator.share) await navigator.share({ title: "SGL VIP 사전신청", text: "SGL VIP가 12월 26일 오픈합니다. 사전신청하고 먼저 안내받으세요.", url });
       else { await navigator.clipboard.writeText(url); setCopied(true); }
     } catch { /* 공유 창을 닫은 경우 */ }
   }
@@ -78,10 +80,10 @@ export default function ApplyForm() {
   if (done) return (
     <div className="vip-done">
       <span className="vip-done__mark"><Icon name="check" /></span>
-      <h3 ref={doneTitle} tabIndex={-1}>사전예약이 완료되었습니다</h3>
+      <h3 ref={doneTitle} tabIndex={-1}>사전신청이 완료되었습니다</h3>
       <p><b>{name.trim()}</b>님, 남겨주신 연락처로 담당자가 SGL VIP 상세 내용을 안내해 드릴게요.</p>
       <ul>
-        <li><span>매주 일요일 19시</span><a href="/sgl-vip/benefits">새 혜택 공개</a></li>
+        <li><span>매주 일요일 19시</span>새 혜택 공개</li>
         <li><span>12월 26일</span>SGL VIP 오픈</li>
       </ul>
       <button type="button" className="vip-btn vip-btn--ghost" onClick={share}><Icon name="share" /> {copied ? "링크를 복사했어요" : "함께 라운딩할 분께 공유하기"}</button>
@@ -132,10 +134,10 @@ export default function ApplyForm() {
           <summary>내용 보기</summary>
           <dl>
             <div><dt>수집 항목</dt><dd>필수: 이름, 휴대폰 번호 / 선택: 인스타그램 ID, 관심 여행지, SGL 이용 여부</dd></div>
-            <div><dt>이용 목적</dt><dd>SGL VIP 사전예약 접수, 오픈·혜택·가입 방법 안내</dd></div>
+            <div><dt>이용 목적</dt><dd>SGL VIP 사전신청 접수, 오픈·혜택·가입 방법 안내</dd></div>
             <div><dt>보유 기간</dt><dd>신청일로부터 1년 또는 동의 철회 시까지</dd></div>
           </dl>
-          <p>동의를 거부할 수 있으나, 거부하시면 사전예약을 하실 수 없습니다. 철회·삭제 요청은 <span className="vip-nowrap">고객센터({VIP_SUPPORT_TEL})</span>로 연락해 주세요.</p>
+          <p>동의를 거부할 수 있으나, 거부하시면 사전신청을 하실 수 없습니다. 철회·삭제 요청은 <span className="vip-nowrap">고객센터({VIP_SUPPORT_TEL})</span>로 연락해 주세요.</p>
         </details>
         {errors.privacyConsent && <p className="vip-error" id="vip-privacy-error">{errors.privacyConsent}</p>}
         <label className="vip-check">
@@ -145,7 +147,7 @@ export default function ApplyForm() {
         </label>
         <details className="vip-terms">
           <summary>내용 보기</summary>
-          <p>SGL의 혜택·이벤트 소식을 문자, 카카오톡, 인스타그램 DM으로 받습니다. 동의하지 않아도 사전예약에는 영향이 없으며, 언제든 철회할 수 있습니다.</p>
+          <p>SGL의 혜택·이벤트 소식을 문자, 카카오톡, 인스타그램 DM으로 받습니다. 동의하지 않아도 사전신청에는 영향이 없으며, 언제든 철회할 수 있습니다.</p>
         </details>
       </div>
 
@@ -154,8 +156,8 @@ export default function ApplyForm() {
       </div>
 
       {formError && <p className="vip-error vip-error--form" role="alert">{formError}</p>}
-      <button type="submit" className="vip-btn vip-btn--full" disabled={busy}>{busy ? "접수 중…" : "사전예약 완료하기"}</button>
-      <p className="vip-form__foot">사전예약은 무료이며, 결제는 진행되지 않습니다.</p>
+      <button type="submit" className="vip-btn vip-btn--full" disabled={busy}>{busy ? "접수 중…" : "사전신청 완료하기"}</button>
+      <p className="vip-form__foot">사전신청은 무료이며, 결제는 진행되지 않습니다.</p>
     </form>
   );
 }

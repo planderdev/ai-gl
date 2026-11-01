@@ -1,12 +1,12 @@
 /**
- * SGL VIP 사전예약 페이지(/sgl-vip) 공용 상수·순수 함수. 클라이언트에서도 import 하므로 서버 전용 모듈을 넣지 않는다.
+ * SGL VIP 사전신청 랜딩(/sgl-vip) 공용 상수·순수 함수. 클라이언트에서도 import 하므로 서버 전용 모듈을 넣지 않는다.
  * 일시는 모두 한국시간(KST, UTC+9) 기준이며 내부 값은 epoch ms.
  */
 const KST_MS = 9 * 3600_000;
 const DAY_MS = 86_400_000;
 const REVEAL_HOUR = 19;
 
-/** 광고 기준 "12월 26일 오픈". 오픈 시각이 정해지지 않아 카운트다운은 00시 기준으로 센다 */
+/** 광고 기준 "12월 26일 오픈". 오픈 시각은 정해지지 않아 D-Day 표시에만 쓴다 */
 export const VIP_OPEN_AT = Date.UTC(2026, 11, 26) - KST_MS;
 /** 첫 혜택은 11/1 광고로 공개됐으므로 페이지의 다음 공개는 11/8(일) 19시부터 센다 */
 const FIRST_NEXT_REVEAL_AT = Date.UTC(2026, 10, 8, REVEAL_HOUR) - KST_MS;
@@ -15,7 +15,7 @@ export const VIP_ANNUAL_FEE = "10만원";
 export const VIP_SUPPORT_TEL = "1544-7567";
 export const VIP_REGIONS = ["벳부", "다카마쓰", "마쓰야마", "후지"] as const;
 /** 동의 문구를 바꾸면 함께 올린다(신청 건에 어떤 문구로 동의했는지 남는다) */
-export const VIP_CONSENT_VERSION = "2026-11-01.2";
+export const VIP_CONSENT_VERSION = "2026-11-01.3";
 
 /** CMS(vip-benefits)에 시드되는 첫 혜택. 스토어에 없어도 랜딩에는 항상 노출한다 */
 export const VIP_FIRST_BENEFIT = {
