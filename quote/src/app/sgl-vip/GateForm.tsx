@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { VIP_SUPPORT_TEL } from "@/lib/sgl-vip/config";
 import { Icon } from "./Brand";
 
@@ -10,12 +10,6 @@ export default function GateForm() {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    // DM 으로 보낸 링크(/sgl-vip?code=…)로 들어오면 코드를 미리 채운다
-    const code = new URLSearchParams(window.location.search).get("code");
-    if (code && input.current) input.current.value = code;
-  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();

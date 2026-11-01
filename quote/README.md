@@ -96,7 +96,7 @@ rowspan 셀을 펼치고, 표 앞 텍스트의 "■나리타 송영 / ＜하네�
 광고 영상(SGL 1주년, 12월 26일 오픈, 연회비 10만원, 매주 일요일 19시 혜택 공개)에서 유입된 고객용 공개 페이지. 로그인 없이 열리도록 `src/proxy.ts` matcher 에서 `sgl-vip`, `api/public` 을 제외했다.
 | 경로 | 내용 |
 |---|---|
-| `/sgl-vip` | 12월 26일 카운트다운 + 입장 코드 입력. `?code=…` 로 들어오면 코드를 미리 채운다(DM 링크용) |
+| `/sgl-vip` | 12월 26일 카운트다운 + 입장 코드 입력. 코드는 입력칸에서 가려서 표시한다 |
 | `/sgl-vip/apply` | 사전예약 정보 입력. 입장 쿠키가 없으면 `/sgl-vip` 로 돌려보낸다 |
 | `/sgl-vip/benefits` | 1주년 인사, 공개된 혜택, 다음 공개 카운트다운, 오픈 일정, 광고 영상 |
 - 입장 코드: 관리자 이벤트관리 → VIP 입장 코드(`cms-settings.vip_access_code`, 비우면 기본값). `POST /api/public/sgl-vip/access` 가 서버에서 확인하고 서명 쿠키(`src/lib/sgl-vip/access.ts`)를 준다. 신청 API 도 이 쿠키를 확인한다.

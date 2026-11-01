@@ -193,7 +193,7 @@ export const SETTINGS_TABS: { id: string; label: string; desc?: string; sections
     { title: "문자 / 외부 연동", fields: [sel("sms_provider", "SMS Provider", [["none", "사용 안함"], ["solapi", "Solapi"], ["alimtalk", "알림톡"]]), { name: "sms_api_key", label: "SMS API Key", type: "password" }, { name: "sms_api_secret", label: "SMS API Secret", type: "password" }, { name: "external_booking_token", label: "외부 예약 연동 토큰", type: "password" }] },
   ] },
   { id: "vip", label: "VIP 입장 코드", desc: "고객이 /sgl-vip 에서 입력하는 코드입니다. 바꾸면 바로 적용되며, 이미 입장한 고객은 그대로 유지됩니다.", sections: [
-    { title: "SGL VIP 사전예약", fields: [t("vip_access_code", "입장 코드", { help: "대소문자·공백은 구분하지 않습니다. 비워 두면 기본 코드 1226 이 적용됩니다." })] },
+    { title: "SGL VIP 사전예약", fields: [{ name: "vip_access_code", label: "입장 코드", type: "password", help: "대소문자·공백은 구분하지 않습니다. 비워 두면 기본 코드가 적용됩니다." }] },
   ] },
 ];
 export const settingsTabById = (id: string) => SETTINGS_TABS.find((x) => x.id === id);
