@@ -193,3 +193,38 @@ export interface VehicleFare {
   sourceUrl: string;
   capturedAt: string;
 }
+
+/** SGL VIP 사전신청(CMS 컬렉션 vip-applications). id 는 휴대폰 번호 해시 → 번호당 한 건 */
+export interface VipApplication {
+  id: string;
+  name: string;
+  phone: string; // 010-1234-5678
+  instagram: string;
+  regions: string[];
+  status: "new" | "contacted" | "joined" | "cancelled";
+  marketing_consent: boolean;
+  privacy_consent_at: string;
+  marketing_consent_at: string;
+  consent_version: string;
+  utm_source: string;
+  utm_medium: string;
+  utm_campaign: string;
+  utm_content: string;
+  referrer: string;
+  created_at: string;
+  updated_at: string;
+}
+/** 매주 공개되는 VIP 혜택(CMS 컬렉션 vip-benefits) */
+export interface VipBenefit {
+  id: string;
+  sort_order: number;
+  status: string;
+  reveal_at: string; // KST "2026-11-08T19:00"
+  title: string;
+  highlight: string;
+  before_text?: string;
+  after_text?: string;
+  note?: string;
+  image?: string;
+  image_alt?: string;
+}

@@ -54,10 +54,10 @@ export function FieldGrid({ sections, value, onChange }: { sections: SectionDef[
 
 export default function CmsForm({ collection, item }: { collection: CollectionDef; item: Rec | null }) {
   const router = useRouter();
-  const [value, setValue] = useState<Rec>(item ?? { ...(collection.defaults ?? {}) });
+  const [value, setValue] = useState<Rec>(() => { const v = { ...(item ?? collection.defaults ?? {}) }; delete v.__new; return v; });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const isNew = !item;
+  const isNew = !item || !!item.__new; // 새 문서 화면은 기본값을 __new 표시와 함께 받는다
   async function save() {
     setBusy(true); setMsg(null);
     const res = await fetch(isNew ? `/api/cms/${collection.id}` : `/api/cms/${collection.id}/${encodeURIComponent(String(item!.id))}`, { method: isNew ? "POST" : "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(value) });

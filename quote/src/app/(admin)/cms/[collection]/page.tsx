@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 function Cell({ col, v, statusOptions }: { col: ColumnDef; v: unknown; statusOptions?: [string, string][] }) {
   if (v == null || v === "") return <span className="text-[var(--admin-text-soft)]">-</span>;
   switch (col.type) {
-    case "status": { const lab = statusOptions?.find(([k]) => k === String(v))?.[1] ?? String(v); const s = String(v); const cls = /publish|active|confirmed|published|visible|paid|^1$/.test(s) ? "admin-chip--success" : /draft|pending|scheduled|lead/.test(s) ? "admin-chip--warning" : /hidden|cancel|inactive|soldout|^0$/.test(s) ? "admin-chip--danger" : "admin-chip--gray"; return <span className={`admin-chip ${cls}`}>{lab}</span>; }
+    case "status": { const lab = statusOptions?.find(([k]) => k === String(v))?.[1] ?? String(v); const s = String(v); const cls = /publish|active|confirmed|published|visible|paid|joined|^1$/.test(s) ? "admin-chip--success" : /draft|pending|scheduled|lead|^new$/.test(s) ? "admin-chip--warning" : /hidden|cancel|inactive|soldout|^0$/.test(s) ? "admin-chip--danger" : "admin-chip--gray"; return <span className={`admin-chip ${cls}`}>{lab}</span>; }
     case "money": return <span className="num">{Number(v).toLocaleString("ko-KR")}</span>;
     case "number": return <span className="num">{String(v)}</span>;
     case "boolean": return v === true || v === 1 || v === "1" ? <i className="ri-checkbox-circle-fill text-[var(--admin-success)]" /> : <i className="ri-checkbox-blank-circle-line text-[var(--admin-text-soft)]" />;
@@ -30,8 +30,8 @@ export default async function CmsListPage({ params, searchParams }: PageProps<"/
   const stats = c.statusOptions ? c.statusOptions.map(([k, lab]) => ({ label: lab, value: all.filter((it) => String(it[c.statusField!]) === k).length })) : [];
   return (
     <>
-      <PageHead crumb={c.label} title={c.label} desc={`${c.singular} ${all.length}건. 캐디스 관리자(PHP)에서 관리하던 데이터를 같은 구조로 관리합니다.`} stats={[{ label: "전체", value: all.length }, ...stats]}
-        actions={<Link href={`/cms/${c.id}/new${typeof sp.type === "string" ? `?type=${sp.type}` : ""}`} className="admin-btn admin-btn--primary"><i className="ri-add-line" /> {c.singular} 등록</Link>} />
+      <PageHead crumb={c.label} title={c.label} desc={c.desc ?? `${c.singular} ${all.length}건. 캐디스 관리자(PHP)에서 관리하던 데이터를 같은 구조로 관리합니다.`} stats={[{ label: "전체", value: all.length }, ...stats]}
+        actions={<>{c.exportable && <a href={`/api/cms/${c.id}/export`} className="admin-btn admin-btn--light"><i className="ri-file-excel-2-line" /> 엑셀 다운로드</a>}<Link href={`/cms/${c.id}/new${typeof sp.type === "string" ? `?type=${sp.type}` : ""}`} className="admin-btn admin-btn--primary"><i className="ri-add-line" /> {c.singular} 등록</Link></>} />
       <section className="admin-card">
         <div className="admin-card__head">
           <form className="flex flex-wrap items-center gap-2 text-sm">

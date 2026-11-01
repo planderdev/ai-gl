@@ -1,10 +1,10 @@
-import { collection, nowIso, readDoc, writeDoc } from "@/lib/store/collection";
+import { collection, nowIso, readDoc, recordCollection, writeDoc } from "@/lib/store/collection";
 import { allFields, collectionById, type CollectionDef } from "./schema";
 
 export type CmsItem = { id: string; [k: string]: unknown };
-export const cmsStore = (c: CollectionDef) => collection<CmsItem>(`cms-${c.id}`);
+export const cmsStore = (c: CollectionDef) => (c.perRecord ? recordCollection<CmsItem> : collection<CmsItem>)(`cms-${c.id}`);
 
-const nowLocal = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
+export const nowLocal = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
 
 export async function listItems(c: CollectionDef, q: { search?: string; status?: string } = {}) {
   let items = await cmsStore(c).list();

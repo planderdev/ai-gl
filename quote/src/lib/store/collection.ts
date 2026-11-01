@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { resolveDataDir } from "./data-dir";
-import { BlobCollection, blobReadJson, blobWriteJson } from "./blob-collection";
+import { BlobCollection, BlobRecordCollection, blobReadJson, blobWriteJson } from "./blob-collection";
 
 /** Vercel Blob 토큰이 있으면 Blob, 아니면 로컬 JSON 파일 */
 export const isBlobEnabled = () => !!process.env.BLOB_READ_WRITE_TOKEN;
@@ -15,8 +15,12 @@ export interface Collection<T extends { id: string }> {
   remove(id: string): Promise<void>;
   replaceAll(items: T[]): Promise<void>;
 }
+/** 건별로 저장해 동시 쓰기에 안전한 컬렉션. createIfAbsent 는 같은 id 가 이미 있으면 false */
+export interface RecordCollection<T extends { id: string }> extends Collection<T> {
+  createIfAbsent(item: T): Promise<boolean>;
+}
 
-class FileCollection<T extends { id: string }> implements Collection<T> {
+class FileCollection<T extends { id: string }> implements RecordCollection<T> {
   private cache: Map<string, T> | null = null;
   private writing: Promise<void> = Promise.resolve();
   constructor(private file: string) {}
@@ -46,6 +50,7 @@ class FileCollection<T extends { id: string }> implements Collection<T> {
   async upsertMany(items: T[]) { const m = await this.load(); for (const it of items) m.set(it.id, it); await this.persist(); return items.length; }
   async remove(id: string) { (await this.load()).delete(id); await this.persist(); }
   async replaceAll(items: T[]) { this.cache = new Map(items.map((x) => [x.id, x])); await this.persist(); }
+  async createIfAbsent(item: T) { const m = await this.load(); if (m.has(item.id)) return false; m.set(item.id, item); await this.persist(); return true; }
 }
 
 const g = globalThis as unknown as { __aiglCollections?: Map<string, Collection<{ id: string }>> };
@@ -53,6 +58,13 @@ export function collection<T extends { id: string }>(name: string): Collection<T
   g.__aiglCollections ??= new Map();
   if (!g.__aiglCollections.has(name)) g.__aiglCollections.set(name, isBlobEnabled() ? new BlobCollection<T>(name) : new FileCollection<T>(path.join(resolveDataDir(), `${name}.json`)));
   return g.__aiglCollections.get(name) as unknown as Collection<T>;
+}
+
+const gr = globalThis as unknown as { __aiglRecordCollections?: Map<string, RecordCollection<{ id: string }>> };
+export function recordCollection<T extends { id: string }>(name: string): RecordCollection<T> {
+  gr.__aiglRecordCollections ??= new Map();
+  if (!gr.__aiglRecordCollections.has(name)) gr.__aiglRecordCollections.set(name, isBlobEnabled() ? new BlobRecordCollection<T>(name) : new FileCollection<T>(path.join(resolveDataDir(), `${name}.json`)));
+  return gr.__aiglRecordCollections.get(name) as unknown as RecordCollection<T>;
 }
 
 /** 단일 문서(설정 등) */

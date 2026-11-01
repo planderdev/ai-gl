@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidInstagram, isValidPhone, normalizeInstagram, normalizePhone, VIP_REGIONS } from "@/lib/sgl-vip/config";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 const money = z.union([z.number(), z.literal("미정"), z.literal("운항없음"), z.literal("마감")]);
@@ -89,3 +90,16 @@ export const golfCourseSchema = z.object({
 });
 export const vehicleRuleSchema = z.object({ id: z.string().optional(), name: z.string().min(1), region: z.string().min(1), feesByWeekday: weekdayRates, memo: z.string().optional() });
 export const settingsSchema = z.object({ exchangeRate: z.number().positive().optional(), margins: z.array(z.number()).optional(), holidays: z.array(date).optional() });
+
+const clipped = z.string().transform((v) => v.slice(0, 300)).default("");
+export const vipApplySchema = z.object({
+  name: z.string().trim().min(1, "이름을 입력해 주세요").max(30, "이름은 30자까지 입력할 수 있어요"),
+  phone: z.string().transform(normalizePhone).refine(isValidPhone, "휴대폰 번호를 정확히 입력해 주세요"),
+  instagram: z.string().transform(normalizeInstagram).refine(isValidInstagram, "인스타그램 아이디를 확인해 주세요").default(""),
+  regions: z.array(z.enum(VIP_REGIONS)).max(VIP_REGIONS.length).default([]),
+  privacyConsent: z.literal(true, "개인정보 수집·이용에 동의해 주세요"),
+  marketingConsent: z.boolean().default(false),
+  website: z.string().max(300).default(""), // 허니팟: 사람에게는 보이지 않는 입력란
+  utm_source: clipped, utm_medium: clipped, utm_campaign: clipped, utm_content: clipped, referrer: clipped,
+});
+export type VipApplyInput = z.infer<typeof vipApplySchema>;

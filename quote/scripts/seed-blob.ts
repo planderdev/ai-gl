@@ -2,6 +2,7 @@
  * 로컬 .data/*.json 을 Vercel Blob 으로 올린다.
  *   BLOB_READ_WRITE_TOKEN=... npx tsx scripts/seed-blob.ts [--force] [--only a,b] [--skip a,b]
  * 크롤링 산출물(fares, vehicle-fares, fare-requests)은 운영이 더 최신인 경우가 많아 기본 제외한다. 올리려면 --only 또는 --include-crawled.
+ * 사전신청(cms-vip-applications)은 운영에서 건별로 저장되는 개인정보라 로컬 테스트 값을 올리지 않도록 항상 제외한다.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -18,6 +19,7 @@ async function main() {
   const dir = path.join(process.cwd(), ".data");
   for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
     const name = f.replace(/\.json$/, "");
+    if (name === "cms-vip-applications") continue;
     if ((only && !only.includes(name)) || skip.has(name)) { console.log(`skip ${name} (${only ? "--only 대상 아님" : "크롤링 산출물 — --include-crawled 또는 --only 로 명시"})`); continue; }
     const existing = await blobReadJson<unknown>(name).catch(() => null);
     if (existing && !force) { console.log(`skip ${name} (이미 존재, --force 로 덮어쓰기)`); continue; }

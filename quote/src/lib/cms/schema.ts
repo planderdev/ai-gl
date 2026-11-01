@@ -2,6 +2,8 @@
  * 캐디스 PHP 관리자(admin/)가 관리하던 컬렉션을 Next.js 에서 그대로 관리하기 위한 스키마.
  * 필드·섹션·옵션은 admin/pages 의 각 form.php 와 admin/data 의 json 구조를 따른다.
  */
+import { VIP_FIRST_BENEFIT } from "@/lib/sgl-vip/config";
+
 export type FieldType = "text" | "textarea" | "html" | "number" | "select" | "boolean" | "date" | "datetime" | "list" | "json" | "password";
 export interface FieldDef { name: string; label: string; type: FieldType; options?: [string, string][]; help?: string; full?: boolean; readonly?: boolean }
 export interface SectionDef { title: string; fields: FieldDef[] }
@@ -18,8 +20,12 @@ export interface CollectionDef {
   sections: SectionDef[];
   defaults?: Record<string, unknown>;
   sortBy?: { key: string; dir: "asc" | "desc" };
-  source: string;        // 시드 원본(저장소 루트 기준)
+  source?: string;       // 시드 원본(저장소 루트 기준)
   sourceGroup?: string;  // taxonomy.json 처럼 dict 안의 그룹
+  seedItems?: Record<string, unknown>[]; // 원본 파일 없이 코드로 시드할 항목
+  desc?: string;         // 목록 상단 설명
+  perRecord?: boolean;   // 공개 폼이 동시에 쓰는 데이터 → 건별 저장(recordCollection)
+  exportable?: boolean;  // 목록에 엑셀 다운로드 표시
 }
 
 const status = (opts: [string, string][]): FieldDef => ({ name: "status", label: "상태", type: "select", options: opts });
@@ -132,6 +138,31 @@ export const COLLECTIONS: CollectionDef[] = [
     sections: [{ title: "정보", fields: [t("name", "이름"), t("slug", "슬러그"), ...(g === "regions" ? [t("country", "국가 연결")] : []), n("sort_order", "정렬 순서"), sel("is_active", "사용 여부", [["1", "사용"], ["0", "미사용"]])] }],
   })),
 ];
+
+COLLECTIONS.push(
+  {
+    id: "vip-applications", label: "VIP 사전신청", singular: "사전신청", titleField: "name", searchFields: ["name", "phone", "instagram"],
+    desc: "SGL VIP 랜딩페이지(/sgl-vip)로 접수된 사전신청입니다. 같은 휴대폰 번호는 한 건만 접수됩니다.",
+    statusField: "status", statusOptions: [["new", "신규"], ["contacted", "안내완료"], ["joined", "가입완료"], ["cancelled", "취소"]],
+    columns: [{ key: "name", label: "이름" }, { key: "phone", label: "휴대폰" }, { key: "instagram", label: "인스타그램" }, { key: "regions", label: "관심 여행지" }, { key: "marketing_consent", label: "마케팅 동의", type: "boolean" }, { key: "status", label: "상태", type: "status" }, { key: "utm_source", label: "유입" }, { key: "created_at", label: "신청일시", type: "date" }],
+    defaults: { status: "new", regions: [], marketing_consent: false }, sortBy: { key: "created_at", dir: "desc" }, perRecord: true, exportable: true,
+    sections: [
+      { title: "신청자", fields: [t("name", "이름"), t("phone", "휴대폰"), t("instagram", "인스타그램 ID"), list("regions", "관심 여행지"), sel("status", "상태", [["new", "신규"], ["contacted", "안내완료"], ["joined", "가입완료"], ["cancelled", "취소"]]), ta("admin_memo", "운영 메모")] },
+      { title: "동의 / 유입 경로", fields: [t("created_at", "신청일시", { readonly: true }), t("privacy_consent_at", "개인정보 동의 일시", { readonly: true }), t("marketing_consent_at", "마케팅 동의 일시", { readonly: true }), t("consent_version", "동의 문구 버전", { readonly: true }), t("utm_source", "utm_source", { readonly: true }), t("utm_medium", "utm_medium", { readonly: true }), t("utm_campaign", "utm_campaign", { readonly: true }), t("utm_content", "utm_content", { readonly: true }), t("referrer", "유입 페이지", { readonly: true, full: true })] },
+    ],
+  },
+  {
+    id: "vip-benefits", label: "VIP 혜택 공개", singular: "혜택", titleField: "title", searchFields: ["title", "highlight"],
+    desc: "상태가 '공개'이고 공개 일시가 지난 혜택만 랜딩페이지에 나타납니다(최대 1분 지연). 공개 전 내용은 고객 화면으로 전달되지 않습니다. 매주 일요일 19시 공개분을 미리 등록하세요.",
+    statusField: "status", statusOptions: PUBLISH,
+    columns: [{ key: "title", label: "혜택" }, { key: "highlight", label: "핵심 문구" }, { key: "reveal_at", label: "공개 일시", type: "date" }, { key: "status", label: "상태", type: "status" }, { key: "sort_order", label: "순서", type: "number" }],
+    defaults: { status: "draft", sort_order: 2 }, sortBy: { key: "sort_order", dir: "asc" }, seedItems: [VIP_FIRST_BENEFIT],
+    sections: [
+      { title: "공개 설정", fields: [status(PUBLISH), { name: "reveal_at", label: "공개 일시(한국시간)", type: "datetime" }, n("sort_order", "순서")] },
+      { title: "내용", fields: [t("title", "혜택명", { full: true }), t("highlight", "핵심 문구", { full: true }), t("before_text", "기존 조건", { help: "비우면 비교표를 표시하지 않습니다" }), t("after_text", "VIP 조건"), ta("note", "보조 설명"), t("image", "이미지 URL", { help: "/sgl-vip/… 또는 https://…" }), t("image_alt", "이미지 설명(대체 텍스트)")] },
+    ],
+  },
+);
 
 export const collectionById = (id: string) => COLLECTIONS.find((c) => c.id === id);
 export const allFields = (c: CollectionDef) => c.sections.flatMap((s) => s.fields);

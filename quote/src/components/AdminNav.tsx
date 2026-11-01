@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 /** 캐디스 Admin(admin/includes/menu-data.php)과 같은 메뉴 구조 + 견적 시스템 */
-type Child = { label: string; href: string; external?: boolean };
+type Child = { label: string; href: string; external?: boolean; newTab?: boolean };
 type Group = { key: string; label: string; icon: string; href?: string; children?: Child[] };
 const MENU: Group[] = [
   { key: "dashboard", label: "대시보드", icon: "ri-dashboard-line", href: "/" },
@@ -12,7 +12,7 @@ const MENU: Group[] = [
     { label: "전체 상품", href: "/cms/products" }, { label: "골프장 등록", href: "/cms/products/new?type=golf_course" }, { label: "패키지 등록", href: "/cms/products/new?type=travel_package" },
     { label: "호텔 관리", href: "/cms/hotels" }, { label: "국가 관리", href: "/cms/taxonomy-countries" }, { label: "지역 관리", href: "/cms/taxonomy-regions" }, { label: "테마 관리", href: "/cms/taxonomy-themes" }, { label: "배지 관리", href: "/cms/taxonomy-badges" },
   ] },
-  { key: "event", label: "이벤트관리", icon: "ri-megaphone-line", children: [{ label: "이벤트 목록", href: "/cms/events" }, { label: "이벤트 등록", href: "/cms/events/new" }] },
+  { key: "event", label: "이벤트관리", icon: "ri-megaphone-line", children: [{ label: "이벤트 목록", href: "/cms/events" }, { label: "이벤트 등록", href: "/cms/events/new" }, { label: "VIP 사전신청", href: "/cms/vip-applications" }, { label: "VIP 혜택 공개", href: "/cms/vip-benefits" }, { label: "VIP 랜딩페이지", href: "/sgl-vip", external: true, newTab: true }] },
   { key: "booking", label: "예약관리", icon: "ri-calendar-check-line", children: [{ label: "예약 목록", href: "/cms/bookings" }, { label: "예약 캘린더", href: "/cms/bookings/calendar" }, { label: "예약 등록", href: "/cms/bookings/new" }] },
   { key: "customer", label: "고객관리", icon: "ri-user-3-line", children: [{ label: "고객 목록", href: "/cms/customers" }, { label: "고객 등록", href: "/cms/customers/new" }] },
   { key: "content", label: "콘텐츠관리", icon: "ri-file-list-3-line", children: [{ label: "공지사항", href: "/cms/notices" }, { label: "FAQ", href: "/cms/faqs" }, { label: "배너관리", href: "/cms/banners" }] },
@@ -52,7 +52,7 @@ export default function AdminNav() {
             </button>
             <div className="admin-nav__children">
               {m.children.map((c) => c.external
-                ? <a key={c.href} href={c.href} className="admin-nav__child">{c.label} <i className="ri-download-2-line ml-auto text-sm opacity-60" /></a>
+                ? <a key={c.href} href={c.href} target={c.newTab ? "_blank" : undefined} className="admin-nav__child">{c.label} <i className={`${c.newTab ? "ri-external-link-line" : "ri-download-2-line"} ml-auto text-sm opacity-60`} /></a>
                 : <Link key={c.href} href={c.href} className={`admin-nav__child ${isCur(c.href) ? "is-current" : ""}`}>{c.label}</Link>)}
             </div>
           </div>

@@ -4,6 +4,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
 /**
  * 접근 보호: 로그인 세션 쿠키가 있어야 화면·API 를 쓸 수 있다. 크롤러는 x-api-key(=CRAWLER_API_KEY).
  * 로그인 페이지(/login)와 인증 API 는 열려 있다. 세션이 없으면 화면은 /login 으로, API 는 401.
+ * 고객용 랜딩(/sgl-vip, public/sgl-vip 자산)과 공개 API(/api/public)는 matcher 에서 제외해 프록시를 거치지 않는다.
  */
 export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -18,4 +19,4 @@ export async function proxy(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
+export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|sgl-vip|api/public).*)"] };
