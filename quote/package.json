@@ -15,7 +15,8 @@
     "crawl": "tsx crawler/fares.ts",
     "crawl:airseoul": "tsx crawler/fares.ts --provider airseoul",
     "crawl:jejuair": "tsx crawler/fares.ts --provider jejuair",
-    "seed:cms": "tsx scripts/seed-cms.ts"
+    "seed:cms": "tsx scripts/seed-cms.ts",
+    "hash-password": "tsx scripts/hash-password.ts"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
