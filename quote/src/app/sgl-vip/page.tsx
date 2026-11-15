@@ -15,7 +15,7 @@ import "./sgl-vip.css";
 export const revalidate = 60;
 
 const TITLE = "SGL VIP 사전신청 | 12월 26일 오픈";
-const DESCRIPTION = "SGL 1주년, 감사의 마음을 담아 SGL VIP가 12월 26일 오픈합니다. 연회비 10만원, 매주 일요일 19시 VIP 혜택 공개. 지금 사전신청하세요.";
+const DESCRIPTION = "SGL 인스타그램 운영 1주년, 감사의 마음을 담아 SGL VIP가 12월 26일 오픈합니다. 연회비 10만원, 매주 일요일 19시 VIP 혜택 공개. 지금 사전신청하세요.";
 export const metadata: Metadata = {
   // 링크 미리보기(카카오톡·인스타 DM)는 절대 주소가 필요하다. 운영 도메인을 연결하면 Vercel 이 이 값을 바꿔 준다
   metadataBase: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "ai-gl.vercel.app"}`),
@@ -78,7 +78,7 @@ export default async function SglVipPage() {
           <span className="vip-top__dday"><DdayText initial={dday} /></span>
         </header>
         <div className="vip-hero__copy">
-          <p className="vip-hero__eyebrow">SGL 1주년 · 감사의 마음을 담아</p>
+          <p className="vip-hero__eyebrow">인스타그램 운영 1주년 · 감사의 마음을 담아</p>
           <h1>
             <span className="vip-hero__date">12.26</span>
             <span className="vip-hero__title">SGL VIP 오픈</span>
@@ -97,7 +97,7 @@ export default async function SglVipPage() {
       <section className="vip-story">
         <Image className="vip-story__bg" src="/sgl-vip/tree-sky.jpg" alt="" fill sizes="100vw" />
         <div className="vip-wrap vip-story__copy vip-reveal">
-          <h2>오는 12월,<br />SGL이 1주년을 맞이합니다.</h2>
+          <h2>오는 12월,<br />SGL 인스타그램이 <br className="vip-only-mobile" />운영 1주년을 맞이합니다.</h2>
           <p>그동안 함께한 팀원들과 모든 팔로워분들께 감사드립니다.<br />그 감사한 마음을 담아, SGL VIP를 엽니다.</p>
         </div>
       </section>
