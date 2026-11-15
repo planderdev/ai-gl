@@ -223,6 +223,7 @@ export interface VipBenefit {
   reveal_at: string; // KST "2026-11-08T19:00"
   title: string;
   highlight: string;
+  items?: string[];
   before_text?: string;
   after_text?: string;
   note?: string;

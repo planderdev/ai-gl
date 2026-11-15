@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import Image from "next/image";
-import { dDayLabel, dDayOf, formatKst, nextRevealAt, ordinalLabel, VIP_ANNUAL_FEE, VIP_SUPPORT_TEL } from "@/lib/sgl-vip/config";
-import { listRevealedBenefits } from "@/lib/sgl-vip/service";
+import { dDayLabel, dDayOf, formatKst, nextRevealAt, ordinalLabel, parseKst, VIP_ANNUAL_FEE, VIP_SUPPORT_TEL } from "@/lib/sgl-vip/config";
+import { loadVipBenefits } from "@/lib/sgl-vip/service";
 import type { VipBenefit } from "@/types";
 import ApplyForm from "./ApplyForm";
 import { Icon, SglLogo } from "./Brand";
@@ -41,6 +41,11 @@ function BenefitCard({ benefit, index }: { benefit: VipBenefit; index: number })
         <p className="vip-tag">{ordinalLabel(index + 1)} 혜택</p>
         <h3 className="vip-card__title">{benefit.title}</h3>
         <p className="vip-card__highlight"><span>{benefit.highlight}</span></p>
+        {!!benefit.items?.length && (
+          <ul className="vip-card__items">
+            {benefit.items.map((item, i) => <li key={i}><Icon name="check" />{item}</li>)}
+          </ul>
+        )}
         {benefit.before_text && benefit.after_text && (
           <dl className="vip-compare">
             <div className="is-before"><dt>기존</dt><dd>{benefit.before_text}</dd></div>
@@ -55,7 +60,9 @@ function BenefitCard({ benefit, index }: { benefit: VipBenefit; index: number })
 
 async function loadLanding() {
   const now = Date.now();
-  return { benefits: await listRevealedBenefits(now), reveal: nextRevealAt(now), dday: dDayLabel(dDayOf(now)) };
+  const { revealed, scheduledAt } = await loadVipBenefits(now);
+  const lastRevealAt = Math.max(...revealed.map((b) => parseKst(b.reveal_at)));
+  return { benefits: revealed, reveal: scheduledAt ?? nextRevealAt(now, lastRevealAt), dday: dDayLabel(dDayOf(now)) };
 }
 
 export default async function SglVipPage() {

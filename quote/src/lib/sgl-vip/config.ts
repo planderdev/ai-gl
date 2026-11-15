@@ -2,6 +2,8 @@
  * SGL VIP 사전신청 랜딩(/sgl-vip) 공용 상수·순수 함수. 클라이언트에서도 import 하므로 서버 전용 모듈을 넣지 않는다.
  * 일시는 모두 한국시간(KST, UTC+9) 기준이며 내부 값은 epoch ms.
  */
+import type { VipBenefit } from "@/types";
+
 const KST_MS = 9 * 3600_000;
 const DAY_MS = 86_400_000;
 const REVEAL_HOUR = 19;
@@ -17,20 +19,56 @@ export const VIP_REGIONS = ["벳부", "다카마쓰", "마쓰야마", "후지"] 
 /** 동의 문구를 바꾸면 함께 올린다(신청 건에 어떤 문구로 동의했는지 남는다) */
 export const VIP_CONSENT_VERSION = "2026-11-01.3";
 
-/** CMS(vip-benefits)에 시드되는 첫 혜택. 스토어에 없어도 랜딩에는 항상 노출한다 */
-export const VIP_FIRST_BENEFIT = {
-  id: "benefit-1",
-  sort_order: 1,
-  status: "publish",
-  reveal_at: "2026-11-01T00:00",
-  title: "벳부골프클럽 2인 단독 라운딩",
-  highlight: "1년 내내 추가요금 면제",
-  before_text: "2인 라운딩 시 18홀당 1인 2만원 추가요금",
-  after_text: "추가요금 0원",
-  note: "1인 기준 18홀 5회면, 면제받는 추가요금이 연회비 10만원과 같아요.",
-  image: "/sgl-vip/two-round.jpg",
-  image_alt: "두 사람이 탄 카트가 페어웨이를 달리는 모습",
-};
+/**
+ * 인스타그램 릴스로 공개된 혜택(1탄 11/1, 2탄 11/8, 3탄 11/14). CMS(vip-benefits)의 기본 항목이라
+ * 스토어에 없어도 랜딩·관리자에 보이고, 관리자에서 저장하면 스토어 값이 우선한다. reveal_at 은 릴스 게시 시각.
+ */
+export const VIP_ANNOUNCED_BENEFITS: VipBenefit[] = [
+  {
+    id: "benefit-1",
+    sort_order: 1,
+    status: "publish",
+    reveal_at: "2026-11-01T00:00",
+    title: "벳부골프클럽 2인 단독 라운딩",
+    highlight: "1년 내내 추가요금 면제",
+    before_text: "2인 라운딩 시 18홀당 1인 2만원 추가요금",
+    after_text: "추가요금 0원",
+    note: "1인 기준 18홀 5회면, 면제받는 추가요금이 연회비 10만원과 같아요.",
+    image: "/sgl-vip/two-round.jpg",
+    image_alt: "두 사람이 탄 카트가 페어웨이를 달리는 모습",
+  },
+  {
+    id: "benefit-2",
+    sort_order: 2,
+    status: "publish",
+    reveal_at: "2026-11-08T18:57",
+    title: "다카마쓰 골프여행 갈 때마다",
+    highlight: "석식과 사누키 우동 무료",
+    items: [
+      "석식 1회 무료 · 해물 가마솥밥과 사시미 세트",
+      "원조 사누키 우동 1회 무료",
+      "명문 사카이데CC, 세토내해를 바라보는 다카마쓰CC 지정 포함",
+      "라운딩 후 가와라마치(시내) 하차까지",
+    ],
+    image: "/sgl-vip/takamatsu-dinner.jpg",
+    image_alt: "가마솥밥, 사시미, 튀김이 차려진 석식 상차림",
+  },
+  {
+    id: "benefit-3",
+    sort_order: 3,
+    status: "publish",
+    reveal_at: "2026-11-14T19:58",
+    title: "항공 포함 패키지 선택 시",
+    highlight: "10만원 즉시 할인",
+    items: [
+      "가입하는 즉시 할인과 무료 혜택 이용",
+      "벳부·마쓰야마·다카마쓰·미야자키·삿포로 등 지역별 무료 혜택도 함께",
+    ],
+    note: "연회비 페이백 혜택이에요. 항공 포함 패키지를 한 번만 이용해도 연회비 10만원만큼 돌려받아요.",
+    image: "/sgl-vip/kagoshima-view.jpg",
+    image_alt: "가고시마 골프장에서 바라본 사쿠라지마",
+  },
+];
 
 export const normalizePhone = (v: string) => v.replace(/\D/g, "");
 export const isValidPhone = (digits: string) => /^01[016789]\d{7,8}$/.test(digits);
@@ -45,13 +83,17 @@ export function formatPhone(v: string) {
 export const normalizeInstagram = (v: string) => v.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/[/?].*$/, "").replace(/^@/, "");
 export const isValidInstagram = (id: string) => /^[A-Za-z0-9._]{0,30}$/.test(id);
 
-/** 다음 공개 시각(매주 일요일 19시). 오픈 이후로 넘어가면 null */
-export function nextRevealAt(now: number): number | null {
+/**
+ * 다음 공개 시각(매주 일요일 19시). 마지막 혜택이 그 일요일 전에 당겨 공개됐으면(3탄은 토요일 밤) 그 주 몫으로 보고 다음 주로 넘긴다.
+ * 오픈 이후로 넘어가면 null
+ */
+export function nextRevealAt(now: number, lastRevealAt = -Infinity): number | null {
   const shifted = now + KST_MS;
   const midnight = Math.floor(shifted / DAY_MS) * DAY_MS;
   let t = midnight + ((7 - new Date(midnight).getUTCDay()) % 7) * DAY_MS + REVEAL_HOUR * 3600_000;
   if (t <= shifted) t += 7 * DAY_MS;
-  const at = Math.max(t - KST_MS, FIRST_NEXT_REVEAL_AT);
+  let at = Math.max(t - KST_MS, FIRST_NEXT_REVEAL_AT);
+  if (at - lastRevealAt < 3.5 * DAY_MS) at += 7 * DAY_MS;
   return at < VIP_OPEN_AT ? at : null;
 }
 

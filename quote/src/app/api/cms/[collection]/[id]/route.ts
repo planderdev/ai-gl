@@ -1,11 +1,11 @@
 import { fail, handle, json, decodeId } from "@/lib/api";
 import { collectionById } from "@/lib/cms/schema";
-import { cmsStore, removeItem, updateItem } from "@/lib/cms/service";
+import { getItem, removeItem, updateItem } from "@/lib/cms/service";
 
 export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/cms/[collection]/[id]">) => {
   const p = await ctx.params; const c = collectionById(decodeId(p.collection));
   if (!c) return fail("not_found", 404);
-  const item = await cmsStore(c).get(decodeId(p.id));
+  const item = await getItem(c, decodeId(p.id));
   return item ? json(item) : fail("not_found", 404);
 });
 export const PUT = handle(async (req: Request, ctx: RouteContext<"/api/cms/[collection]/[id]">) => {

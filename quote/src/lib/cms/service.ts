@@ -6,8 +6,17 @@ export const cmsStore = (c: CollectionDef) => (c.perRecord ? recordCollection<Cm
 
 export const nowLocal = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
 
+/** 코드로 정의한 기본 항목(seedItems)은 스토어에 없어도 목록·상세에 보인다. 관리자에서 저장하면 스토어 값이 우선한다 */
+const seedsOf = (c: CollectionDef) => (c.seedItems ?? []) as CmsItem[];
+export const isSeedItem = (c: CollectionDef, id: string) => seedsOf(c).some((s) => s.id === id);
+export async function getItem(c: CollectionDef, id: string) {
+  return (await cmsStore(c).get(id)) ?? seedsOf(c).find((s) => s.id === id) ?? null;
+}
+
 export async function listItems(c: CollectionDef, q: { search?: string; status?: string } = {}) {
-  let items = await cmsStore(c).list();
+  const stored = await cmsStore(c).list();
+  const ids = new Set(stored.map((it) => it.id));
+  let items = [...stored, ...seedsOf(c).filter((s) => !ids.has(s.id))];
   if (q.search) { const s = q.search.toLowerCase(); items = items.filter((it) => c.searchFields.some((f) => String(it[f] ?? "").toLowerCase().includes(s))); }
   if (q.status && c.statusField) items = items.filter((it) => String(it[c.statusField!]) === q.status);
   const sb = c.sortBy;
@@ -44,7 +53,7 @@ export async function createItem(cid: string, input: Record<string, unknown>) {
 }
 export async function updateItem(cid: string, id: string, input: Record<string, unknown>) {
   const c = collectionById(cid); if (!c) return null;
-  const cur = await cmsStore(c).get(id); if (!cur) return null;
+  const cur = await getItem(c, id); if (!cur) return null;
   return cmsStore(c).upsert({ ...cur, ...normalize(c, input), id, updated_at: nowLocal() });
 }
 export async function removeItem(cid: string, id: string) { const c = collectionById(cid); if (!c) return false; await cmsStore(c).remove(id); return true; }

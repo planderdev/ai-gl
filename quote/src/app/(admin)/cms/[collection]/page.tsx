@@ -4,7 +4,7 @@ import PageHead from "@/components/PageHead";
 import CmsRowActions from "@/components/CmsRowActions";
 import { decodeId } from "@/lib/api";
 import { collectionById, type ColumnDef } from "@/lib/cms/schema";
-import { listItems } from "@/lib/cms/service";
+import { isSeedItem, listItems } from "@/lib/cms/service";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +53,7 @@ export default async function CmsListPage({ params, searchParams }: PageProps<"/
                       {i === 0 ? <Link href={`/cms/${c.id}/${encodeURIComponent(it.id)}`} className="font-bold text-[var(--admin-text-strong)] hover:text-[var(--admin-primary)]">{String(it[col.key] ?? it[c.titleField] ?? it.id)}</Link> : <Cell col={col} v={it[col.key]} statusOptions={c.statusOptions} />}
                     </td>
                   ))}
-                  <td className="num"><CmsRowActions collectionId={c.id} id={it.id} singular={c.singular} /></td>
+                  <td className="num"><CmsRowActions collectionId={c.id} id={it.id} singular={c.singular} deletable={!isSeedItem(c, it.id)} /></td>
                 </tr>
               ))}
               {!items.length && <tr><td colSpan={c.columns.length + 1} className="py-8 text-center text-[var(--admin-text-muted)]">데이터가 없습니다.</td></tr>}

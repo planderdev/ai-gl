@@ -2,7 +2,7 @@
  * 캐디스 PHP 관리자(admin/)가 관리하던 컬렉션을 Next.js 에서 그대로 관리하기 위한 스키마.
  * 필드·섹션·옵션은 admin/pages 의 각 form.php 와 admin/data 의 json 구조를 따른다.
  */
-import { VIP_FIRST_BENEFIT } from "@/lib/sgl-vip/config";
+import { VIP_ANNOUNCED_BENEFITS } from "@/lib/sgl-vip/config";
 
 export type FieldType = "text" | "textarea" | "html" | "number" | "select" | "boolean" | "date" | "datetime" | "list" | "json" | "password";
 export interface FieldDef { name: string; label: string; type: FieldType; options?: [string, string][]; help?: string; full?: boolean; readonly?: boolean }
@@ -22,7 +22,7 @@ export interface CollectionDef {
   sortBy?: { key: string; dir: "asc" | "desc" };
   source?: string;       // 시드 원본(저장소 루트 기준)
   sourceGroup?: string;  // taxonomy.json 처럼 dict 안의 그룹
-  seedItems?: Record<string, unknown>[]; // 원본 파일 없이 코드로 시드할 항목
+  seedItems?: Record<string, unknown>[]; // 코드로 정의한 기본 항목. 스토어에 없어도 목록에 보이고, 저장하면 스토어 값이 우선한다
   desc?: string;         // 목록 상단 설명
   perRecord?: boolean;   // 공개 폼이 동시에 쓰는 데이터 → 건별 저장(recordCollection)
   exportable?: boolean;  // 목록에 엑셀 다운로드 표시
@@ -153,13 +153,13 @@ COLLECTIONS.push(
   },
   {
     id: "vip-benefits", label: "VIP 혜택 공개", singular: "혜택", titleField: "title", searchFields: ["title", "highlight"],
-    desc: "상태가 '공개'이고 공개 일시가 지난 혜택만 랜딩페이지에 나타납니다(최대 1분 지연). 공개 전 내용은 고객 화면으로 전달되지 않습니다. 매주 일요일 19시 공개분을 미리 등록하세요.",
+    desc: "상태가 '공개'이고 공개 일시가 지난 혜택만 랜딩페이지에 나타납니다(최대 1분 지연). 공개 전 내용은 고객 화면으로 전달되지 않습니다. 릴스로 공개된 1~3탄은 기본으로 들어 있어 삭제할 수 없고, 내리려면 상태를 '숨김'으로 바꾸세요. 다음 혜택을 공개 일시와 함께 미리 등록하면 랜딩 카운트다운이 그 시각을 가리키고, 없으면 다음 일요일 19시를 가리킵니다.",
     statusField: "status", statusOptions: PUBLISH,
     columns: [{ key: "title", label: "혜택" }, { key: "highlight", label: "핵심 문구" }, { key: "reveal_at", label: "공개 일시", type: "date" }, { key: "status", label: "상태", type: "status" }, { key: "sort_order", label: "순서", type: "number" }],
-    defaults: { status: "draft", sort_order: 2 }, sortBy: { key: "sort_order", dir: "asc" }, seedItems: [VIP_FIRST_BENEFIT],
+    defaults: { status: "draft", sort_order: VIP_ANNOUNCED_BENEFITS.length + 1 }, sortBy: { key: "sort_order", dir: "asc" }, seedItems: VIP_ANNOUNCED_BENEFITS as unknown as Record<string, unknown>[],
     sections: [
       { title: "공개 설정", fields: [status(PUBLISH), { name: "reveal_at", label: "공개 일시(한국시간)", type: "datetime" }, n("sort_order", "순서")] },
-      { title: "내용", fields: [t("title", "혜택명", { full: true }), t("highlight", "핵심 문구", { full: true }), t("before_text", "기존 조건", { help: "비우면 비교표를 표시하지 않습니다" }), t("after_text", "VIP 조건"), ta("note", "보조 설명"), t("image", "이미지 URL", { help: "/sgl-vip/… 또는 https://…" }), t("image_alt", "이미지 설명(대체 텍스트)")] },
+      { title: "내용", fields: [t("title", "혜택명", { full: true }), t("highlight", "핵심 문구", { full: true }), list("items", "혜택 항목", "한 줄에 하나 · 카드에 체크 목록으로 표시"), t("before_text", "기존 조건", { help: "비우면 비교표를 표시하지 않습니다" }), t("after_text", "VIP 조건"), ta("note", "보조 설명"), t("image", "이미지 URL", { help: "/sgl-vip/… 또는 https://…" }), t("image_alt", "이미지 설명(대체 텍스트)")] },
     ],
   },
 );

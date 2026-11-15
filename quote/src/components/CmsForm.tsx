@@ -54,7 +54,7 @@ export function FieldGrid({ sections, value, onChange }: { sections: SectionDef[
 
 export default function CmsForm({ collection, item }: { collection: CollectionDef; item: Rec | null }) {
   const router = useRouter();
-  const [value, setValue] = useState<Rec>(() => { const v = { ...(item ?? collection.defaults ?? {}) }; delete v.__new; return v; });
+  const [value, setValue] = useState<Rec>(() => { const v = { ...(item ?? collection.defaults ?? {}) }; delete v.__new; delete v.__seed; return v; });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const isNew = !item || !!item.__new; // 새 문서 화면은 기본값을 __new 표시와 함께 받는다
@@ -78,7 +78,7 @@ export default function CmsForm({ collection, item }: { collection: CollectionDe
       <FieldGrid sections={collection.sections} value={value} onChange={(k, v) => setValue((s) => ({ ...s, [k]: v }))} />
       <div className="sticky bottom-0 flex items-center gap-2 rounded-2xl border border-[var(--admin-border)] bg-white/90 p-3 backdrop-blur">
         <button className="admin-btn admin-btn--primary" disabled={busy} onClick={save}><i className="ri-save-3-line" /> {isNew ? `${collection.singular} 등록` : "저장"}</button>
-        {!isNew && <button className="admin-btn admin-btn--danger" disabled={busy} onClick={remove}><i className="ri-delete-bin-6-line" /> 삭제</button>}
+        {!isNew && !item!.__seed && <button className="admin-btn admin-btn--danger" disabled={busy} onClick={remove}><i className="ri-delete-bin-6-line" /> 삭제</button>}
         {msg && <span className="text-sm text-[var(--admin-text-muted)]">{msg}</span>}
         {!isNew && <span className="ml-auto text-xs text-[var(--admin-text-soft)]">ID {String(item!.id)} · 수정 {String(item!.updated_at ?? "-")}</span>}
       </div>

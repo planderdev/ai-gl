@@ -4,7 +4,7 @@ import CmsForm from "@/components/CmsForm";
 import PageHead from "@/components/PageHead";
 import { decodeId } from "@/lib/api";
 import { collectionById } from "@/lib/cms/schema";
-import { cmsStore } from "@/lib/cms/service";
+import { getItem, isSeedItem } from "@/lib/cms/service";
 
 export const dynamic = "force-dynamic";
 export default async function CmsEditPage({ params, searchParams }: PageProps<"/cms/[collection]/[id]">) {
@@ -12,9 +12,10 @@ export default async function CmsEditPage({ params, searchParams }: PageProps<"/
   const c = collectionById(decodeId(p.collection));
   if (!c) notFound();
   const id = decodeId(p.id);
-  const item = id === "new" ? null : await cmsStore(c).get(id);
+  const item = id === "new" ? null : await getItem(c, id);
   if (id !== "new" && !item) notFound();
-  const initial = item ?? null;
+  // 기본 항목은 지워도 코드 값이 다시 보이므로 삭제 대신 상태로 내린다
+  const initial = item && isSeedItem(c, id) ? { ...item, __seed: true } : item;
   const defaults = { ...(c.defaults ?? {}), ...(typeof sp.type === "string" ? { type: sp.type, product_type: sp.type } : {}) };
   const title = item ? String(item[c.titleField] ?? id) : `새 ${c.singular}${typeof sp.type === "string" ? ` (${sp.type === "golf_course" ? "골프장" : "패키지"})` : ""}`;
   return (

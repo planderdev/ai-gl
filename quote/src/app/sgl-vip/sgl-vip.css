@@ -86,6 +86,9 @@ body:has(.vip) { background: #06140d; }
 .vip-card__title { margin-top: 14px; font-size: clamp(18px, 4.8vw, 21px); font-weight: 700; line-height: 1.35; letter-spacing: -0.03em; color: var(--text-2); }
 .vip-card__highlight { margin-top: 4px; font-size: clamp(29px, 7.6vw, 42px); font-weight: 800; line-height: 1.22; letter-spacing: -0.04em; }
 .vip-card__highlight span { background: linear-gradient(transparent 66%, rgba(77, 255, 46, 0.6) 66%); }
+.vip-card__items { display: grid; gap: 10px; margin-top: 20px; }
+.vip-card__items li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 15.5px; font-weight: 600; line-height: 1.45; letter-spacing: -0.02em; }
+.vip-card__items svg { box-sizing: content-box; width: 14px; height: 14px; padding: 4px; border-radius: 999px; background: var(--pine); color: var(--neon); stroke-width: 3; }
 .vip-compare { display: grid; gap: 8px; margin-top: 22px; }
 .vip-compare > div { display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 14px; }
 .vip-compare dt { font-size: 13px; font-weight: 700; }

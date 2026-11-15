@@ -95,7 +95,7 @@ rowspan 셀을 펼치고, 표 앞 텍스트의 "■나리타 송영 / ＜하네�
 ## SGL VIP 사전신청 랜딩 (`/sgl-vip`, `src/app/sgl-vip/`, `src/lib/sgl-vip/`)
 광고 영상(SGL 1주년, 12월 26일 오픈, 연회비 10만원, 매주 일요일 19시 혜택 공개)에서 유입된 고객이 사전신청하는 공개 페이지. 로그인 없이 열리도록 `src/proxy.ts` matcher 에서 `sgl-vip`, `api/public` 을 제외했다.
 - 신청: `POST /api/public/sgl-vip/apply` → CMS 컬렉션 `vip-applications`(관리자: 이벤트관리 → VIP 사전신청, 엑셀 다운로드). 공개 폼이 동시에 쓰므로 `perRecord` 로 **건당 Blob 하나**(`recordCollection`)에 저장한다. id 는 휴대폰 번호 해시라 번호당 한 건이며, 재신청해도 응답은 같고 첫 건이 유지된다.
-- 혜택 공개: CMS 컬렉션 `vip-benefits`(이벤트관리 → VIP 혜택 공개). 상태가 공개이고 공개 일시(KST)가 지난 항목만 서버에서 골라 보내므로 공개 전 내용은 페이지 소스에 실리지 않는다. 페이지 캐시 60초 → 최대 1분 지연. 첫 혜택(`VIP_FIRST_BENEFIT`)은 저장소에 없어도 노출되고, 수정하려면 `npm run seed:cms` 로 저장소에 넣은 뒤 관리자에서 고친다.
+- 혜택 공개: CMS 컬렉션 `vip-benefits`(이벤트관리 → VIP 혜택 공개). 상태가 공개이고 공개 일시(KST)가 지난 항목만 서버에서 골라 보내므로 공개 전 내용은 페이지 소스에 실리지 않는다. 페이지 캐시 60초 → 최대 1분 지연. 릴스로 공개된 혜택(`VIP_ANNOUNCED_BENEFITS`, 1~3탄)은 컬렉션 기본 항목(`seedItems`)이라 저장소에 없어도 랜딩·관리자에 보이고, 관리자에서 저장하면 저장소 값이 우선한다(삭제 대신 상태 '숨김'). 잠긴 카드의 다음 공개 시각은 공개 예정으로 등록된 혜택이 있으면 그 시각, 없으면 다음 일요일 19시이며, 직전 혜택이 일요일보다 당겨 공개됐으면(3탄 토요일) 그 주는 건너뛴다.
 - 일정·문구 상수: `src/lib/sgl-vip/config.ts`. 동의 문구를 바꾸면 `VIP_CONSENT_VERSION` 도 올린다.
 - 자산: `public/sgl-vip/`. 영상에 자막이 박혀 있어 사진·히어로 클립은 자막 띠를 피해 잘랐다.
 - 유입 경로: 광고 링크에 `?utm_source=&utm_medium=&utm_campaign=&utm_content=` 를 붙이면 신청 건에 함께 저장된다.
