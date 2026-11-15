@@ -15,7 +15,7 @@ const FIRST_NEXT_REVEAL_AT = Date.UTC(2026, 10, 8, REVEAL_HOUR) - KST_MS;
 
 export const VIP_ANNUAL_FEE = "10만원";
 export const VIP_SUPPORT_TEL = "1544-7567";
-export const VIP_REGIONS = ["벳부", "다카마쓰", "마쓰야마", "후지"] as const;
+export const VIP_REGIONS = ["벳부", "다카마쓰", "마쓰야마", "후지", "미야자키", "삿포로"] as const;
 /** 동의 문구를 바꾸면 함께 올린다(신청 건에 어떤 문구로 동의했는지 남는다) */
 export const VIP_CONSENT_VERSION = "2026-11-01.3";
 
