@@ -5,6 +5,7 @@ import AutoGroupButton from "@/components/AutoGroupButton";
 import { productGroups, products, quoteProduct, sortSheets } from "@/lib/products/service";
 import { golfCourses, hotels, vehicleRules } from "@/lib/masters/service";
 import { todayKst } from "@/lib/crawler/airseoul";
+import { loadConfig } from "@/lib/sgl/catalog";
 import { golfText, SALE_TYPE_LABEL, saleTypeOf, stayText } from "@/lib/products/describe";
 import { airlineName } from "@/lib/format";
 import type { ProductGroup } from "@/types";
@@ -15,7 +16,8 @@ type Quote = NonNullable<Awaited<ReturnType<typeof quoteProduct>>>;
 
 /** 상품관리 첫 화면: 국가 › 지역 › 상품군(원가표 파일) › 원가표(시트) */
 export default async function ProductsPage() {
-  const [list, groups, h, g, v] = await Promise.all([products().list(), productGroups().list(), hotels().list(), golfCourses().list(), vehicleRules().list()]);
+  const [list, groups, h, g, v, sgl] = await Promise.all([products().list(), productGroups().list(), hotels().list(), golfCourses().list(), vehicleRules().list(), loadConfig()]);
+  const siteOpen = sgl.status === "open"; // 설정 › 고객 사이트의 공개 스위치와 사이트 상태
   const quotes = new Map((await Promise.all(list.map((p) => quoteProduct(p.id)))).filter((q): q is Quote => !!q).map((q) => [q.product.id, q]));
   const hotelsById = new Map(h.map((x) => [x.id, x])), coursesById = new Map(g.map((x) => [x.id, x]));
   const groupIds = new Set(groups.map((x) => x.id));
@@ -60,7 +62,9 @@ export default async function ProductsPage() {
               {grp.publicStatus === "hidden"
                 ? <span className="admin-chip admin-chip--gray" title="고객 사이트(/sgl)에 보이지 않습니다"><i className="ri-eye-off-line" /> 고객 사이트 숨김</span>
                 : children.some((p) => p.dateTo > today)
-                  ? <a className="admin-chip admin-chip--success" href={`/sgl/p/${encodeURIComponent(grp.id)}`} target="_blank" title="고객 사이트에서 보기"><i className="ri-global-line" /> 고객 사이트 공개</a>
+                  ? siteOpen
+                    ? <a className="admin-chip admin-chip--success" href={`/sgl/p/${encodeURIComponent(grp.id)}`} target="_blank" title="고객 사이트에서 보기"><i className="ri-global-line" /> 고객 사이트 공개</a>
+                    : <a className="admin-chip admin-chip--warning" href={`/sgl/p/${encodeURIComponent(grp.id)}`} target="_blank" title="고객 사이트가 아직 미공개입니다. 관리자만 미리 볼 수 있어요"><i className="ri-eye-line" /> 미리보기(사이트 미공개)</a>
                   : <span className="admin-chip admin-chip--warning" title="출발일이 남은 원가표가 없어 고객 사이트에 보이지 않습니다"><i className="ri-calendar-close-line" /> 출발일 지남</span>}
             </div>
             {grp.summary && <p className="mt-1 pl-7 text-xs text-[var(--admin-text-muted)]">{grp.summary}</p>}
@@ -89,7 +93,8 @@ export default async function ProductsPage() {
           <Link href="/products/new" className="admin-btn admin-btn--primary"><i className="ri-add-line" /> 새 원가표</Link>
           <Link href="/products/new#import" className="admin-btn admin-btn--light"><i className="ri-upload-2-line" /> 엑셀 가져오기</Link>
           <GroupEditor regions={masterRegions} />
-          <a href="/sgl" target="_blank" className="admin-btn admin-btn--light"><i className="ri-external-link-line" /> 고객 사이트</a>
+          <a href="/sgl" target="_blank" className="admin-btn admin-btn--light" title={siteOpen ? "고객 사이트 열기" : "아직 미공개입니다. 설정 › 고객 사이트에서 공개를 켜면 고객에게 열립니다"}><i className="ri-external-link-line" /> {siteOpen ? "고객 사이트" : "고객 사이트 미리보기"}</a>
+          {!siteOpen && <Link href="/cms/settings/sgl" className="admin-chip admin-chip--warning" title="설정 › 고객 사이트에서 공개를 켜세요"><i className="ri-lock-line" /> 고객 사이트 미공개</Link>}
           <AutoGroupButton count={list.filter((p) => !p.groupId || !groupIds.has(p.groupId)).length} />
         </>}
       />

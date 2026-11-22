@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { guardSite } from "@/lib/sgl/access";
 import { findDeparture, loadCatalog } from "@/lib/sgl/catalog";
 import { addDaysIso, dateKo, depositOf, sized, won } from "@/lib/sgl/config";
 import { BookForm } from "../_ui/Forms";
@@ -12,6 +13,7 @@ const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : "
 
 /** 예약 작성: 상세에서 고른 일정·출발일·인원을 서버가 다시 확인하고 금액을 계산해 보여 준다 */
 export default async function BookPage({ searchParams }: Props) {
+  if (!(await guardSite()).allowed) return null;
   const sp = await searchParams;
   const catalog = await loadCatalog();
   const hit = findDeparture(catalog, one(sp.sheet), one(sp.date));

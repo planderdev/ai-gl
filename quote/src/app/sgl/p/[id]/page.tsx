@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { decodeId } from "@/lib/api";
+import { guardSite, siteAccess } from "@/lib/sgl/access";
 import { findPackage, loadCatalog } from "@/lib/sgl/catalog";
 import Detail from "../../_ui/Detail";
 import PackageCard from "../../_ui/PackageCard";
@@ -11,12 +12,14 @@ type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<str
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!(await siteAccess()).allowed) return {};
   const pkg = findPackage(await loadCatalog(), decodeId((await params).id));
   return pkg ? { title: pkg.title, description: pkg.summary } : {};
 }
 
 /** 상품 상세: 관리자의 상품군 하나. 일정(원가표)·출발일·인원을 고르면 그 날짜의 판매가로 예약을 시작한다 */
 export default async function PackagePage({ params, searchParams }: Props) {
+  if (!(await guardSite()).allowed) return null;
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const catalog = await loadCatalog();
   const pkg = findPackage(catalog, decodeId(id));

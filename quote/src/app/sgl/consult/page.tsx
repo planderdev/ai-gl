@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { guardSite } from "@/lib/sgl/access";
 import { findSheet, loadCatalog } from "@/lib/sgl/catalog";
 import { dateKo } from "@/lib/sgl/config";
 import { ConsultForm } from "../_ui/Forms";
@@ -12,6 +13,7 @@ const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : "
 
 /** 상담 신청. 상세에서 넘어오면 보던 상품·출발일·인원이 미리 채워진다 */
 export default async function ConsultPage({ searchParams }: Props) {
+  if (!(await guardSite()).allowed) return null;
   const sp = await searchParams;
   const catalog = await loadCatalog();
   const { config, packages } = catalog;

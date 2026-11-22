@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { collectionById } from "@/lib/cms/schema";
 import { listItems } from "@/lib/cms/service";
+import { guardSite } from "@/lib/sgl/access";
 import { loadCatalog } from "@/lib/sgl/catalog";
 import { HERO_SLIDES, PAY_METHOD_LABEL, todayKstIso } from "@/lib/sgl/config";
 import { Icon } from "./_ui/icons";
@@ -18,6 +19,7 @@ async function loadFaqs() {
 }
 
 export default async function SglHome() {
+  if (!(await guardSite()).allowed) return null;
   const [{ config, packages }, faqs] = await Promise.all([loadCatalog(), loadFaqs()]);
   // 마지막 히어로 장의 설명에는 지금 판매 중인 지역을 적는다
   const regions = [...new Set(packages.map((p) => p.region))];

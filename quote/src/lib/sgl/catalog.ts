@@ -34,7 +34,8 @@ export function toConfig(s: Raw): SglConfig {
   if (on(s.payment_bank_enabled) && str(s.bank_account)) methods.push("bank");
   if (on(s.payment_onsite_enabled)) methods.push("onsite");
   return {
-    status: oneOf(s.site_status, ["open", "maintenance", "private"] as const, "open"),
+    // 공개 스위치(설정 › 고객 사이트)를 켜기 전에는 사이트 상태와 상관없이 비공개
+    status: on(s.sgl_site_open) ? oneOf(s.site_status, ["open", "maintenance", "private"] as const, "open") : "private",
     brand: str(s.sgl_brand_name, SGL_DEFAULTS.brand), tel: str(s.sgl_tel, SGL_DEFAULTS.tel), hours: str(s.sgl_hours, SGL_DEFAULTS.hours),
     kakaoUrl: str(s.sgl_kakao_url), instagramUrl: str(s.sgl_instagram_url),
     company: str(s.sgl_company, SGL_DEFAULTS.company), ceo: str(s.sgl_ceo, SGL_DEFAULTS.ceo), bizNo: str(s.sgl_biz_no, SGL_DEFAULTS.bizNo), license: str(s.sgl_tour_license, SGL_DEFAULTS.license), address: str(s.sgl_address, SGL_DEFAULTS.address),

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { guardSite } from "@/lib/sgl/access";
 import { loadConfig } from "@/lib/sgl/catalog";
 import { LookupForm } from "../_ui/Forms";
 
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: "예약 조회", robots: { index: fal
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function LookupPage({ searchParams }: Props) {
+  if (!(await guardSite()).allowed) return null;
   const [sp, config] = await Promise.all([searchParams, loadConfig()]);
   const no = typeof sp.no === "string" ? sp.no.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 30) : "";
   return (

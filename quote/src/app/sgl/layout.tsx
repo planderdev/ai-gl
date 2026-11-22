@@ -2,30 +2,38 @@ import type { Metadata, Viewport } from "next";
 import { Gilda_Display, Noto_Serif_KR, Urbanist } from "next/font/google";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { loadConfig } from "@/lib/sgl/catalog";
+import { siteAccess } from "@/lib/sgl/access";
 import Chrome from "./_ui/Chrome";
 import "./sgl.css";
 
 const TITLE = "SGL 일본 골프여행 | 상담 · 예약 · 결제";
 const DESCRIPTION = "항공·숙박·그린피·차량을 한 번에. 다카마쓰·마쓰야마·벳부 골프여행의 출발일별 요금을 확인하고 상담부터 예약, 결제까지 한 곳에서 진행하세요.";
-export const metadata: Metadata = {
-  metadataBase: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "ai-gl.vercel.app"}`),
-  title: { default: TITLE, template: "%s | SGL 골프여행" },
-  description: DESCRIPTION,
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/sgl", siteName: "SGL", locale: "ko_KR", type: "website" },
-};
+/** 공개 전(404)에는 사이트 소개 문구를 머리말에 싣지 않는다 */
+export async function generateMetadata(): Promise<Metadata> {
+  const { config, preview } = await siteAccess();
+  if (config.status === "private") return { title: preview ? `[미리보기] ${TITLE}` : undefined, robots: { index: false, follow: false } };
+  return {
+    metadataBase: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "ai-gl.vercel.app"}`),
+    title: { default: TITLE, template: "%s | SGL 골프여행" },
+    description: DESCRIPTION,
+    openGraph: { title: TITLE, description: DESCRIPTION, url: "/sgl", siteName: "SGL", locale: "ko_KR", type: "website" },
+  };
+}
 export const viewport: Viewport = { themeColor: "#f7d9c6" };
 
 const urbanist = Urbanist({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700", "800"], variable: "--f-urbanist", display: "swap" });
 const gilda = Gilda_Display({ subsets: ["latin"], weight: "400", variable: "--f-gilda", display: "swap" });
 const serifKr = Noto_Serif_KR({ weight: ["400", "500"], variable: "--f-serif-kr", display: "swap", preload: false });
 
-/** 고객 사이트 공통 틀: 관리자 설정의 사이트 상태(정상/점검/비공개)와 연락처·사업자 정보를 따른다 */
+/**
+ * 고객 사이트 공통 틀: 관리자 설정의 공개 스위치·사이트 상태(정상/점검/비공개)와 연락처·사업자 정보를 따른다.
+ * 공개 전에는 404, 로그인한 관리자에게만 미리보기 띠와 함께 보여 준다.
+ */
 export default async function SglLayout({ children }: { children: React.ReactNode }) {
-  const config = await loadConfig();
-  if (config.status === "private") notFound();
+  const { config, preview } = await siteAccess();
+  if (!preview && config.status === "private") notFound();
   const fonts = `${urbanist.variable} ${gilda.variable} ${serifKr.variable}`;
-  if (config.status === "maintenance") return (
+  if (!preview && config.status === "maintenance") return (
     <div className={`sgl ${fonts}`}>
       <main className="sgl-maint">
         <div>
@@ -54,6 +62,13 @@ export default async function SglLayout({ children }: { children: React.ReactNod
           <p>사진은 여행 분위기를 보여 주는 예시이며 실제 골프장·숙소와 다를 수 있습니다. © {config.brand}. All rights reserved.</p>
         </footer>
       </Chrome>
+      {preview && (
+        <aside className="sgl-preview" role="status">
+          <b>관리자 미리보기</b>
+          <span>{config.status === "maintenance" ? "고객에게는 점검 안내가 보입니다." : "고객에게는 아직 열리지 않습니다."}</span>
+          <Link href="/cms/settings/sgl" prefetch={false}>공개 설정</Link>
+        </aside>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { decodeId } from "@/lib/api";
 import { getBooking, isPayable, verifyBookingToken } from "@/lib/sgl/bookings";
+import { guardSite } from "@/lib/sgl/access";
 import { findPackage, loadCatalog } from "@/lib/sgl/catalog";
 import { addDaysIso, BOOKING_STATUS_LABEL, dateKo, PAY_METHOD_LABEL, sized, won, type PayMethod } from "@/lib/sgl/config";
 import { PaymentPanel } from "../../_ui/Forms";
@@ -15,6 +16,7 @@ const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : "
 
 /** 예약 현황과 결제. 주소의 열람 토큰(k)이 맞아야 볼 수 있고, 없으면 예약 조회로 보낸다 */
 export default async function BookingPage({ params, searchParams }: Props) {
+  if (!(await guardSite()).allowed) return null;
   const [{ no }, sp] = await Promise.all([params, searchParams]);
   const b = await getBooking(decodeId(no));
   const k = one(sp.k);

@@ -35,7 +35,7 @@ export const BOOKING_STATUS: [string, string][] = [["pending", "결제대기"], 
 const t = (name: string, label: string, extra: Partial<FieldDef> = {}): FieldDef => ({ name, label, type: "text", ...extra });
 const ta = (name: string, label: string, extra: Partial<FieldDef> = {}): FieldDef => ({ name, label, type: "textarea", full: true, ...extra });
 const n = (name: string, label: string, extra: Partial<FieldDef> = {}): FieldDef => ({ name, label, type: "number", ...extra });
-const b = (name: string, label: string): FieldDef => ({ name, label, type: "boolean" });
+const b = (name: string, label: string, extra: Partial<FieldDef> = {}): FieldDef => ({ name, label, type: "boolean", ...extra });
 const sel = (name: string, label: string, options: [string, string][]): FieldDef => ({ name, label, type: "select", options });
 const list = (name: string, label: string, help = "한 줄에 하나"): FieldDef => ({ name, label, type: "list", help, full: true });
 const js = (name: string, label: string, help = "JSON 그대로 편집"): FieldDef => ({ name, label, type: "json", help, full: true });
@@ -202,6 +202,7 @@ export const SETTINGS_TABS: { id: string; label: string; sections: SectionDef[] 
     { title: "예외 규정", fields: [ta("noshow_policy", "노쇼 규정"), ta("weather_policy", "우천 / 기상 규정"), ta("cancellation_extra_notice", "추가 안내 문구")] },
   ] },
   { id: "sgl", label: "고객 사이트", sections: [
+    { title: "공개 상태", fields: [b("sgl_site_open", "고객 사이트(/sgl) 공개", { full: true, help: "꺼 두면 고객에게는 열리지 않고(404), 로그인한 관리자만 미리 볼 수 있습니다. 결제 설정의 입금 계좌와 상품·사진을 확인한 뒤 켜세요." })] },
     { title: "브랜드 · 상담 채널", fields: [t("sgl_brand_name", "브랜드명", { help: "비우면 SGL" }), t("sgl_tel", "고객센터 전화", { help: "비우면 1544-7567" }), t("sgl_hours", "상담 시간", { help: "비우면 평일 09:00~18:00" }), t("sgl_kakao_url", "카카오톡 채널 주소", { help: "https://pf.kakao.com/… 넣으면 상담 버튼이 생깁니다" }), t("sgl_instagram_url", "인스타그램 주소")] },
     { title: "가격 노출", fields: [sel("sgl_price_mode", "판매가 기준", [["direct_first", "원가표의 실제 판매가 우선, 없으면 마진 판매가"], ["direct_only", "실제 판매가를 적은 날짜만 가격 공개"]]), n("sgl_price_margin", "마진 판매가에 쓸 마진(%)", { help: "비우면 원가표 마진 중 가장 높은 값" }), sel("sgl_price_round", "올림 단위(원)", [["1000", "1,000원"], ["10000", "10,000원"], ["100", "100원"]])] },
     { title: "예약 조건", fields: [n("sgl_min_people", "최소 인원", { help: "비우면 2명" }), n("sgl_max_people", "온라인 예약 최대 인원", { help: "비우면 8명 · 넘으면 상담으로 안내" }), n("sgl_booking_lead_days", "온라인 예약 마감(출발 며칠 전)", { help: "비우면 7일 · 그보다 임박한 출발일은 상담으로 안내" })] },
