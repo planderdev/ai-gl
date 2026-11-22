@@ -78,6 +78,7 @@ src/lib/store        JSON 파일 컬렉션 스토어
 src/lib/{masters,products,fares}/service.ts   도메인 서비스
 src/app/api          REST 라우트
 src/app/(pages)      대시보드 / 상품·원가표 / 항공 운임 / 마스터 데이터
+src/app/sgl          SGL 고객 사이트(상담·예약·결제) — src/lib/sgl 가 관리자 데이터를 고객용으로 변환
 scripts              CLI(import/export)
 ```
 
@@ -120,6 +121,26 @@ rowspan 셀을 펼치고, 표 앞 텍스트의 "■나리타 송영 / ＜하네�
 - 일정·문구 상수: `src/lib/sgl-vip/config.ts`. 동의 문구를 바꾸면 `VIP_CONSENT_VERSION` 도 올린다.
 - 자산: `public/sgl-vip/`. 영상에 자막이 박혀 있어 사진·히어로 클립은 자막 띠를 피해 잘랐다.
 - 유입 경로: 광고 링크에 `?utm_source=&utm_medium=&utm_campaign=&utm_content=` 를 붙이면 신청 건에 함께 저장된다.
+
+## SGL 고객 사이트 — 상담 · 예약 · 결제 (`/sgl`, `src/app/sgl/`, `src/lib/sgl/`)
+관리자에서 만든 상품군·원가표·설정을 고객이 보는 공개 사이트. 로그인 없이 열리도록 `src/proxy.ts` matcher 에서 `sgl`(→ `/sgl`, `/sgl-vip`)과 `api/public` 을 제외했다.
+
+| 화면 | 경로 | 관리자에서 오는 것 |
+|---|---|---|
+| 랜딩(히어로·검색·상품 목록·이용 방법·FAQ) | `/sgl` | 공개 상품군, 출발일별 판매가, 콘텐츠관리 FAQ, 설정(연락처·결제 수단) |
+| 상품 상세(일정 선택·가격 달력·인원) | `/sgl/p/<상품군 id>` | 상품군의 원가표(일정)·숙박·골프장·항공편, 취소/환불 설정 |
+| 예약 작성 | `/sgl/book?sheet=&date=&pax=` | 서버가 그 날짜의 판매가를 다시 계산 |
+| 예약 현황·결제 | `/sgl/booking/<예약번호>?k=<열람 토큰>` | 결제 설정(수단·계좌·예약금), 예약관리의 상태 |
+| 상담 신청 / 예약 조회 | `/sgl/consult`, `/sgl/lookup` | 상담 채널 설정 |
+
+- **상품 = 상품군, 일정 = 원가표.** 상품군의 `publicStatus` 가 `hidden` 이 아니고 출발일이 남은 원가표가 있으면 상품으로 보인다(상품관리 › 상품군 수정 › 고객 사이트 노출에서 공개/숨김·고객용 이름·사진·소개를 정한다).
+- **판매가** (`src/lib/sgl/catalog.ts`): 원가표 행의 실제 판매가(`directSalePrice`) → 없으면 원가 ÷ (1 − 마진)을 올림(인디비 항공이 마감·미정이면 그룹 원가). 둘 다 없으면 "가격 문의"(상담), 인디비 마감이면 마감. 마진·올림 단위·실제 판매가만 공개 여부는 설정 › 고객 사이트. **원가·마진·운임 내역은 고객에게 내려가지 않는다**(`Public*` 타입에 없음). 카탈로그는 인스턴스 메모리에 30초 보관한다.
+- **예약** (`src/lib/sgl/bookings.ts`): 예약관리(`cms-bookings`, 건별 저장)에 쌓인다. 예약번호는 `SGL` + 날짜 + 무작위 5자, 예약 화면은 예약번호의 HMAC 토큰(`AUTH_SECRET`)이 주소에 있어야 열리고, 예약 조회는 예약번호 + 휴대폰 번호가 모두 맞아야 그 주소를 준다. 온라인 예약은 설정의 인원 범위·예약 마감일(출발 N일 전) 안에서만 받고, 그 밖은 상담으로 보낸다.
+- **결제**: 설정 › 결제 설정을 그대로 따른다. 무통장입금은 계좌번호가 있어야, 카드결제는 `TOSS_CLIENT_KEY`·`TOSS_SECRET_KEY`(토스페이먼츠 결제창 API 개별 연동 키, `test_ck_`/`test_sk_` 또는 `live_`)가 있어야 열린다. '부분결제'를 켜고 예약금 정책(고정·비율, 1인당/건당)을 정하면 예약금만 먼저 결제할 수 있다. 무통장·현장 결제는 신청만 받고, **입금 확인은 관리자가 예약관리에서 결제 상태를 '결제완료'로 바꾼다** → 고객의 예약 화면에 바로 반영. 카드는 `/api/public/sgl/toss/success` 에서 주문번호·금액을 저장값과 대조한 뒤 승인한다.
+- **상담**: `POST /api/public/sgl/inquiries` → 예약관리 › 상담 문의(`cms-inquiries`).
+- 설정 › 기본 설정의 사이트 상태가 `maintenance` 면 점검 안내, `private` 이면 404.
+- 화면: `src/app/sgl/_ui/`(히어로·검색·달력·카드·상세·폼), 스타일 `sgl.css`(모든 규칙이 `.sgl` 아래). 기본 사진·히어로 문구·지역 정보는 `src/lib/sgl/config.ts`. 사진을 지정하지 않은 상품은 분위기 예시 사진(Unsplash)을 쓰므로 실제 사진을 상품군에 넣는 것이 좋다.
+- 공개 API(`/api/public/sgl/*`)는 인스턴스별 간이 호출 제한 + 허니팟만 있다. 대량 호출 방어는 Vercel Firewall 로 한다.
 
 ## 배포 (Vercel)
 - 프로젝트: `planderdevs-projects/ai-gl` → https://ai-gl.vercel.app

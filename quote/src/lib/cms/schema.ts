@@ -26,6 +26,7 @@ export interface CollectionDef {
   desc?: string;         // 목록 상단 설명
   perRecord?: boolean;   // 공개 폼이 동시에 쓰는 데이터 → 건별 저장(recordCollection)
   exportable?: boolean;  // 목록에 엑셀 다운로드 표시
+  legacySingle?: boolean; // perRecord 로 바꾸기 전 단일 파일(Blob)에 남은 항목도 함께 읽는다
 }
 
 const status = (opts: [string, string][]): FieldDef => ({ name: "status", label: "상태", type: "select", options: opts });
@@ -81,15 +82,30 @@ export const COLLECTIONS: CollectionDef[] = [
     ],
   },
   {
-    id: "bookings", label: "예약 목록", singular: "예약", titleField: "customer_name", searchFields: ["customer_name", "customer_phone", "product_title"], statusField: "status", statusOptions: BOOKING_STATUS,
-    columns: [{ key: "id", label: "ID", width: "60px" }, { key: "customer_name", label: "고객" }, { key: "product_title", label: "상품" }, { key: "date", label: "예약일", type: "date" }, { key: "people", label: "인원", type: "number" }, { key: "total_price", label: "금액", type: "money" }, { key: "payment_status", label: "결제" }, { key: "status", label: "상태", type: "status" }],
-    defaults: { status: "pending", payment_method: "card", payment_status: "pending", people: 1, refund_status: "none", status_logs: [] }, sortBy: { key: "date", dir: "desc" }, source: "admin/data/bookings.json",
+    id: "bookings", label: "예약 목록", singular: "예약", titleField: "customer_name", searchFields: ["id", "customer_name", "customer_phone", "product_title"], statusField: "status", statusOptions: BOOKING_STATUS,
+    desc: "고객 사이트(/sgl)에서 접수된 예약과 관리자가 직접 등록한 예약입니다. 무통장 입금을 확인하면 결제 상태를 '결제완료'로, 항공·골프장 예약까지 끝나면 상태를 '예약확정'으로 바꾸세요. 고객의 예약 조회 화면에 바로 반영됩니다.",
+    columns: [{ key: "id", label: "예약번호", width: "150px" }, { key: "customer_name", label: "고객" }, { key: "product_title", label: "상품" }, { key: "date", label: "출발일", type: "date" }, { key: "people", label: "인원", type: "number" }, { key: "total_price", label: "금액", type: "money" }, { key: "payment_method", label: "결제 수단" }, { key: "payment_status", label: "결제" }, { key: "status", label: "상태", type: "status" }, { key: "created_at", label: "접수", type: "date" }],
+    defaults: { status: "pending", payment_method: "card", payment_status: "pending", people: 1, refund_status: "none", status_logs: [] }, sortBy: { key: "created_at", dir: "desc" }, source: "admin/data/bookings.json",
+    perRecord: true, legacySingle: true, exportable: true,
     sections: [
-      { title: "예약 정보", fields: [t("product_id", "상품 ID"), t("product_title", "상품명"), { name: "date", label: "예약일", type: "date" }, n("people", "인원"), n("total_price", "총 금액"), status(BOOKING_STATUS)] },
-      { title: "고객 정보", fields: [t("customer_name", "고객명"), t("customer_phone", "연락처")] },
-      { title: "결제 정보", fields: [sel("payment_method", "결제 수단", [["card", "카드결제"], ["bank", "무통장입금"], ["onsite", "현장결제"], ["partial", "부분결제"]]), sel("payment_status", "결제 상태", [["pending", "결제대기"], ["paid", "결제완료"], ["refunded", "환불완료"]]), n("payment_amount", "결제 금액"), { name: "payment_date", label: "결제 일시", type: "datetime" }] },
+      { title: "예약 정보", fields: [t("product_id", "상품(원가표) ID"), t("product_title", "상품명"), { name: "date", label: "출발일", type: "date" }, { name: "return_date", label: "귀국일", type: "date" }, n("people", "인원"), n("unit_price", "1인 요금"), n("total_price", "총 금액"), status(BOOKING_STATUS)] },
+      { title: "고객 정보", fields: [t("customer_name", "고객명"), t("customer_phone", "연락처"), t("customer_email", "이메일"), ta("companions", "동행자"), ta("request_note", "요청 사항")] },
+      { title: "결제 정보", fields: [sel("payment_method", "결제 수단", [["card", "카드결제"], ["bank", "무통장입금"], ["onsite", "현장결제"], ["partial", "부분결제"]]), sel("payment_plan", "결제 구분", [["full", "전액"], ["deposit", "예약금"]]), sel("payment_status", "결제 상태", [["pending", "결제대기"], ["paid", "결제완료"], ["refunded", "환불완료"]]), n("payment_due", "결제 요청 금액"), n("payment_amount", "결제된 금액"), { name: "payment_date", label: "결제 일시", type: "datetime" }, n("deposit_amount", "예약금"), n("balance_amount", "잔금"), t("depositor_name", "입금자명"), t("bank_deadline", "입금 기한", { readonly: true }), t("pg_order_id", "PG 주문번호", { readonly: true }), t("pg_payment_key", "PG 결제키", { readonly: true }), t("pg_receipt_url", "영수증 URL", { readonly: true, full: true })] },
       { title: "취소 / 환불", fields: [ta("cancel_reason", "취소 사유"), { name: "cancel_date", label: "취소일", type: "date" }, sel("refund_status", "환불 상태", [["none", "없음"], ["requested", "요청"], ["done", "완료"]]), n("refund_amount", "환불 금액"), { name: "refund_date", label: "환불일", type: "date" }, ta("refund_memo", "환불 메모")] },
       { title: "내부 메모", fields: [ta("admin_memo", "운영 메모"), js("status_logs", "상태 변경 이력")] },
+      { title: "접수 경로 / 동의", fields: [t("source", "접수 경로", { readonly: true }), t("created_at", "접수 일시", { readonly: true }), t("privacy_consent_at", "개인정보 동의 일시", { readonly: true }), t("terms_consent_at", "규정 확인 일시", { readonly: true }), t("consent_version", "동의 문구 버전", { readonly: true }), t("utm_source", "utm_source", { readonly: true }), t("utm_medium", "utm_medium", { readonly: true }), t("utm_campaign", "utm_campaign", { readonly: true }), t("referrer", "유입 페이지", { readonly: true, full: true })] },
+    ],
+  },
+  {
+    id: "inquiries", label: "상담 문의", singular: "상담 문의", titleField: "name", searchFields: ["name", "phone", "product_title", "message"],
+    desc: "고객 사이트(/sgl)에서 접수된 상담 신청입니다. 연락을 마치면 상태를 바꿔 두세요.",
+    statusField: "status", statusOptions: [["new", "신규"], ["in_progress", "상담중"], ["done", "상담완료"], ["closed", "종료"]],
+    columns: [{ key: "name", label: "이름" }, { key: "phone", label: "휴대폰" }, { key: "contact_method", label: "연락 방법" }, { key: "region", label: "지역" }, { key: "product_title", label: "관심 상품" }, { key: "depart_date", label: "희망 출발일", type: "date" }, { key: "people", label: "인원", type: "number" }, { key: "status", label: "상태", type: "status" }, { key: "created_at", label: "접수", type: "date" }],
+    defaults: { status: "new", contact_method: "phone" }, sortBy: { key: "created_at", dir: "desc" }, perRecord: true, exportable: true,
+    sections: [
+      { title: "문의자", fields: [t("name", "이름"), t("phone", "휴대폰"), sel("contact_method", "연락 방법", [["phone", "전화"], ["kakao", "카카오톡"]]), sel("status", "상태", [["new", "신규"], ["in_progress", "상담중"], ["done", "상담완료"], ["closed", "종료"]])] },
+      { title: "문의 내용", fields: [t("region", "지역"), t("product_title", "관심 상품"), t("product_id", "상품(원가표) ID"), { name: "depart_date", label: "희망 출발일", type: "date" }, n("people", "인원"), ta("message", "문의 내용"), ta("admin_memo", "상담 메모")] },
+      { title: "동의 / 유입 경로", fields: [t("created_at", "접수 일시", { readonly: true }), t("privacy_consent_at", "개인정보 동의 일시", { readonly: true }), b("marketing_consent", "마케팅 수신 동의"), t("consent_version", "동의 문구 버전", { readonly: true }), t("utm_source", "utm_source", { readonly: true }), t("utm_medium", "utm_medium", { readonly: true }), t("utm_campaign", "utm_campaign", { readonly: true }), t("referrer", "유입 페이지", { readonly: true, full: true })] },
     ],
   },
   {
@@ -179,11 +195,17 @@ export const SETTINGS_TABS: { id: string; label: string; sections: SectionDef[] 
   { id: "payment", label: "결제 설정", sections: [
     { title: "결제 수단 사용 여부", fields: [b("payment_card_enabled", "카드결제"), b("payment_bank_enabled", "무통장입금"), b("payment_onsite_enabled", "현장결제"), b("payment_partial_enabled", "부분결제")] },
     { title: "무통장입금 계좌 정보", fields: [t("bank_name", "은행명"), t("bank_holder", "예금주"), t("bank_account", "계좌번호")] },
-    { title: "예약금 정책", fields: [sel("deposit_policy_type", "예약금 정책", [["fixed", "고정 금액"], ["percent", "비율"], ["none", "사용 안함"]]), n("deposit_amount", "예약금 금액"), n("deposit_percent", "예약금 비율(%)"), ta("payment_notice", "결제 안내 문구")] },
+    { title: "예약금 정책", fields: [sel("deposit_policy_type", "예약금 정책", [["fixed", "고정 금액"], ["percent", "비율"], ["none", "사용 안함"]]), n("deposit_amount", "예약금 금액"), n("deposit_percent", "예약금 비율(%)"), sel("deposit_unit", "고정 예약금 기준", [["per_person", "1인당"], ["per_booking", "예약 1건당"]]), n("sgl_balance_due_days", "잔금 기한(출발 며칠 전)", { help: "비우면 30일" }), n("sgl_bank_deadline_hours", "무통장 입금 기한(시간)", { help: "비우면 24시간" }), ta("payment_notice", "결제 안내 문구", { help: "고객 사이트(/sgl)는 '부분결제'를 켜야 예약금만 먼저 결제할 수 있습니다. 끄면 전액 결제만 받습니다. 카드결제는 서버에 토스페이먼츠 키(TOSS_CLIENT_KEY, TOSS_SECRET_KEY)가 있어야 열립니다." })] },
   ] },
   { id: "cancellation", label: "취소/환불 설정", sections: [
     { title: "기본 취소 정책", fields: [sel("cancel_policy_type", "취소 정책 유형", [["flexible", "유연"], ["standard", "일반"], ["strict", "엄격"], ["non_refundable", "환불불가"]]), n("cancel_free_days", "무료 취소 가능 일수"), n("cancel_fee_percent", "기본 취소 수수료율(%)"), ta("refund_notice", "환불 기본 안내 문구")] },
     { title: "예외 규정", fields: [ta("noshow_policy", "노쇼 규정"), ta("weather_policy", "우천 / 기상 규정"), ta("cancellation_extra_notice", "추가 안내 문구")] },
+  ] },
+  { id: "sgl", label: "고객 사이트", sections: [
+    { title: "브랜드 · 상담 채널", fields: [t("sgl_brand_name", "브랜드명", { help: "비우면 SGL" }), t("sgl_tel", "고객센터 전화", { help: "비우면 1544-7567" }), t("sgl_hours", "상담 시간", { help: "비우면 평일 09:00~18:00" }), t("sgl_kakao_url", "카카오톡 채널 주소", { help: "https://pf.kakao.com/… 넣으면 상담 버튼이 생깁니다" }), t("sgl_instagram_url", "인스타그램 주소")] },
+    { title: "가격 노출", fields: [sel("sgl_price_mode", "판매가 기준", [["direct_first", "원가표의 실제 판매가 우선, 없으면 마진 판매가"], ["direct_only", "실제 판매가를 적은 날짜만 가격 공개"]]), n("sgl_price_margin", "마진 판매가에 쓸 마진(%)", { help: "비우면 원가표 마진 중 가장 높은 값" }), sel("sgl_price_round", "올림 단위(원)", [["1000", "1,000원"], ["10000", "10,000원"], ["100", "100원"]])] },
+    { title: "예약 조건", fields: [n("sgl_min_people", "최소 인원", { help: "비우면 2명" }), n("sgl_max_people", "온라인 예약 최대 인원", { help: "비우면 8명 · 넘으면 상담으로 안내" }), n("sgl_booking_lead_days", "온라인 예약 마감(출발 며칠 전)", { help: "비우면 7일 · 그보다 임박한 출발일은 상담으로 안내" })] },
+    { title: "사업자 정보(화면 아래)", fields: [t("sgl_company", "상호", { help: "비우면 에이지엘 주식회사" }), t("sgl_ceo", "대표자"), t("sgl_biz_no", "사업자등록번호"), t("sgl_tour_license", "관광사업 등록번호"), t("sgl_address", "주소", { full: true })] },
   ] },
   { id: "api", label: "API 설정", sections: [
     { title: "운영 모드", fields: [sel("api_mode", "API 모드", [["test", "테스트"], ["live", "운영"]])] },

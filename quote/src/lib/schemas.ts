@@ -46,6 +46,12 @@ const productGroupBase = z.object({
   summary: z.string().optional(),
   fileName: z.string().optional(),
   sortOrder: z.number().optional(),
+  publicStatus: z.enum(["publish", "hidden"]).optional(),
+  publicTitle: z.string().max(80).optional(),
+  publicImage: z.string().max(600).optional(),
+  publicGallery: z.array(z.string().max(600)).max(12).optional(),
+  publicDescription: z.string().max(2000).optional(),
+  publicHighlights: z.array(z.string().max(120)).max(8).optional(),
 });
 export const productGroupSchema = productGroupBase.extend({ country: z.string().min(1).default("일본") });
 export const productGroupPatchSchema = productGroupBase.partial();
@@ -134,3 +140,47 @@ export const vipApplySchema = z.object({
   utm_source: clipped, utm_medium: clipped, utm_campaign: clipped, utm_content: clipped, referrer: clipped,
 });
 export type VipApplyInput = z.infer<typeof vipApplySchema>;
+
+/* ---------- SGL 고객 사이트(/sgl) 공개 폼 ---------- */
+const personName = z.string().trim().min(1, "이름을 입력해 주세요").max(30, "이름은 30자까지 입력할 수 있어요");
+const mobile = z.string().transform(normalizePhone).refine(isValidPhone, "휴대폰 번호를 정확히 입력해 주세요");
+const utm = { utm_source: clipped, utm_medium: clipped, utm_campaign: clipped, utm_content: clipped, referrer: clipped };
+const honeypot = z.string().max(300).default("");
+export const sglInquirySchema = z.object({
+  name: personName,
+  phone: mobile,
+  contact: z.enum(["phone", "kakao"]).default("phone"),
+  region: z.string().trim().max(40).default(""),
+  packageId: z.string().max(200).default(""),
+  sheetId: z.string().max(200).default(""),
+  date: z.union([date, z.literal("")]).default(""),
+  people: z.number().int().min(1).max(99).nullable().default(null),
+  message: z.string().trim().max(2000, "문의 내용은 2,000자까지 입력할 수 있어요").default(""),
+  privacyConsent: z.literal(true, "개인정보 수집·이용에 동의해 주세요"),
+  marketingConsent: z.boolean().default(false),
+  website: honeypot,
+  ...utm,
+});
+export type SglInquiryInput = z.infer<typeof sglInquirySchema>;
+export const sglBookingSchema = z.object({
+  sheetId: z.string().min(1).max(200),
+  date,
+  people: z.number().int().min(1).max(40),
+  name: personName,
+  phone: mobile,
+  email: z.union([z.email("이메일 주소를 확인해 주세요"), z.literal("")]).default(""),
+  companions: z.string().trim().max(1000).default(""),
+  request: z.string().trim().max(2000).default(""),
+  privacyConsent: z.literal(true, "개인정보 수집·이용에 동의해 주세요"),
+  termsConsent: z.literal(true, "예약·취소 규정을 확인해 주세요"),
+  website: honeypot,
+  ...utm,
+});
+export type SglBookingInput = z.infer<typeof sglBookingSchema>;
+export const sglPaymentSchema = z.object({
+  k: z.string().min(8).max(64),
+  method: z.enum(["card", "bank", "onsite"]),
+  plan: z.enum(["deposit", "full"]).default("full"),
+  depositor: z.string().trim().max(30).default(""),
+});
+export const sglLookupSchema = z.object({ no: z.string().trim().min(6).max(30), phone: mobile });

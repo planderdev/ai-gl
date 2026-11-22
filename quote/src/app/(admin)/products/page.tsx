@@ -4,6 +4,7 @@ import GroupEditor from "@/components/GroupEditor";
 import AutoGroupButton from "@/components/AutoGroupButton";
 import { productGroups, products, quoteProduct, sortSheets } from "@/lib/products/service";
 import { golfCourses, hotels, vehicleRules } from "@/lib/masters/service";
+import { todayKst } from "@/lib/crawler/airseoul";
 import { golfText, SALE_TYPE_LABEL, saleTypeOf, stayText } from "@/lib/products/describe";
 import { airlineName } from "@/lib/format";
 import type { ProductGroup } from "@/types";
@@ -22,6 +23,7 @@ export default async function ProductsPage() {
   const regions = [...new Set([...groups.map((x) => x.region), ...list.map((p) => p.region)])].sort((a, b) => a.localeCompare(b, "ko"));
   const masterRegions = [...new Set([...regions, ...h.map((x) => x.region), ...g.map((x) => x.region)])].sort((a, b) => a.localeCompare(b, "ko"));
   const missing = [...quotes.values()].reduce((a, q) => a + q.missing.length, 0);
+  const today = todayKst();
 
   const sheetRows = (items: typeof list) => sortSheets(items).map((p) => {
     const q = quotes.get(p.id);
@@ -55,6 +57,11 @@ export default async function ProductsPage() {
               {grp.airline && <span className="admin-chip admin-chip--gray">{airlineName(grp.airline)}</span>}
               {types.map((t) => <span key={t} className={`admin-chip ${t === "land" ? "admin-chip--success" : ""}`}>{SALE_TYPE_LABEL[t]}</span>)}
               <span className="text-xs text-[var(--admin-text-soft)]">원가표 {children.length}개</span>
+              {grp.publicStatus === "hidden"
+                ? <span className="admin-chip admin-chip--gray" title="고객 사이트(/sgl)에 보이지 않습니다"><i className="ri-eye-off-line" /> 고객 사이트 숨김</span>
+                : children.some((p) => p.dateTo > today)
+                  ? <a className="admin-chip admin-chip--success" href={`/sgl/p/${encodeURIComponent(grp.id)}`} target="_blank" title="고객 사이트에서 보기"><i className="ri-global-line" /> 고객 사이트 공개</a>
+                  : <span className="admin-chip admin-chip--warning" title="출발일이 남은 원가표가 없어 고객 사이트에 보이지 않습니다"><i className="ri-calendar-close-line" /> 출발일 지남</span>}
             </div>
             {grp.summary && <p className="mt-1 pl-7 text-xs text-[var(--admin-text-muted)]">{grp.summary}</p>}
           </td>
@@ -82,6 +89,7 @@ export default async function ProductsPage() {
           <Link href="/products/new" className="admin-btn admin-btn--primary"><i className="ri-add-line" /> 새 원가표</Link>
           <Link href="/products/new#import" className="admin-btn admin-btn--light"><i className="ri-upload-2-line" /> 엑셀 가져오기</Link>
           <GroupEditor regions={masterRegions} />
+          <a href="/sgl" target="_blank" className="admin-btn admin-btn--light"><i className="ri-external-link-line" /> 고객 사이트</a>
           <AutoGroupButton count={list.filter((p) => !p.groupId || !groupIds.has(p.groupId)).length} />
         </>}
       />

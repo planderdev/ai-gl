@@ -15,3 +15,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 상품은 국가 › 지역 › 상품군(`ProductGroup`, 엑셀 파일) › 원가표(`Product`, 시트) 구조다. 판매 유형 `air`(항공 포함)·`land`(현지착)에 따라 표와 엑셀 양식이 갈린다.
 - 동적 세그먼트 id 는 한글일 수 있으므로 라우트/페이지에서 `decodeId()` 로 복원한다.
 - 엑셀 출력은 원본 원가표 열 배치를 유지한다(여행사 담당자가 그대로 쓰는 양식). 열을 바꾸려면 사용자 확인.
+- 고객 사이트(`/sgl`)는 `src/lib/sgl/catalog.ts` 가 만든 `Public*` 데이터만 화면에 넘긴다. 원가·마진·운임을 고객 화면이나 공개 API 응답에 싣지 않는다. 금액은 예약 시 서버가 다시 계산한다.

@@ -131,6 +131,13 @@ export interface ProductGroup {
   summary?: string; // 한 줄 설명
   fileName?: string; // 원본·출력 엑셀 파일명
   sortOrder?: number;
+  /** 고객 사이트(/sgl) 노출. 값이 없으면 공개(출발일이 남은 상품군만 실제로 보인다) */
+  publicStatus?: "publish" | "hidden";
+  publicTitle?: string; // 고객에게 보이는 상품명(없으면 name 에서 괄호 부분을 뺀 것)
+  publicImage?: string; // 대표 사진 URL
+  publicGallery?: string[]; // 상세 사진 URL
+  publicDescription?: string; // 상세 소개 문단
+  publicHighlights?: string[]; // 핵심 포인트(한 줄씩)
   createdAt: string;
   updatedAt: string;
 }
