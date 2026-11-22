@@ -13,7 +13,8 @@
  *   편별 운임을 주는 예약 조회(AvailSearch.do, getAvailSchedule.json)는 봇 차단(Akamai) 대상이라 자동 수집하지 않는다.
  * - 헤드리스 Chrome 은 차단(에러 페이지)되므로 Chrome 창(headed) + 새 컨텍스트로 메인 화면을 연 뒤 페이지 안에서 호출한다.
  * - 짧은 시간에 여러 번 조회하면 이 달력 요청에도 봇 확인 페이지(HTTP 200 text/html, CORS 헤더 없음 → 페이지에서는 "Failed to fetch")가 내려온다.
- *   호출 사이를 띄우고, 막히면 한 번만 쉬었다가 다시 시도한 뒤 그만둔다(state.rateLimited). 확인 페이지를 풀거나 피해 가지 않는다 — 30분 이상 뒤에 다시 실행한다.
+ *   5초 간격으로 부르면 세 번째 호출에서 막혔다(2026-11-22) → 기본 간격 20초. 막히면 한 번만 쉬었다가 다시 시도한 뒤 그만둔다(state.rateLimited).
+ *   확인 페이지를 풀거나 피해 가지 않는다 — 30분 이상 뒤에 로그가 알려 주는 달부터(--from) 이어서 실행한다.
  */
 import type { FareInput } from "@/lib/fares/service";
 import type { FetchOptions, RouteConfig } from "./airseoul";
@@ -34,7 +35,7 @@ export const JEJUAIR_ROUTES: RouteConfig[] = [
   { departure: "ICN", arrival: "MYJ", outboundFlightNo: "7C1703", returnFlightNo: "7C1704" },
   { departure: "ICN", arrival: "MYJ", outboundFlightNo: "7C1721", returnFlightNo: "7C1722" },
 ];
-export const JEJUAIR_PACE_MS = Number(process.env.JEJUAIR_PACE_MS || 5000);
+export const JEJUAIR_PACE_MS = Number(process.env.JEJUAIR_PACE_MS || 20_000);
 const RETRY_WAIT_MS = [60_000];
 export class JejuBlockedError extends Error { constructor(m = "제주항공이 달력 조회를 막았습니다(봇 확인 페이지 응답 — 요청 빈도 제한). 30분 이상 지난 뒤 다시 실행하세요. 바로 다시 시도하면 더 오래 막힐 수 있습니다") { super(m); this.name = "JejuBlockedError"; } }
 const MAIN = "https://www.jejuair.net/ko/main/base/index.do";
@@ -74,7 +75,7 @@ export async function fetchJejuCalendar(page: Page, origin: string, destination:
         if (blocked && opts.state) opts.state.rateLimited = true;
         // 처음부터 막히면 오류로 알리고, 일부라도 받았으면 받은 달까지만 돌려준다(못 받은 날짜는 저장하지 않아 기존 값이 남는다)
         if (!byKey.size) throw blocked ? new JejuBlockedError() : new Error(`제주항공 달력 응답 오류 ${origin}⇄${destination} ${s.slice(0, 7)}: ${why}`);
-        log(`${origin}⇄${destination} ${s.slice(0, 7)}: ${why} — 여기서 중단, ${byKey.size}건까지만 반환`);
+        log(`${origin}⇄${destination} ${s.slice(0, 7)}: ${why} — 여기서 중단, ${byKey.size}건까지만 반환 (나머지는 30분 이상 뒤 --from ${s} 로 이어서)`);
         return [...byKey.values()];
       }
       log(`${origin}⇄${destination} ${s.slice(0, 7)}: ${why} — ${RETRY_WAIT_MS[attempt] / 1000}초 쉬고 다시 시도`);
