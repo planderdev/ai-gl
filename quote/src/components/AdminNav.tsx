@@ -8,6 +8,7 @@ type Child = { label: string; href: string; external?: boolean; newTab?: boolean
 type Group = { key: string; label: string; icon: string; href?: string; children?: Child[] };
 const MENU: Group[] = [
   { key: "dashboard", label: "대시보드", icon: "ri-dashboard-line", href: "/" },
+  { key: "guide", label: "사용 가이드", icon: "ri-book-open-line", href: "/guide" },
   // 상품관리 = 원가표 기준 구조(국가 › 지역 › 상품군 › 원가표)와 그 단가·운임
   { key: "product", label: "상품관리", icon: "ri-golf-ball-line", children: [
     { label: "상품 구조 · 원가표", href: "/products" }, { label: "새 원가표 만들기", href: "/products/new" }, { label: "원가표 엑셀 가져오기", href: "/products/new#import" },

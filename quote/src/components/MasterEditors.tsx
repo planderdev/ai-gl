@@ -114,7 +114,10 @@ export function GolfEditor({ items, region }: { items: GolfCourse[]; region?: st
                           <td><input type="date" value={p.from} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, from: e.target.value } : x) })} /></td>
                           <td><input type="date" value={p.to} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, to: e.target.value } : x) })} /></td>
                           {(["weekday", "weekend", "holiday"] as const).map((k) => <td key={k}><input type="number" value={p[k] ?? ""} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, [k]: e.target.value === "" ? null : Number(e.target.value) } : x) })} className="w-24" /></td>)}
-                          <td><button className="text-neutral-400 hover:text-red-600" onClick={() => upd(key, { periods: c.periods.filter((_, j) => j !== i) })}>✕</button></td>
+                          <td className="whitespace-nowrap">
+                            {i > 0 && <button title="위로 — 위에 있는 기간이 먼저 적용됩니다" className="mr-1 text-neutral-400 hover:text-[var(--admin-primary)]" onClick={() => upd(key, { periods: c.periods.map((x, j) => (j === i - 1 ? p : j === i ? c.periods[i - 1] : x)) })}>▲</button>}
+                            <button title="삭제" className="text-neutral-400 hover:text-red-600" onClick={() => upd(key, { periods: c.periods.filter((_, j) => j !== i) })}>✕</button>
+                          </td>
                         </tr>))}
                     </tbody></table>
                     <div className="flex gap-2">
