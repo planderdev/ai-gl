@@ -5,14 +5,16 @@
  *   npx tsx crawler/fares.ts --all --provider jejuair --days 180
  *   npx tsx crawler/fares.ts --once                            # 대기 요청 1건 처리(편명으로 공급자 자동 선택)
  *   npx tsx crawler/fares.ts --loop 300                        # 300초마다 요청 큐 폴링
- *   옵션: --pax 4(기준 인원)  --pace 6(초, 진에어 호출 간격)  --skip-fresh 20(시간, 진에어 증분)  --server URL  --api-key KEY  --dry-run  --headless(차단됨, 실험용)  --route ICN-TAK:RS741:RS742 (추가 노선)
+ *   옵션: --pax 4(기준 인원)  --pace 6(초, 진에어·제주항공 호출 간격)  --skip-fresh 20(시간, 진에어 증분)  --server URL  --api-key KEY  --dry-run  --headless(차단됨, 실험용)  --route ICN-TAK:RS741:RS742 (추가 노선)
  *   환경변수: AIGL_SERVER, CRAWLER_API_KEY
+ *   편을 구분하지 못한 수집값(제주항공 달력, meta.basis = "day-lowest")은 서버에 있는 가져온·직접 넣은 편별 운임을 덮어쓰지 않는다.
  */
 import { PROVIDERS, providerById, resolveRoutes } from "../src/lib/crawler/providers";
 import { todayKst } from "../src/lib/crawler/airseoul";
 import { addDays } from "../src/lib/pricing/date";
 import type { RouteConfig } from "../src/lib/crawler/airseoul";
 import type { FareInput } from "../src/lib/fares/service";
+import { isApproxFare, keepHumanFares } from "../src/lib/fares/protect";
 
 const args = process.argv.slice(2);
 const flag = (n: string) => args.includes(n);
@@ -33,8 +35,23 @@ async function api(path: string, init: RequestInit = {}) {
   if (!res.ok) throw new Error(`${init.method ?? "GET"} ${path} → ${res.status} ${text.slice(0, 200)}`);
   return text ? JSON.parse(text) : null;
 }
+/** 편 미구분 최저가는 서버의 가져온(import)·직접 넣은(manual) 편별 운임을 덮어쓰지 않도록 업로드에서 뺀다. 서버 조회가 실패하면 올리지 않는다 */
+async function withoutHumanOverwrites(fares: FareInput[]): Promise<FareInput[]> {
+  const dates = fares.filter(isApproxFare).map((f) => f.date).sort();
+  if (!dates.length) return fares;
+  const { items } = await api(`/api/fares?from=${dates[0]}&to=${dates.at(-1)}`) as { items: { flightNo: string; date: string; source?: string }[] };
+  const { keep, skipped } = keepHumanFares(fares, items);
+  if (skipped.length) log(`가져온·직접 넣은 편별 운임이 있는 ${skipped.length}건은 덮어쓰지 않음 (${[...new Set(skipped.map((f) => f.flightNo))].join(", ")})`);
+  return keep;
+}
 async function upload(fares: FareInput[], requestId?: string) {
-  if (dryRun) { log(`dry-run: ${fares.length}건 (예: ${JSON.stringify(fares[0])})`); return fares.length; }
+  if (dryRun) { log(`dry-run: ${fares.length}건 (예: ${JSON.stringify(fares.find((f) => f.status === "ok" || f.meta?.dayLowestKrw != null) ?? fares[0])})`); return fares.length; }
+  fares = await withoutHumanOverwrites(fares);
+  if (!fares.length) {
+    if (requestId) await api(`/api/fares/requests/${requestId}`, { method: "PATCH", body: JSON.stringify({ status: "done", resultCount: 0, note: "새로 저장할 값 없음(편별 운임이 이미 있음)" }) });
+    log(`서버 저장 0건${requestId ? ` (요청 ${requestId} 완료)` : ""}`);
+    return 0;
+  }
   let saved = 0;
   for (let i = 0; i < fares.length; i += 1000) {
     const chunk = fares.slice(i, i + 1000);
@@ -44,7 +61,8 @@ async function upload(fares: FareInput[], requestId?: string) {
   log(`서버 저장 ${saved}건${requestId ? ` (요청 ${requestId} 완료)` : ""}`);
   return saved;
 }
-const summary = (f: FareInput[]) => `${f.length}건 (운임 ${f.filter((x) => x.status === "ok").length}, 운항없음 ${f.filter((x) => x.status !== "ok").length})`;
+const count = (f: FareInput[], st: string) => f.filter((x) => x.status === st).length;
+const summary = (f: FareInput[]) => `${f.length}건 (운임 ${count(f, "ok")}, 마감 ${count(f, "sold_out")}, 운항없음 ${count(f, "no_flight")}, 미정 ${count(f, "unknown")})`;
 
 /** 서버에 이미 있는 최신 운임(항공사 접두, 운임/마감/운항없음) → 건너뛸 날짜 집합 */
 async function freshSet(airline: string, from: string, to: string): Promise<Set<string>> {
@@ -81,7 +99,7 @@ async function runAll() {
     } catch (e) {
       if (/1015|빈도 제한/.test((e as Error).message)) state.rateLimited = true; else throw e;
     }
-    if (state.rateLimited) { log(`${p.label}: 요청 빈도 제한으로 중단 — 1시간 이상 뒤 같은 명령을 다시 실행하면 남은 날짜만 이어서 수집합니다`); process.exitCode = 3; }
+    if (state.rateLimited) { log(`${p.label}: 요청 빈도 제한으로 중단 — ${p.incremental ? "1시간 이상 뒤 같은 명령을 다시 실행하면 남은 날짜만 이어서 수집합니다" : "30분 이상 뒤 같은 명령을 다시 실행하세요"}`); process.exitCode = 3; }
   }
 }
 

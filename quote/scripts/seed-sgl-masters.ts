@@ -157,15 +157,15 @@ async function importBeppu(file: string) {
   console.log(`벳부 상품 ${out.length}개, 운임 ${fareRows.size}건 저장`);
 }
 
-/** 마쓰야마 3박4일 54홀 (제주항공 7C1704/1703) — 확정서 일정표(M-20240229-1) 패턴 */
+/** 마쓰야마 3박4일 54홀 (제주항공 오후편: 출발 7C1703 13:05 / 귀국 7C1704 15:40, 2026-11-22 예약 화면 확인) — 확정서 일정표(M-20240229-1) 패턴 */
 async function seedMatsuyamaProduct() {
   const id = "prd-마쓰야마-도큐레이-3박-54홀-제주항공";
   if (await products().get(id)) { console.log("마쓰야마 상품 이미 존재 — 유지"); return; }
   const settings = await getSettings();
   const dateFrom = new Date(Date.now() + 9 * 3600_000 + 86400_000).toISOString().slice(0, 10);
   const product: Product = {
-    id, name: "마쓰야마 도큐레이호텔 3박4일 54홀 (제주항공 7C1704/1703)", region: "마쓰야마", airline: "7C",
-    outbound: { flightNo: "7C1704", origin: "ICN", destination: "MYJ", dep: "13:05", arr: "14:40" }, inbound: { flightNo: "7C1703", origin: "MYJ", destination: "ICN", dep: "15:40", arr: "17:35" },
+    id, name: "마쓰야마 도큐레이호텔 3박4일 54홀 (제주항공 7C1703/1704)", region: "마쓰야마", airline: "7C",
+    outbound: { flightNo: "7C1703", origin: "ICN", destination: "MYJ", dep: "13:05", arr: "14:40" }, inbound: { flightNo: "7C1704", origin: "MYJ", destination: "ICN", dep: "15:40", arr: "17:35" },
     nights: 3, golfPlan: [0, 18, 18, 18], hotelId: "hotel-도큐레이-호텔-마쓰야마", hotelLabel: "도큐레이호텔 3박\n(조식포함)",
     golfCourseIds: ["golf-마쓰야마국제cc", "golf-마쓰야마씨사이드cc", "golf-치산호조cc"], vehicleRuleId: "veh-마쓰야마-셔틀",
     exchangeRate: settings.exchangeRate, margins: settings.margins, dateFrom, dateTo: addDays(dateFrom, 179),

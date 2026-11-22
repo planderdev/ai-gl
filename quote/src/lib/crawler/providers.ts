@@ -1,7 +1,7 @@
 /** 항공사별 크롤러 레지스트리 — 편명 접두(항공사 코드)로 공급자를 고른다 */
 import type { FareInput } from "@/lib/fares/service";
 import { calendarToFares, DEFAULT_ROUTES, fetchMinFareCalendar, type FetchOptions, type RouteConfig } from "./airseoul";
-import { crawlJejuRoute, JEJUAIR_ROUTES } from "./jejuair";
+import { crawlJejuRoute, crawlJejuRoutes, JEJUAIR_ROUTES } from "./jejuair";
 import { crawlJinRoute, crawlJinRoutes, JINAIR_ROUTES } from "./jinair";
 
 export interface FareProvider {
@@ -22,7 +22,8 @@ export const PROVIDERS: FareProvider[] = [
     id: "airseoul", label: "에어서울", airline: "RS", routes: DEFAULT_ROUTES,
     async crawl(route, from, to, opts) { const cal = await fetchMinFareCalendar(route, opts); return calendarToFares(cal, route, { from, to }); },
   },
-  { id: "jejuair", label: "제주항공", airline: "7C", routes: JEJUAIR_ROUTES, crawl: (route, from, to, opts) => crawlJejuRoute(route, from, to, opts) },
+  // 달력이 노선 단위라 같은 공항 쌍의 편(오후편·조조편)은 한 번만 조회한다 → 전체 수집은 crawlMany 로 한 세션에
+  { id: "jejuair", label: "제주항공", airline: "7C", routes: JEJUAIR_ROUTES, crawl: (route, from, to, opts) => crawlJejuRoute(route, from, to, opts), crawlMany: (routes, from, to, opts) => crawlJejuRoutes(routes, from, to, opts) },
   { id: "jinair", label: "진에어", airline: "LJ", routes: JINAIR_ROUTES, incremental: true, crawl: (route, from, to, opts) => crawlJinRoute(route, from, to, opts), crawlMany: (routes, from, to, opts) => crawlJinRoutes(routes, from, to, opts) },
 ];
 
