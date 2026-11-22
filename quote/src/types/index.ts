@@ -3,13 +3,16 @@ export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type DayType = "weekday" | "weekend" | "holiday";
 export type WeekdayRates = Record<Weekday, number>;
 
-/** 요일별 1인 1박 단가(엔). 시즌 구간이 있으면 해당 구간 단가가 우선. */
+/** 요일별 1인 1박 단가(엔). 우선순위: 일자별 요금(dateRates) → 시즌 구간 → 요일 단가. */
 export interface Hotel {
   id: string;
   name: string;
   region: string;
   nightlyRates: WeekdayRates;
   seasons?: { label: string; from: string; to: string; rates: Partial<WeekdayRates> }[];
+  /** 일자별 요금 캘린더(숙박일 YYYY-MM-DD → 1인 1박 엔). 호텔이 날짜마다 요금을 주는 경우 */
+  dateRates?: Record<string, number>;
+  roomBasis?: string; // 예: 트윈룸 1인 기준
   memo?: string;
   updatedAt: string;
 }
@@ -22,6 +25,8 @@ export interface GolfRatePeriod {
   weekday: number | null;
   weekend: number | null;
   holiday: number | null;
+  /** 플레이 스타일(셀프플레이·캐디포함 등). 값이 있는 행은 상품 라운드가 그 스타일을 지정했을 때만 쓴다 */
+  style?: string;
 }
 export interface GolfCourse {
   id: string;
@@ -96,10 +101,11 @@ export interface RowOverride {
   hotelJpy?: number;
   golfJpy?: number;
   vehicleKrw?: number;
+  extrasKrw?: number; // 기타 원가 합계 직접 지정
   airSurchargeKrw?: number;
   spotSpecial?: boolean; // 날짜 강조(스팟특가)
   groupSpecial?: boolean; // 그룹가 강조
-  directSalePrice?: string; // 인스타직판 표기 (예: "82,9")
+  directSalePrice?: string; // 실제 판매가 표기(만원 단위, 예: "82,9" = 829,000원). 항공 포함 상품은 인스타직판 열
   memo?: string;
   hidden?: boolean; // 표에서 제외(출발 없는 날 등)
 }
@@ -112,9 +118,36 @@ export interface FlightLeg {
   arr: string; // HH:MM
 }
 
+/**
+ * 상위 상품(상품군) — 원가표 엑셀 파일 1개에 해당.
+ * 국가 › 지역 › 상품군 › 원가표(Product, 시트) › 출발일별 행 순으로 내려간다.
+ */
+export interface ProductGroup {
+  id: string;
+  name: string; // 예: 다카마쓰 사카이데 그랜드호텔 (에어서울 조조)
+  country: string; // 일본
+  region: string; // 다카마쓰
+  airline?: string; // RS
+  summary?: string; // 한 줄 설명
+  fileName?: string; // 원본·출력 엑셀 파일명
+  sortOrder?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 판매 유형: air = 항공 포함(인디비·그룹 원가), land = 현지착(항공 제외, 운임은 참고용) */
+export type SaleType = "air" | "land";
+/** 숙박 구성 한 구간(호텔과 박수). 순서대로 묵는다 */
+export interface StaySpec { hotelId: string; nights: number }
+/** 기타 원가 항목(석식·가이드비 등, 1인). krw 와 jpy 를 함께 주면 합산 */
+export interface ExtraCost { label: string; krw?: number; jpy?: number }
+
 export interface Product {
   id: string;
   name: string; // 시트명 (예: 다카마쓰 사카이데 그랜드호텔 3박 36홀)
+  groupId?: string; // 상위 상품(상품군)
+  saleType?: SaleType; // 기본 air
+  paxBasis?: number; // 기준 인원(예: 4인)
   region: string;
   airline: string;
   outbound: FlightLeg;
@@ -122,9 +155,14 @@ export interface Product {
   nights: number;
   golfPlan: number[]; // 일자별 홀수 (예: [0,18,18,0])
   hotelId: string;
+  stays?: StaySpec[]; // 호텔을 나눠 묵는 경우(박수 합 = nights). 없으면 hotelId 에서 nights 박
   hotelLabel?: string; // 헤더에 표시할 호텔 문구(대체 호텔 포함)
   golfCourseIds: string[]; // 라운드 순서대로 배정(부족하면 순환)
+  golfStyles?: string[]; // 라운드별 플레이 스타일(golfCourseIds 와 같은 순서). 비우면 골프장 기본 요금
+  golfLabel?: string; // 헤더에 표시할 골프 문구
   vehicleRuleId: string;
+  extras?: ExtraCost[]; // 기타 원가(1인)
+  note?: string; // 헤더 비고(추천 조합 등)
   exchangeRate: number;
   margins: number[];
   dateFrom: string;
@@ -154,21 +192,28 @@ export interface QuoteRow {
   golfJpy: number;
   golfKrw: number;
   vehicleKrw: number;
+  extrasKrw: number; // 기타 원가 합계(원)
   airSurchargeKrw: number;
+  /** 현지착(land)은 항공을 뺀 원가. costGroup·salesGroup 은 인디비와 같은 값 */
   costIndiv: number | "미정" | "마감";
   costGroup: number | "미정";
   salesIndiv: (number | "미정" | "마감")[];
   salesGroup: (number | "미정" | "마감")[];
+  salePriceKrw: number | null; // directSalePrice 를 원으로 환산
+  saleMargin: number | null; // 판매가 기준 실제 수익률 = 1 − 원가 ÷ 판매가
   override: RowOverride;
   breakdown: {
-    hotelNights: { date: string; weekday: Weekday; jpy: number }[];
-    golfRounds: { date: string; weekday: Weekday; dayType: DayType; courseId: string; courseName: string; holes: number; jpy: number }[];
+    hotelNights: { date: string; weekday: Weekday; jpy: number; hotelId: string; hotelName: string }[];
+    golfRounds: { date: string; weekday: Weekday; dayType: DayType; courseId: string; courseName: string; holes: number; jpy: number; style?: string }[];
+    extras: { label: string; krw: number }[];
     fareMissing: boolean;
   };
 }
 
 export interface QuoteContext {
   hotel: Hotel | null;
+  /** 숙박 구성(stays)에 쓰는 호텔들. 없으면 hotel 하나로 계산 */
+  hotelsById?: Map<string, Hotel>;
   courses: GolfCourse[];
   vehicle: VehicleRule | null;
   holidays: Set<string>;

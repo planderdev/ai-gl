@@ -16,8 +16,8 @@ export default function ImportForm() {
   return (
     <form onSubmit={submit} className="card space-y-2">
       <h2 className="font-bold">기존 원가표 엑셀 가져오기</h2>
-      <p className="text-xs text-neutral-500">수작업 원가표(.xlsx)를 올리면 시트마다 상품을 만들고, 항공 운임·그룹가·유택·요일별 숙박/차량 규칙을 추출합니다. 규칙과 다른 셀은 수동조정으로 보존됩니다.</p>
-      <div className="flex flex-wrap items-center gap-2"><input type="file" name="file" accept=".xlsx" required /><input name="region" placeholder="지역 (기본 다카마쓰)" /><button className="btn" disabled={busy}>{busy ? "가져오는 중…" : "가져오기"}</button></div>
+      <p className="text-xs text-neutral-500">수작업 원가표(.xlsx)를 올리면 파일을 상품군으로, 시트마다 원가표를 만듭니다. 항공 포함(인디비·그룹) 양식과 현지착 양식을 머리글로 구분하고, 호텔 요금표·골프장 요금표 시트가 있으면 단가에 반영합니다. 규칙과 다른 셀만 수동조정으로 보존됩니다.</p>
+      <div className="flex flex-wrap items-center gap-2"><input type="file" name="file" accept=".xlsx" required /><input name="region" placeholder="지역 (비우면 자동)" /><button className="btn" disabled={busy}>{busy ? "가져오는 중…" : "가져오기"}</button></div>
       {log && <pre className="whitespace-pre-wrap rounded bg-neutral-50 p-2 text-xs">{log.join("\n")}</pre>}
     </form>
   );

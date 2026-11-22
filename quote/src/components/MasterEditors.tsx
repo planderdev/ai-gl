@@ -28,11 +28,15 @@ function RatesRow({ rates, onChange, unit }: { rates: WeekdayRates; onChange: (r
   );
 }
 
-/** 요일별 단가형 마스터(호텔·차량) 공용 편집기 */
-function WeekdayMasterEditor<T extends { id: string; name: string; region: string; memo?: string }>({ items, api, ratesKey, unit, title, hint }: { items: T[]; api: string; ratesKey: "nightlyRates" | "feesByWeekday"; unit: string; title: string; hint: string }) {
+const toLines = (r?: Record<string, number>) => Object.entries(r ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([d, v]) => `${d} ${v}`).join("\n");
+const fromLines = (text: string) => Object.fromEntries(text.split("\n").map((l) => l.trim().match(/^(\d{4}-\d{2}-\d{2})[\s=:,]+([\d,]+)/)).filter((m): m is RegExpMatchArray => !!m).map((m) => [m[1], Number(m[2].replace(/,/g, ""))]));
+
+/** 요일별 단가형 마스터(호텔·차량) 공용 편집기. calendar 를 켜면 일자별 요금(호텔)도 편집한다 */
+function WeekdayMasterEditor<T extends { id: string; name: string; region: string; memo?: string; dateRates?: Record<string, number>; roomBasis?: string }>({ items, api, ratesKey, unit, title, hint, calendar, region }: { items: T[]; api: string; ratesKey: "nightlyRates" | "feesByWeekday"; unit: string; title: string; hint: string; calendar?: boolean; region?: string }) {
   const { run, msg } = useSave();
   const [drafts, setDrafts] = useState<Record<string, T>>(() => Object.fromEntries(items.map((i) => [i.id, i])));
-  const [neu, setNeu] = useState<{ name: string; region: string; rates: WeekdayRates }>({ name: "", region: items[0]?.region ?? "다카마쓰", rates: emptyRates() });
+  const [neu, setNeu] = useState<{ name: string; region: string; rates: WeekdayRates }>({ name: "", region: region ?? items[0]?.region ?? "다카마쓰", rates: emptyRates() });
+  const [cal, setCal] = useState<Record<string, string>>({}); // 열어 둔 호텔의 일자별 요금 텍스트
   const rates = (i: T) => (i as unknown as Record<string, WeekdayRates>)[ratesKey];
   return (
     <section className="card space-y-3">
@@ -41,7 +45,26 @@ function WeekdayMasterEditor<T extends { id: string; name: string; region: strin
         <div key={it.id} className="grid gap-2 rounded border border-neutral-100 p-2 md:grid-cols-[180px_100px_1fr_auto]">
           <input value={d.name} onChange={(e) => setDrafts({ ...drafts, [it.id]: { ...d, name: e.target.value } })} />
           <input value={d.region} onChange={(e) => setDrafts({ ...drafts, [it.id]: { ...d, region: e.target.value } })} />
-          <div><RatesRow rates={rates(d)} unit={unit} onChange={(r) => setDrafts({ ...drafts, [it.id]: { ...d, [ratesKey]: r } })} /><input value={d.memo ?? ""} placeholder="메모" onChange={(e) => setDrafts({ ...drafts, [it.id]: { ...d, memo: e.target.value } })} className="mt-1 w-full text-xs" /></div>
+          <div>
+            <RatesRow rates={rates(d)} unit={unit} onChange={(r) => setDrafts({ ...drafts, [it.id]: { ...d, [ratesKey]: r } })} />
+            <input value={d.memo ?? ""} placeholder="메모" onChange={(e) => setDrafts({ ...drafts, [it.id]: { ...d, memo: e.target.value } })} className="mt-1 w-full text-xs" />
+            {calendar && (
+              <div className="mt-1 text-xs">
+                <button type="button" className="text-[var(--admin-primary)] hover:underline" onClick={() => setCal((c) => { const n = { ...c }; if (it.id in n) delete n[it.id]; else n[it.id] = toLines(d.dateRates); return n; })}>
+                  <i className="ri-calendar-2-line" /> 일자별 요금 {Object.keys(d.dateRates ?? {}).length ? `${Object.keys(d.dateRates!).length}일 (${Object.keys(d.dateRates!).sort()[0]} ~ ${Object.keys(d.dateRates!).sort().at(-1)})` : "없음"} {it.id in cal ? "▲" : "▼"}
+                </button>
+                {it.id in cal && (
+                  <div className="mt-1 grid gap-2 md:grid-cols-[1fr_180px]">
+                    <textarea rows={8} value={cal[it.id]} onChange={(e) => { setCal({ ...cal, [it.id]: e.target.value }); setDrafts({ ...drafts, [it.id]: { ...d, dateRates: fromLines(e.target.value) } }); }} className="w-full font-mono" placeholder={"2026-12-01 11500\n2026-12-05 14500"} />
+                    <div className="space-y-1 text-neutral-500">
+                      <p>한 줄에 <b>숙박일 금액</b>(1인 1박 엔). 여기 적힌 날은 요일 단가 대신 이 금액을 씁니다.</p>
+                      <input value={d.roomBasis ?? ""} placeholder="객실 기준 (예: 트윈룸 기준)" onChange={(e) => setDrafts({ ...drafts, [it.id]: { ...d, roomBasis: e.target.value } })} className="w-full" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="flex gap-1"><button className="btn" onClick={() => run(() => post(api, d))}>저장</button><button className="btn-ghost" onClick={() => confirm(`${d.name} 삭제?`) && run(() => post(`${api}/${it.id}`, undefined, "DELETE"))}>삭제</button></div>
         </div>); })}
       <div className="grid gap-2 rounded border border-dashed border-neutral-300 p-2 md:grid-cols-[180px_100px_1fr_auto]">
@@ -53,19 +76,20 @@ function WeekdayMasterEditor<T extends { id: string; name: string; region: strin
     </section>
   );
 }
-export const HotelEditor = ({ items }: { items: Hotel[] }) => <WeekdayMasterEditor items={items} api="/api/hotels" ratesKey="nightlyRates" unit="엔/1인 1박" title="호텔 (요일별 1인 1박 단가, 엔)" hint="체크인일부터 N박의 각 날짜 요일 단가를 합산 → 호텔 ¥" />;
-export const VehicleEditor = ({ items }: { items: VehicleRule[] }) => <WeekdayMasterEditor items={items} api="/api/vehicle-rules" ratesKey="feesByWeekday" unit="원/1인" title="차량+지원비 (출발 요일별, 원)" hint="출발일 요일 기준 1인 금액" />;
+export const HotelEditor = ({ items, region }: { items: Hotel[]; region?: string }) => <WeekdayMasterEditor items={items} region={region} calendar api="/api/hotels" ratesKey="nightlyRates" unit="엔/1인 1박" title="호텔 (1인 1박 단가, 엔)" hint="숙박일마다 일자별 요금 → 없으면 요일 단가를 더해 호텔 ¥" />;
+export const VehicleEditor = ({ items, region }: { items: VehicleRule[]; region?: string }) => <WeekdayMasterEditor items={items} region={region} api="/api/vehicle-rules" ratesKey="feesByWeekday" unit="원/1인" title="차량+지원비 (출발 요일별, 원)" hint="출발일 요일 기준 1인 금액" />;
 
-export function GolfEditor({ items }: { items: GolfCourse[] }) {
+export function GolfEditor({ items, region }: { items: GolfCourse[]; region?: string }) {
   const { run, msg } = useSave();
   const [drafts, setDrafts] = useState<Record<string, GolfCourse>>(() => Object.fromEntries(items.map((i) => [i.id, i])));
   const [open, setOpen] = useState<string | null>(null);
   const upd = (id: string, patch: Partial<GolfCourse>) => setDrafts((d) => ({ ...d, [id]: { ...(d[id] ?? items.find((i) => i.id === id)!), ...patch } }));
-  const blank: GolfCourse = { id: "", name: "", region: items[0]?.region ?? "다카마쓰", holes: 18, playStyle: "셀프플레이", periods: [{ from: "2026-01-01", to: "2026-12-31", weekday: 0, weekend: 0, holiday: 0 }], updatedAt: "" };
+  const blank: GolfCourse = { id: "", name: "", region: region ?? items[0]?.region ?? "다카마쓰", holes: 18, playStyle: "셀프플레이", periods: [{ from: "2026-01-01", to: "2026-12-31", weekday: 0, weekend: 0, holiday: 0 }], updatedAt: "" };
   const list = [...items.map((i) => drafts[i.id] ?? i), ...(drafts["__new"] ? [drafts["__new"]] : [])];
   return (
     <section className="card space-y-2">
-      <div className="flex items-baseline gap-3"><h2 className="font-bold">골프장 요금표 (1인 그린피, 엔)</h2><span className="text-xs text-neutral-500">플레이 날짜가 속한 기간의 평일/주말/연휴(일본 공휴일) 단가 × 홀수/18</span><span className="ml-auto text-xs text-neutral-500">{msg}</span><button className="btn-ghost" onClick={() => { setDrafts({ ...drafts, __new: blank }); setOpen("__new"); }}>+ 골프장</button></div>
+      <div className="flex items-baseline gap-3"><h2 className="font-bold">골프장 요금표 (1인 그린피, 엔)</h2><span className="text-xs text-neutral-500">플레이 날짜가 속한 기간의 평일/주말/연휴(일본 공휴일) 단가 × 홀수/18 · 스타일을 적은 행은 원가표 라운드가 그 스타일을 골랐을 때만 적용</span><span className="ml-auto text-xs text-neutral-500">{msg}</span><button className="btn-ghost" onClick={() => { setDrafts({ ...drafts, __new: blank }); setOpen("__new"); }}>+ 골프장</button></div>
+      <datalist id="golf-styles"><option value="셀프플레이" /><option value="캐디포함" /></datalist>
       <table className="w-full text-sm">
         <thead><tr className="text-left text-xs text-neutral-500"><th>골프장</th><th>지역</th><th>TEL</th><th>홀</th><th>기간</th><th className="text-right">주중</th><th className="text-right">주말</th><th className="text-right">연휴</th><th></th></tr></thead>
         <tbody>
@@ -82,10 +106,11 @@ export function GolfEditor({ items }: { items: GolfCourse[] }) {
                       <input value={c.playStyle} onChange={(e) => upd(key, { playStyle: e.target.value })} />
                       <input value={c.notes ?? ""} placeholder="기타사항" onChange={(e) => upd(key, { notes: e.target.value })} />
                     </div>
-                    <table className="w-full text-xs"><thead><tr className="text-neutral-500"><th>라벨</th><th>부터</th><th>까지</th><th>주중</th><th>주말</th><th>연휴</th><th></th></tr></thead><tbody>
+                    <table className="w-full text-xs"><thead><tr className="text-neutral-500"><th>라벨</th><th>스타일</th><th>부터</th><th>까지</th><th>주중</th><th>주말</th><th>연휴</th><th></th></tr></thead><tbody>
                       {c.periods.map((p, i) => (
                         <tr key={i}>
                           <td><input value={p.label ?? ""} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })} className="w-full" /></td>
+                          <td><input value={p.style ?? ""} placeholder="기본" list="golf-styles" onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, style: e.target.value || undefined } : x) })} className="w-24" /></td>
                           <td><input type="date" value={p.from} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, from: e.target.value } : x) })} /></td>
                           <td><input type="date" value={p.to} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, to: e.target.value } : x) })} /></td>
                           {(["weekday", "weekend", "holiday"] as const).map((k) => <td key={k}><input type="number" value={p[k] ?? ""} onChange={(e) => upd(key, { periods: c.periods.map((x, j) => j === i ? { ...x, [k]: e.target.value === "" ? null : Number(e.target.value) } : x) })} className="w-24" /></td>)}
@@ -100,7 +125,7 @@ export function GolfEditor({ items }: { items: GolfCourse[] }) {
                     </div>
                   </div>)}
               </td>
-              {!isOpen && <><td>{c.region}</td><td className="text-xs">{c.tel}</td><td>{c.holes}</td><td className="text-xs">{p0 ? `${p0.from}~${p0.to}${c.periods.length > 1 ? ` 외 ${c.periods.length - 1}` : ""}` : "-"}</td><td className="text-right">{p0?.weekday?.toLocaleString() ?? "-"}</td><td className="text-right">{p0?.weekend?.toLocaleString() ?? "-"}</td><td className="text-right">{p0?.holiday?.toLocaleString() ?? "-"}</td><td className="text-right"><button className="text-xs text-neutral-500 hover:underline" onClick={() => setOpen(key)}>편집</button></td></>}
+              {!isOpen && <><td>{c.region}</td><td className="text-xs">{c.tel}</td><td>{c.holes}</td><td className="text-xs">{p0 ? `${p0.style ? `[${p0.style}] ` : ""}${p0.from}~${p0.to}${c.periods.length > 1 ? ` 외 ${c.periods.length - 1}` : ""}` : "-"}</td><td className="text-right">{p0?.weekday?.toLocaleString() ?? "-"}</td><td className="text-right">{p0?.weekend?.toLocaleString() ?? "-"}</td><td className="text-right">{p0?.holiday?.toLocaleString() ?? "-"}</td><td className="text-right"><button className="text-xs text-neutral-500 hover:underline" onClick={() => setOpen(key)}>편집</button></td></>}
             </tr>); })}
         </tbody>
       </table>

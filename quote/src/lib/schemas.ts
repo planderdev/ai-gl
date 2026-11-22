@@ -35,9 +35,27 @@ export const fareRequestPatchSchema = z.object({
 });
 
 const leg = z.object({ flightNo: z.string(), origin: z.string(), destination: z.string(), dep: z.string(), arr: z.string() });
-export const productSchema = z.object({
+// 수정(PATCH)용 스키마는 기본값이 없는 원형에서 만든다. zod 4 는 .partial() 뒤에도 .default() 를 채우므로,
+// 기본값이 붙은 스키마로 부분 수정을 받으면 보내지 않은 필드(overrides·groupFares 등)가 빈 값으로 덮인다.
+const productGroupBase = z.object({
   id: z.string().optional(),
   name: z.string().min(1),
+  country: z.string().min(1),
+  region: z.string().min(1),
+  airline: z.string().optional(),
+  summary: z.string().optional(),
+  fileName: z.string().optional(),
+  sortOrder: z.number().optional(),
+});
+export const productGroupSchema = productGroupBase.extend({ country: z.string().min(1).default("일본") });
+export const productGroupPatchSchema = productGroupBase.partial();
+
+const productBase = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1),
+  groupId: z.string().optional(),
+  saleType: z.enum(["air", "land"]).optional(),
+  paxBasis: z.number().int().min(1).max(40).nullable().optional(),
   region: z.string().min(1),
   airline: z.string().min(1),
   outbound: leg,
@@ -45,19 +63,29 @@ export const productSchema = z.object({
   nights: z.number().int().min(1).max(14),
   golfPlan: z.array(z.number().int().min(0)),
   hotelId: z.string(),
+  stays: z.array(z.object({ hotelId: z.string().min(1), nights: z.number().int().min(1).max(14) })).optional(),
   hotelLabel: z.string().optional(),
   golfCourseIds: z.array(z.string()),
+  golfStyles: z.array(z.string()).optional(),
+  golfLabel: z.string().optional(),
   vehicleRuleId: z.string(),
+  extras: z.array(z.object({ label: z.string().min(1), krw: z.number().optional(), jpy: z.number().optional() })).optional(),
+  note: z.string().optional(),
   exchangeRate: z.number().positive(),
   margins: z.array(z.number().min(0).max(0.9)).min(1),
   dateFrom: date,
   dateTo: date,
-  groupFares: z.record(z.string(), money).default({}),
-  groupTaxByMonth: z.record(z.string(), money).default({}),
-  overrides: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
+  groupFares: z.record(z.string(), money),
+  groupTaxByMonth: z.record(z.string(), money),
+  overrides: z.record(z.string(), z.record(z.string(), z.unknown())),
   legend: z.string().optional(),
 });
-export const productPatchSchema = productSchema.partial();
+export const productSchema = productBase.extend({
+  groupFares: productBase.shape.groupFares.default({}),
+  groupTaxByMonth: productBase.shape.groupTaxByMonth.default({}),
+  overrides: productBase.shape.overrides.default({}),
+});
+export const productPatchSchema = productBase.partial();
 
 export const overridePatchSchema = z.object({
   date,
@@ -69,6 +97,7 @@ export const overridePatchSchema = z.object({
     hotelJpy: z.number().nullable().optional(),
     golfJpy: z.number().nullable().optional(),
     vehicleKrw: z.number().nullable().optional(),
+    extrasKrw: z.number().nullable().optional(),
     airSurchargeKrw: z.number().nullable().optional(),
     spotSpecial: z.boolean().nullable().optional(),
     groupSpecial: z.boolean().nullable().optional(),
@@ -81,11 +110,12 @@ export const overridePatchSchema = z.object({
 
 export const hotelSchema = z.object({
   id: z.string().optional(), name: z.string().min(1), region: z.string().min(1), nightlyRates: weekdayRates,
-  seasons: z.array(z.object({ label: z.string(), from: date, to: date, rates: weekdayRates.partial() })).optional(), memo: z.string().optional(),
+  seasons: z.array(z.object({ label: z.string(), from: date, to: date, rates: weekdayRates.partial() })).optional(),
+  dateRates: z.record(date, z.number()).optional(), roomBasis: z.string().optional(), memo: z.string().optional(),
 });
 export const golfCourseSchema = z.object({
   id: z.string().optional(), name: z.string().min(1), region: z.string().min(1), tel: z.string().optional(), holes: z.number().int().default(18), playStyle: z.string().default("셀프플레이"),
-  periods: z.array(z.object({ label: z.string().optional(), from: z.string(), to: z.string(), weekday: z.number().nullable(), weekend: z.number().nullable(), holiday: z.number().nullable() })),
+  periods: z.array(z.object({ label: z.string().optional(), from: z.string(), to: z.string(), weekday: z.number().nullable(), weekend: z.number().nullable(), holiday: z.number().nullable(), style: z.string().optional() })),
   notes: z.string().optional(),
 });
 export const vehicleRuleSchema = z.object({ id: z.string().optional(), name: z.string().min(1), region: z.string().min(1), feesByWeekday: weekdayRates, memo: z.string().optional() });

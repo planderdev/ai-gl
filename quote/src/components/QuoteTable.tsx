@@ -5,7 +5,7 @@ import type { Product, QuoteRow } from "@/types";
 import { krw, pct } from "@/lib/format";
 
 type Props = { product: Product; rows: QuoteRow[] };
-type Key = "outboundFare" | "inboundFare" | "groupFare" | "hotelJpy" | "golfJpy" | "vehicleKrw" | "airSurchargeKrw" | "airIndivKrw" | "directSalePrice" | "memo";
+type Key = "outboundFare" | "inboundFare" | "groupFare" | "hotelJpy" | "golfJpy" | "vehicleKrw" | "extrasKrw" | "airSurchargeKrw" | "airIndivKrw" | "directSalePrice" | "memo";
 
 const md = (s: string) => `${Number(s.slice(5, 7))}/${Number(s.slice(8, 10))}`;
 const parseMoney = (raw: string): number | "미정" | "운항없음" | "마감" | null => {
@@ -17,7 +17,8 @@ const parseMoney = (raw: string): number | "미정" | "운항없음" | "마감" 
 };
 
 function Cell({ r, k, value, jp, text, onSave }: { r: QuoteRow; k: Key; value: unknown; jp?: boolean; text?: boolean; onSave: (date: string, patch: Record<string, unknown>) => void }) {
-  const overridden = k === "groupFare" ? false : (r.override as Record<string, unknown>)[k] != null;
+  // 판매가·메모·그룹가는 원래 사람이 넣는 값이라 수동조정 표시를 하지 않는다
+  const overridden = k === "groupFare" || text ? false : (r.override as Record<string, unknown>)[k] != null;
   const display = text ? String(value ?? "") : typeof value === "number" ? Math.round(value).toLocaleString("ko-KR") : String(value ?? "");
   return (
     <input
@@ -42,6 +43,9 @@ export default function QuoteTable({ product, rows }: Props) {
   const [showHidden, setShowHidden] = useState(false);
   const [detail, setDetail] = useState<QuoteRow | null>(null);
   const m = product.margins;
+  const land = product.saleType === "land";
+  const hasExtras = (product.extras?.length ?? 0) > 0;
+  const showMargin = rows.some((r) => r.saleMargin != null);
 
   async function save(date: string, patch: Record<string, unknown>) {
     const res = await fetch(`/api/products/${product.id}/overrides`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, patch }) });
@@ -54,8 +58,9 @@ export default function QuoteTable({ product, rows }: Props) {
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-600">
         <span className="admin-chip admin-chip--warning">주황 셀 = 수동 입력(비우면 자동)</span>
-        <span className="admin-chip" style={{ background: "#fef9c3", color: "#854d0e" }}>노란 날짜 = 스팟특가</span>
-        <span className="admin-chip admin-chip--gray">회색 운임 = 미수집</span>
+        <span className="admin-chip" style={{ background: "#fef9c3", color: "#854d0e" }}>노란 날짜 = {land ? "강조(연휴·성수기)" : "스팟특가"}</span>
+        <span className="admin-chip admin-chip--gray">{land ? "항공 운임 = 참고용(원가 제외)" : "회색 운임 = 미수집"}</span>
+        <span className="text-[var(--admin-text-soft)]">날짜를 누르면 계산 내역</span>
         <label className="ml-auto flex items-center gap-1"><input type="checkbox" checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} /> 숨긴 날짜 표시 ({hiddenDates.length})</label>
         {pending && <span className="text-neutral-400">저장 중…</span>}
       </div>
@@ -64,12 +69,14 @@ export default function QuoteTable({ product, rows }: Props) {
           <thead>
             <tr>
               <th className="th sticky left-0 z-20 bg-neutral-100">날짜</th><th className="th">요일</th><th className="th">{product.outbound.flightNo}</th><th className="th">귀국</th><th className="th">{product.inbound.flightNo}</th>
-              <th className="th">그룹가</th><th className="th">유택</th><th className="th">항공{"\n"}인디비</th><th className="th">항공{"\n"}그룹</th>
-              <th className="th">호텔 ¥</th><th className="th">호텔 ₩</th><th className="th">골프 ¥</th><th className="th">골프 ₩</th><th className="th">차량+{"\n"}지원비</th><th className="th">항공{"\n"}추가금</th>
-              <th className="th bg-neutral-200">인디비{"\n"}원가</th><th className="th bg-neutral-200">그룹{"\n"}원가</th>
-              {m.map((x) => <th key={`i${x}`} className="th bg-sky-100">인디비{"\n"}{pct(x)}</th>)}
-              {m.map((x) => <th key={`g${x}`} className="th bg-emerald-100">그룹{"\n"}{pct(x)}</th>)}
-              <th className="th">인스타{"\n"}직판</th><th className="th">메모</th><th className="th">플래그</th>
+              {!land && <><th className="th">그룹가</th><th className="th">유택</th></>}<th className="th">항공{"\n"}{land ? "(참고)" : "인디비"}</th>{!land && <th className="th">항공{"\n"}그룹</th>}
+              <th className="th">호텔 ¥</th><th className="th">호텔 ₩</th><th className="th">골프 ¥</th><th className="th">골프 ₩</th><th className="th">{land ? "차량" : `차량+\n지원비`}</th>
+              {hasExtras && <th className="th">{product.extras!.map((e) => e.label).join("\n+ ")}</th>}
+              {!land && <th className="th">항공{"\n"}추가금</th>}
+              <th className="th bg-neutral-200">{land ? "원가합" : `인디비\n원가`}</th>{!land && <th className="th bg-neutral-200">그룹{"\n"}원가</th>}
+              {m.map((x) => <th key={`i${x}`} className="th bg-sky-100">{land ? "수익" : "인디비"}{"\n"}{pct(x)}</th>)}
+              {!land && m.map((x) => <th key={`g${x}`} className="th bg-emerald-100">그룹{"\n"}{pct(x)}</th>)}
+              <th className="th">{land ? "판매가" : `인스타\n직판`}</th>{showMargin && <th className="th">판매{"\n"}수익률</th>}<th className="th">메모</th><th className="th">플래그</th>
             </tr>
           </thead>
           <tbody>
@@ -84,26 +91,28 @@ export default function QuoteTable({ product, rows }: Props) {
                   <td className={`td ${fareCls(r.outboundFare)}`}><Cell onSave={save} r={r} k="outboundFare" value={r.outboundFare ?? "미정"} /></td>
                   <td className="td text-center text-neutral-500">{md(r.returnDate)}</td>
                   <td className={`td ${fareCls(r.inboundFare)}`}><Cell onSave={save} r={r} k="inboundFare" value={r.inboundFare ?? "미정"} /></td>
-                  <td className={`td ${ov.groupSpecial ? "bg-yellow-100" : ""}`}><Cell onSave={save} r={r} k="groupFare" value={r.groupFare ?? ""} /></td>
-                  <td className="td text-neutral-600">{num(r.groupTax)}</td>
-                  <td className={`td font-medium ${ov.airIndivKrw != null ? "bg-orange-50" : ""}`}><Cell onSave={save} r={r} k="airIndivKrw" value={r.airIndiv} /></td>
-                  <td className={`td font-medium ${ov.groupSpecial ? "bg-yellow-100" : ""}`}>{num(r.airGroup)}</td>
+                  {!land && <><td className={`td ${ov.groupSpecial ? "bg-yellow-100" : ""}`}><Cell onSave={save} r={r} k="groupFare" value={r.groupFare ?? ""} /></td>
+                  <td className="td text-neutral-600">{num(r.groupTax)}</td></>}
+                  {land ? <td className="td text-neutral-400">{typeof r.airIndiv === "number" ? num(r.airIndiv) : r.breakdown.fareMissing ? "" : r.airIndiv}</td> : <td className={`td font-medium ${ov.airIndivKrw != null ? "bg-orange-50" : ""}`}><Cell onSave={save} r={r} k="airIndivKrw" value={r.airIndiv} /></td>}
+                  {!land && <td className={`td font-medium ${ov.groupSpecial ? "bg-yellow-100" : ""}`}>{num(r.airGroup)}</td>}
                   <td className="td"><Cell onSave={save} r={r} k="hotelJpy" value={r.hotelJpy} jp /></td>
                   <td className="td text-neutral-600">{krw(r.hotelKrw)}</td>
                   <td className="td"><Cell onSave={save} r={r} k="golfJpy" value={r.golfJpy} jp /></td>
                   <td className="td text-neutral-600">{krw(r.golfKrw)}</td>
                   <td className="td"><Cell onSave={save} r={r} k="vehicleKrw" value={r.vehicleKrw} /></td>
-                  <td className="td"><Cell onSave={save} r={r} k="airSurchargeKrw" value={r.airSurchargeKrw || ""} /></td>
+                  {hasExtras && <td className="td"><Cell onSave={save} r={r} k="extrasKrw" value={r.extrasKrw} /></td>}
+                  {!land && <td className="td"><Cell onSave={save} r={r} k="airSurchargeKrw" value={r.airSurchargeKrw || ""} /></td>}
                   <td className="td bg-neutral-100 font-semibold">{num(r.costIndiv)}</td>
-                  <td className="td bg-neutral-100 font-semibold">{num(r.costGroup)}</td>
+                  {!land && <td className="td bg-neutral-100 font-semibold">{num(r.costGroup)}</td>}
                   {r.salesIndiv.map((v, i) => <td key={i} className="td bg-sky-50 font-semibold text-sky-900">{num(v)}</td>)}
-                  {r.salesGroup.map((v, i) => <td key={i} className="td bg-emerald-50 font-semibold text-emerald-900">{num(v)}</td>)}
-                  <td className="td"><Cell onSave={save} r={r} k="directSalePrice" value={ov.directSalePrice} text /></td>
+                  {!land && r.salesGroup.map((v, i) => <td key={i} className="td bg-emerald-50 font-semibold text-emerald-900">{num(v)}</td>)}
+                  <td className="td" title={r.salePriceKrw ? `${r.salePriceKrw.toLocaleString("ko-KR")}원` : "만원 단위로 입력 (예: 84,9 = 849,000원)"}><Cell onSave={save} r={r} k="directSalePrice" value={ov.directSalePrice} text /></td>
+                  {showMargin && <td className={`td font-medium ${r.saleMargin == null ? "text-neutral-300" : r.saleMargin < Math.min(...m) - 0.05 ? "text-red-600" : r.saleMargin < Math.min(...m) ? "text-amber-600" : "text-emerald-700"}`} title="1 − 원가 ÷ 판매가">{r.saleMargin == null ? "-" : `${(r.saleMargin * 100).toFixed(1)}%`}</td>}
                   <td className="td"><Cell onSave={save} r={r} k="memo" value={ov.memo} text /></td>
                   <td className="td whitespace-nowrap text-center">
-                    <button title="스팟특가" onClick={() => save(r.date, { spotSpecial: ov.spotSpecial ? null : true })} className={`rounded px-1 text-[11px] ${ov.spotSpecial ? "bg-yellow-300" : "bg-neutral-100 text-neutral-400"}`}>특가</button>{" "}
-                    <button title="그룹가 강조" onClick={() => save(r.date, { groupSpecial: ov.groupSpecial ? null : true })} className={`rounded px-1 text-[11px] ${ov.groupSpecial ? "bg-yellow-300" : "bg-neutral-100 text-neutral-400"}`}>그룹</button>{" "}
-                    <button title="마감" onClick={() => save(r.date, { soldOut: ov.soldOut ? null : true })} className={`rounded px-1 text-[11px] ${ov.soldOut ? "bg-red-200 text-red-800" : "bg-neutral-100 text-neutral-400"}`}>마감</button>{" "}
+                    <button title={land ? "날짜 강조" : "스팟특가"} onClick={() => save(r.date, { spotSpecial: ov.spotSpecial ? null : true })} className={`rounded px-1 text-[11px] ${ov.spotSpecial ? "bg-yellow-300" : "bg-neutral-100 text-neutral-400"}`}>{land ? "강조" : "특가"}</button>{" "}
+                    {!land && <><button title="그룹가 강조" onClick={() => save(r.date, { groupSpecial: ov.groupSpecial ? null : true })} className={`rounded px-1 text-[11px] ${ov.groupSpecial ? "bg-yellow-300" : "bg-neutral-100 text-neutral-400"}`}>그룹</button>{" "}
+                    <button title="마감" onClick={() => save(r.date, { soldOut: ov.soldOut ? null : true })} className={`rounded px-1 text-[11px] ${ov.soldOut ? "bg-red-200 text-red-800" : "bg-neutral-100 text-neutral-400"}`}>마감</button>{" "}</>}
                     <button title="이 날짜 숨김" onClick={() => save(r.date, { hidden: true })} className="rounded bg-neutral-100 px-1 text-[11px] text-neutral-400 hover:bg-red-100 hover:text-red-700">숨김</button>
                   </td>
                 </tr>
@@ -120,10 +129,12 @@ export default function QuoteTable({ product, rows }: Props) {
           <div className="card max-h-[80vh] w-full max-w-lg overflow-auto text-sm" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 flex items-center justify-between"><h3 className="font-semibold">{detail.date} ({detail.weekdayLabel}) 계산 내역</h3><button onClick={() => setDetail(null)} className="btn-ghost">닫기</button></div>
             <p className="mb-1 font-medium">숙박 {detail.hotelJpy.toLocaleString()}엔 {detail.override.hotelJpy != null && <span className="text-orange-700">(수동)</span>}</p>
-            <ul className="mb-3 text-xs text-neutral-600">{detail.breakdown.hotelNights.map((n) => <li key={n.date}>{n.date} ({["일","월","화","수","목","금","토"][n.weekday]}) ¥{n.jpy.toLocaleString()}</li>)}</ul>
+            <ul className="mb-3 text-xs text-neutral-600">{detail.breakdown.hotelNights.map((n, i) => <li key={n.date}>{i + 1}박째 {n.date} ({["일","월","화","수","목","금","토"][n.weekday]}) {n.hotelName} ¥{n.jpy.toLocaleString()}</li>)}</ul>
             <p className="mb-1 font-medium">골프 {detail.golfJpy.toLocaleString()}엔 {detail.override.golfJpy != null && <span className="text-orange-700">(수동)</span>}</p>
-            <ul className="mb-3 text-xs text-neutral-600">{detail.breakdown.golfRounds.map((g, i) => <li key={i}>{g.date} ({["일","월","화","수","목","금","토"][g.weekday]} · {g.dayType === "weekday" ? "평일" : g.dayType === "weekend" ? "주말" : "연휴"}) {g.courseName} {g.holes}H ¥{g.jpy.toLocaleString()}</li>)}</ul>
-            <p className="text-xs text-neutral-600">차량+지원비 {detail.vehicleKrw.toLocaleString()}원 · 환율 {product.exchangeRate} · 항공 인디비 {num(detail.airIndiv)} / 그룹 {num(detail.airGroup)}</p>
+            <ul className="mb-3 text-xs text-neutral-600">{detail.breakdown.golfRounds.map((g, i) => <li key={i}>{g.date} ({["일","월","화","수","목","금","토"][g.weekday]} · {g.dayType === "weekday" ? "평일" : g.dayType === "weekend" ? "주말" : "연휴"}) {g.courseName} {g.holes}H{g.style ? ` ${g.style}` : ""} ¥{g.jpy.toLocaleString()}</li>)}</ul>
+            {detail.breakdown.extras.length > 0 && <><p className="mb-1 font-medium">기타 원가 {Math.round(detail.extrasKrw).toLocaleString()}원 {detail.override.extrasKrw != null && <span className="text-orange-700">(수동)</span>}</p>
+            <ul className="mb-3 text-xs text-neutral-600">{detail.breakdown.extras.map((e, i) => <li key={i}>{e.label} {Math.round(e.krw).toLocaleString()}원</li>)}</ul></>}
+            <p className="text-xs text-neutral-600">{land ? "차량" : "차량+지원비"} {detail.vehicleKrw.toLocaleString()}원 · 환율 {product.exchangeRate} · {land ? `원가합 ${num(detail.costIndiv)}원 (항공 제외)` : `항공 인디비 ${num(detail.airIndiv)} / 그룹 ${num(detail.airGroup)}`}{detail.salePriceKrw ? ` · 판매가 ${detail.salePriceKrw.toLocaleString("ko-KR")}원` : ""}{detail.saleMargin != null ? ` (수익률 ${(detail.saleMargin * 100).toFixed(1)}%)` : ""}</p>
           </div>
         </div>
       )}

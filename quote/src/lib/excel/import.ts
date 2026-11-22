@@ -1,19 +1,26 @@
 import ExcelJS from "exceljs";
-import type { FlightFare, FlightLeg, GolfCourse, Hotel, MoneyOrLabel, Product, RowOverride, VehicleRule, Weekday, WeekdayRates } from "@/types";
-import { addDays, dayTypeOf, eachDate, formatDate, weekdayOf } from "@/lib/pricing/date";
+import type { FlightFare, FlightLeg, GolfCourse, GolfRatePeriod, Hotel, MoneyOrLabel, Product, ProductGroup, RowOverride, VehicleRule, Weekday, WeekdayRates } from "@/types";
+import { addDays, dayTypeOf, eachDate, weekdayOf } from "@/lib/pricing/date";
 import { computeRow, fareKey } from "@/lib/pricing/engine";
 import { JP_HOLIDAYS_DEFAULT } from "@/lib/masters/holidays";
+import { airlineName } from "@/lib/format";
+import { argb, dateOf, fontArgb, isFormula, label, matchByName, mode, normName, num, slug, str } from "./import-util";
+import { importLandSheet } from "./import-land";
 
 /**
- * 기존 수작업 원가표(.xlsx) → 시스템 데이터로 변환.
- * - 시트당 상품 1개, 날짜 행 → 항공 운임(인디비)·그룹가·유택·수동 조정값
- * - E1~E3 = 요일별 1박 단가, N열 요일별 최빈값 = 차량+지원비 규칙
- * - 골프 그린피는 행 데이터에서 평일/주말 단가를 최소제곱으로 역산해 '패키지 그린피' 골프장으로 등록
- * - 규칙으로 재현되지 않는 셀만 overrides 로 보존 → 재출력 시 원본과 동일
+ * 기존 수작업 원가표(.xlsx) → 시스템 데이터로 변환. 파일 1개 = 상품군, 시트 1장 = 원가표(상품).
+ * 시트 양식은 5행 머리글로 가른다.
+ * - 항공 포함(인디비·그룹): 그룹가·유택 열이 있는 양식 → 아래 importAirSheets
+ *   · E1~E3 = 요일별 1박 단가, N열 요일별 최빈값 = 차량+지원비 규칙
+ *   · 골프 그린피는 행 데이터에서 평일/주말 단가를 역산해 '패키지 그린피' 골프장으로 등록
+ * - 현지착(항공 제외): 그룹 열이 없는 양식 → import-land.ts
+ * 규칙으로 재현되지 않는 셀만 overrides 로 보존 → 재출력 시 원본과 동일.
+ * 호텔·골프장·차량은 existing 으로 받은 기존 마스터와 이름을 맞춰 중복 등록하지 않는다.
  */
 export interface ImportResult {
-  hotel: Hotel;
-  vehicle: VehicleRule;
+  groups: ProductGroup[];
+  hotels: Hotel[];
+  vehicles: VehicleRule[];
   courses: GolfCourse[];
   products: Product[];
   fares: FlightFare[];
@@ -21,31 +28,12 @@ export interface ImportResult {
   margins: number[];
   log: string[];
 }
-
-type CellV = ExcelJS.CellValue;
-const num = (v: CellV): number | null => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "object" && v && "result" in v && typeof v.result === "number" ? v.result : null);
-const str = (v: CellV): string => (v == null ? "" : typeof v === "object" && "richText" in v ? v.richText.map((t) => t.text).join("") : typeof v === "object" && "result" in v ? String(v.result ?? "") : String(v));
-const isFormula = (v: CellV) => typeof v === "object" && v != null && "formula" in v;
-const dateOf = (v: CellV): string | null => {
-  if (v instanceof Date) return formatDate(new Date(Math.round(v.getTime() / 86400000) * 86400000));
-  return null;
-};
-const label = (v: CellV): MoneyOrLabel | null => {
-  const n = num(v);
-  if (n != null) return n;
-  const s = str(v).trim();
-  if (s === "운항없음") return "운항없음";
-  if (s === "미정") return "미정";
-  if (s === "마감") return "마감";
-  return null;
-};
-const argb = (c: ExcelJS.Cell) => {
-  const f = c.fill as ExcelJS.FillPattern | undefined;
-  return f?.type === "pattern" && f.fgColor?.argb ? f.fgColor.argb : null;
-};
-const fontArgb = (c: ExcelJS.Cell) => (c.font?.color as { argb?: string } | undefined)?.argb ?? null;
-const mode = (xs: number[]) => { const m = new Map<number, number>(); xs.forEach((x) => m.set(x, (m.get(x) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0; };
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-|-$/g, "");
+export interface ImportOptions {
+  region?: string;
+  holidays?: string[];
+  fileName?: string;
+  existing?: { hotels?: Hotel[]; courses?: GolfCourse[]; vehicles?: VehicleRule[] };
+}
 
 function parseSchedule(s: string): { out: FlightLeg; in: FlightLeg } | null {
   const legs = [...s.matchAll(/([A-Z]{2}\d{2,4})\s*(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/g)].map((m) => ({ flightNo: m[1], dep: m[2], arr: m[3] }));
@@ -67,10 +55,12 @@ function fitGolfRates(samples: { a: number; b: number; y: number }[]): { weekday
   return { weekday: Math.round(w), weekend: Math.round(e) };
 }
 
-export async function importCostWorkbook(buf: ArrayBuffer | Buffer, opts: { region?: string; holidays?: string[] } = {}): Promise<ImportResult> {
+const hasGroupColumn = (ws: ExcelJS.Worksheet) => { let hit = false; ws.getRow(5).eachCell((c) => { if (/그룹/.test(str(c.value))) hit = true; }); return hit; };
+const commonPrefix = (names: string[]) => { let p = names[0] ?? ""; for (const n of names) while (p && !n.startsWith(p)) p = p.slice(0, -1); return p.replace(/\s*\d*박?\s*$/, "").trim(); };
+
+export async function importCostWorkbook(buf: ArrayBuffer | Buffer, opts: ImportOptions = {}): Promise<ImportResult> {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buf as unknown as ArrayBuffer);
-  const region = opts.region ?? "다카마쓰";
   const holidays = new Set(opts.holidays ?? JP_HOLIDAYS_DEFAULT);
   const now = new Date().toISOString();
   const log: string[] = [];
@@ -78,7 +68,98 @@ export async function importCostWorkbook(buf: ArrayBuffer | Buffer, opts: { regi
   const costSheets = wb.worksheets.filter((ws) => str(ws.getCell("A5").value).trim() === "날짜");
   const golfSheet = wb.worksheets.find((ws) => /골프장.*요금표/.test(str(ws.getCell("A1").value)));
   if (!costSheets.length) throw new Error("원가표 시트를 찾지 못했습니다(A5='날짜' 인 시트 필요).");
+  const airSheets = costSheets.filter(hasGroupColumn);
+  const landSheets = costSheets.filter((ws) => !hasGroupColumn(ws));
 
+  const res: ImportResult = { groups: [], hotels: [], vehicles: [], courses: [], products: [], fares: [], exchangeRate: 9.2, margins: [0.15, 0.2], log };
+  const fares = new Map<string, FlightFare>();
+  const knownHotels = [...(opts.existing?.hotels ?? [])], knownCourses = [...(opts.existing?.courses ?? [])], knownVehicles = [...(opts.existing?.vehicles ?? [])];
+  const touched = { hotels: new Map<string, Hotel>(), courses: new Map<string, GolfCourse>(), vehicles: new Map<string, VehicleRule>() };
+
+  if (airSheets.length) {
+    // 지역을 비우면 시트 이름 첫머리에서 찾는다(기존 지역과 맞는 것 우선)
+    const first = airSheets[0].name.trim();
+    const regionsKnown = [...new Set([...knownHotels, ...knownCourses].map((x) => x.region))];
+    const air = importAirSheets(airSheets, { region: opts.region ?? regionsKnown.find((r) => first.startsWith(r)) ?? first.split(/\s+/)[0] ?? "다카마쓰", holidays, now, fares, log });
+    touched.hotels.set(air.hotel.id, air.hotel); touched.vehicles.set(air.vehicle.id, air.vehicle);
+    for (const c of air.courses) touched.courses.set(c.id, c);
+    res.products.push(...air.products); res.groups.push(air.group);
+    res.exchangeRate = air.exchangeRate; res.margins = air.margins;
+  }
+  if (landSheets.length) {
+    const skip = new Set<ExcelJS.Worksheet>([...costSheets, ...(golfSheet ? [golfSheet] : [])]);
+    const ctx = { wb, region: opts.region, holidays, now, hotels: knownHotels, courses: knownCourses, vehicles: knownVehicles, touched, fares, log };
+    for (const ws of landSheets) {
+      const r = importLandSheet(ws, ctx, skip);
+      if (!r) continue;
+      res.products.push(r.product);
+      if (!res.groups.some((g) => g.id === r.group.id)) res.groups.push(r.group);
+      res.exchangeRate = r.product.exchangeRate; res.margins = r.product.margins;
+    }
+  }
+  for (const g of res.groups) g.fileName = opts.fileName ?? g.fileName;
+
+  if (golfSheet) {
+    const region = opts.region ?? res.products[0]?.region ?? "다카마쓰";
+    const n = importGolfRateSheet(golfSheet, { region, now, known: knownCourses, touched: touched.courses });
+    log.push(`골프장 요금표 '${golfSheet.name}' ${n.total}곳(기존 ${n.matched}곳 갱신 · 신규 ${n.total - n.matched}곳)`);
+  }
+
+  res.hotels = [...touched.hotels.values()]; res.vehicles = [...touched.vehicles.values()]; res.courses = [...touched.courses.values()]; res.fares = [...fares.values()];
+  return res;
+}
+
+/**
+ * 골프장 요금표 시트(골프장·홀·기간·플레이스타일·주중·주말·연휴·기타사항).
+ * 기존 골프장과 이름이 맞으면 그 골프장에 스타일별 요금 구간을 더하고, 없으면 새로 만든다.
+ */
+function importGolfRateSheet(ws: ExcelJS.Worksheet, o: { region: string; now: string; known: GolfCourse[]; touched: Map<string, GolfCourse> }) {
+  type Block = { name: string; tel?: string; holes: number; notes?: string; periods: GolfRatePeriod[] };
+  const blocks: Block[] = [];
+  let cur: Block | null = null;
+  let year = new Date().getFullYear();
+  for (let r = 3; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    const a = ws.getCell(r, 1);
+    const nameCell = str(a.value).trim();
+    if (nameCell && (!a.isMerged || a.master.address === a.address)) {
+      const [nm, ...rest] = nameCell.split("\n");
+      cur = { name: nm.trim(), tel: rest.join(" ").replace(/^(TEL|電話番号)\s*[:：]?\s*/i, "").trim() || undefined, holes: num(row.getCell(2).value) ?? 18, notes: str(row.getCell(8).value) || undefined, periods: [] };
+      blocks.push(cur);
+    }
+    if (!cur) continue;
+    const period = str(row.getCell(3).value).trim();
+    const wk = num(row.getCell(5).value), we = num(row.getCell(6).value), ho = num(row.getCell(7).value);
+    if (!period && wk == null && we == null && ho == null) continue;
+    const m = period.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s*[~～]\s*(?:(\d{4})\.)?(\d{1,2})\.(\d{1,2})/);
+    let from = "", to = "";
+    if (m) { year = parseInt(m[1]); from = `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`; to = `${m[4] ?? m[1]}-${m[5].padStart(2, "0")}-${m[6].padStart(2, "0")}`; }
+    else { const s = period.match(/(\d{1,2})\/(\d{1,2})\s*[~～]\s*(\d{1,2})\/(\d{1,2})/); if (s) { from = `${year}-${s[1].padStart(2, "0")}-${s[2].padStart(2, "0")}`; to = `${year}-${s[3].padStart(2, "0")}-${s[4].padStart(2, "0")}`; } }
+    if (from && to && from > to) from = `${from.slice(0, 4)}-01-01`; // "2026.03.01~02.28" 같은 표기 오류는 연초부터로 본다
+    cur.periods.push({ label: period || undefined, from, to, weekday: wk, weekend: we, holiday: ho ?? we, style: str(row.getCell(4).value).trim() || undefined });
+  }
+  // 이름이 정확히 같은 것부터 맞춘 뒤 나머지를 유사 이름으로 맞춘다(도고 ↔ 오쿠도고 같은 오매칭 방지)
+  const claimed = new Set<string>();
+  const hit = new Map<Block, GolfCourse>();
+  for (const b of blocks) { const f = o.known.find((c) => c.region === o.region && !claimed.has(c.id) && normName(c.name) === normName(b.name)); if (f) { hit.set(b, f); claimed.add(f.id); } }
+  for (const b of blocks) { if (hit.has(b)) continue; const f = matchByName(b.name, o.known, o.region, claimed); if (f) { hit.set(b, f); claimed.add(f.id); } }
+  for (const b of blocks) {
+    const found = hit.get(b);
+    const base: GolfCourse = found ? (o.touched.get(found.id) ?? found) : { id: `golf-${slug(b.name)}`, name: b.name, region: o.region, tel: b.tel, holes: b.holes, playStyle: b.periods[0]?.style ?? "셀프플레이", periods: [], notes: b.notes, updatedAt: o.now };
+    const same = (p: GolfRatePeriod, q: GolfRatePeriod) => p.from === q.from && p.to === q.to && p.weekday === q.weekday && p.weekend === q.weekend && p.holiday === q.holiday;
+    const key = (p: GolfRatePeriod) => `${p.style ?? ""}|${p.from}|${p.to}`;
+    const fresh = b.periods.filter((p) => !base.periods.some((q) => !q.style && same(p, q))); // 같은 값이 스타일 없이 이미 있으면 그대로 둔다
+    const keys = new Set(fresh.map(key));
+    const course: GolfCourse = { ...base, tel: base.tel ?? b.tel, notes: base.notes ?? b.notes, periods: [...base.periods.filter((p) => !keys.has(key(p))), ...fresh], updatedAt: o.now };
+    const i = o.known.findIndex((c) => c.id === course.id);
+    if (i >= 0) o.known.splice(i, 1, course); else o.known.push(course);
+    o.touched.set(course.id, course);
+  }
+  return { total: blocks.length, matched: hit.size };
+}
+
+interface AirContext { region: string; holidays: Set<string>; now: string; fares: Map<string, FlightFare>; log: string[] }
+function importAirSheets(costSheets: ExcelJS.Worksheet[], { region, holidays, now, fares, log }: AirContext) {
   // 호텔·차량: 첫 시트 기준(모든 시트 동일 가정, 다르면 시트별 로그)
   const first = costSheets[0];
   // E1 평일(일~목) / E3 금·토 1박 단가 — 원가표 관행 (E2 는 E1 과 동일 값)
@@ -88,7 +169,6 @@ export async function importCostWorkbook(buf: ArrayBuffer | Buffer, opts: { regi
   const hotel: Hotel = { id: `hotel-${slug(hotelName)}`, name: hotelName, region, nightlyRates: nightly, memo: "원가표 E1~E3(1박 단가)에서 가져옴", updatedAt: now };
 
   const vehicleSamples: Record<Weekday, number[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
-  const fares = new Map<string, FlightFare>();
   const exchangeRates: number[] = [];
   let margins: number[] = [];
   const courses: GolfCourse[] = [];
@@ -210,30 +290,11 @@ export async function importCostWorkbook(buf: ArrayBuffer | Buffer, opts: { regi
     log.push(`[${p.name}] ${raws.length}행, 수동조정 ${n}행, 그린피 역산 평일 ${courses.find((c) => c.id === p.golfCourseIds[0])?.periods[0].weekday}엔 / 주말 ${courses.find((c) => c.id === p.golfCourseIds[0])?.periods[0].weekend}엔`);
   }
 
-  // 골프장 요금표 시트
-  if (golfSheet) {
-    let cur: GolfCourse | null = null;
-    let year = new Date().getFullYear();
-    for (let r = 3; r <= golfSheet.rowCount; r++) {
-      const row = golfSheet.getRow(r);
-      const nameCell = str(row.getCell(1).value).trim();
-      if (nameCell && !golfSheet.getCell(r, 1).isMerged || (nameCell && golfSheet.getCell(r, 1).master.address === golfSheet.getCell(r, 1).address)) {
-        const [nm, ...rest] = nameCell.split("\n");
-        cur = { id: `golf-${slug(nm)}`, name: nm.trim(), region, tel: rest.join(" ").replace(/^(TEL|電話番号)\s*[:：]?\s*/i, "").trim() || undefined, holes: num(row.getCell(2).value) ?? 18, playStyle: str(row.getCell(4).value) || "셀프플레이", periods: [], notes: str(row.getCell(8).value) || undefined, updatedAt: now };
-        courses.push(cur);
-      }
-      if (!cur) continue;
-      const period = str(row.getCell(3).value).trim();
-      const wk = num(row.getCell(5).value), we = num(row.getCell(6).value), ho = num(row.getCell(7).value);
-      if (!period && wk == null && we == null && ho == null) continue;
-      const m = period.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})\s*[~～]\s*(?:(\d{4})\.)?(\d{1,2})\.(\d{1,2})/);
-      let from = "", to = "";
-      if (m) { year = parseInt(m[1]); from = `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`; to = `${m[4] ?? m[1]}-${m[5].padStart(2, "0")}-${m[6].padStart(2, "0")}`; }
-      else { const s = period.match(/(\d{1,2})\/(\d{1,2})\s*[~～]\s*(\d{1,2})\/(\d{1,2})/); if (s) { from = `${year}-${s[1].padStart(2, "0")}-${s[2].padStart(2, "0")}`; to = `${year}-${s[3].padStart(2, "0")}-${s[4].padStart(2, "0")}`; } }
-      cur.periods.push({ label: period || undefined, from, to, weekday: wk, weekend: we, holiday: ho ?? we });
-    }
-    log.push(`골프장 요금표 ${courses.filter((c) => !c.id.startsWith("golf-pkg-")).length}곳`);
-  }
-
-  return { hotel, vehicle, courses, products, fares: [...fares.values()], exchangeRate: exchangeRates.at(-1) ?? 9.2, margins: margins.length ? margins : [0.15, 0.2], log };
+  const names = products.map((p) => p.name);
+  const base = commonPrefix(names) || names[0] || region;
+  const airline = products[0]?.airline ?? "";
+  const flights = products[0] ? `${products[0].outbound.flightNo}/${products[0].inbound.flightNo.startsWith(airline) ? products[0].inbound.flightNo.slice(airline.length) : products[0].inbound.flightNo}` : "";
+  const group: ProductGroup = { id: `grp-${slug(`${base} ${airline}`)}`, name: `${base} (${airlineName(airline)}${flights ? ` ${flights}` : ""})`, country: "일본", region, airline, createdAt: now, updatedAt: now };
+  for (const p of products) p.groupId = group.id;
+  return { hotel, vehicle, courses, products, group, exchangeRate: exchangeRates.at(-1) ?? 9.2, margins: margins.length ? margins : [0.15, 0.2] };
 }
