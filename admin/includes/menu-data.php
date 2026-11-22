@@ -129,7 +129,7 @@ $adminMenu = [
                 'external' => true,
             ],
             [
-                'label' => '상품·원가표',
+                'label' => '상품 구조·원가표',
                 'href' => $quoteSystemUrl . '/products',
                 'external' => true,
             ],
@@ -139,7 +139,7 @@ $adminMenu = [
                 'external' => true,
             ],
             [
-                'label' => '견적 마스터 데이터',
+                'label' => '호텔·골프장·차량 단가',
                 'href' => $quoteSystemUrl . '/masters',
                 'external' => true,
             ],

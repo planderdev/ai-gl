@@ -135,8 +135,9 @@ function importGolfRateSheet(ws: ExcelJS.Worksheet, o: { region: string; now: st
     let from = "", to = "";
     if (m) { year = parseInt(m[1]); from = `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`; to = `${m[4] ?? m[1]}-${m[5].padStart(2, "0")}-${m[6].padStart(2, "0")}`; }
     else { const s = period.match(/(\d{1,2})\/(\d{1,2})\s*[~～]\s*(\d{1,2})\/(\d{1,2})/); if (s) { from = `${year}-${s[1].padStart(2, "0")}-${s[2].padStart(2, "0")}`; to = `${year}-${s[3].padStart(2, "0")}-${s[4].padStart(2, "0")}`; } }
-    if (from && to && from > to) from = `${from.slice(0, 4)}-01-01`; // "2026.03.01~02.28" 같은 표기 오류는 연초부터로 본다
-    cur.periods.push({ label: period || undefined, from, to, weekday: wk, weekend: we, holiday: ho ?? we, style: str(row.getCell(4).value).trim() || undefined });
+    let fixed = "";
+    if (from && to && from > to) { fixed = ` (원문 ${period} 표기 보정)`; from = `${from.slice(0, 4)}-01-01`; } // "2026.03.01~02.28" 같은 표기 오류는 연초부터로 본다
+    cur.periods.push({ label: fixed ? `${from.replace(/-/g, ".")}~${to.slice(5).replace(/-/g, ".")}${fixed}` : period || undefined, from, to, weekday: wk, weekend: we, holiday: ho ?? we, style: str(row.getCell(4).value).trim() || undefined });
   }
   // 이름이 정확히 같은 것부터 맞춘 뒤 나머지를 유사 이름으로 맞춘다(도고 ↔ 오쿠도고 같은 오매칭 방지)
   const claimed = new Set<string>();
