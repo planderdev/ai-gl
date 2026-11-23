@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Gilda_Display, Noto_Serif_KR, Urbanist } from "next/font/google";
+import localFont from "next/font/local";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { siteAccess } from "@/lib/sgl/access";
@@ -21,9 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 export const viewport: Viewport = { themeColor: "#f7d9c6" };
 
-const urbanist = Urbanist({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700", "800"], variable: "--f-urbanist", display: "swap" });
-const gilda = Gilda_Display({ subsets: ["latin"], weight: "400", variable: "--f-gilda", display: "swap" });
-const serifKr = Noto_Serif_KR({ weight: ["400", "500"], variable: "--f-serif-kr", display: "swap", preload: false });
+/** 고객 사이트 글꼴: SUIT 가변 폰트 하나(100~900)를 저장소에서 직접 내려 준다. 라이선스는 fonts/OFL.txt */
+const suit = localFont({ src: "./fonts/SUIT-Variable.woff2", weight: "100 900", variable: "--f-suit", display: "swap" });
 
 /**
  * 고객 사이트 공통 틀: 관리자 설정의 공개 스위치·사이트 상태(정상/점검/비공개)와 연락처·사업자 정보를 따른다.
@@ -32,7 +31,7 @@ const serifKr = Noto_Serif_KR({ weight: ["400", "500"], variable: "--f-serif-kr"
 export default async function SglLayout({ children }: { children: React.ReactNode }) {
   const { config, preview } = await siteAccess();
   if (!preview && config.status === "private") notFound();
-  const fonts = `${urbanist.variable} ${gilda.variable} ${serifKr.variable}`;
+  const fonts = suit.variable;
   if (!preview && config.status === "maintenance") return (
     <div className={`sgl ${fonts}`}>
       <main className="sgl-maint">
