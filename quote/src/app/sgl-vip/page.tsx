@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
 import Image from "next/image";
 import { dDayLabel, dDayOf, formatKst, nextRevealAt, ordinalLabel, parseKst, VIP_ANNUAL_FEE, VIP_SUPPORT_TEL } from "@/lib/sgl-vip/config";
 import { loadVipBenefits } from "@/lib/sgl-vip/service";
 import type { VipBenefit } from "@/types";
+import { suit } from "../fonts/suit";
 import ApplyForm from "./ApplyForm";
 import { Icon, SglLogo } from "./Brand";
 import { AdReel, HeroSwing } from "./Media";
@@ -26,8 +26,6 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 export const viewport: Viewport = { themeColor: "#06140d" };
-
-const display = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--vip-display", display: "swap" });
 
 function BenefitCard({ benefit, index }: { benefit: VipBenefit; index: number }) {
   return (
@@ -69,9 +67,7 @@ export default async function SglVipPage() {
   const { benefits, reveal, dday } = await loadLanding();
 
   return (
-    <div className={`vip ${display.variable}`}>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" precedence="default" />
-
+    <div className={`vip ${suit.variable}`}>
       <section className="vip-hero">
         <header className="vip-top">
           <SglLogo className="vip-top__logo" />

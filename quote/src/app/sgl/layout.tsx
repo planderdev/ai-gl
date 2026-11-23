@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { siteAccess } from "@/lib/sgl/access";
+import { suit } from "../fonts/suit";
 import Chrome from "./_ui/Chrome";
 import "./sgl.css";
 
@@ -20,9 +20,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 export const viewport: Viewport = { themeColor: "#f7d9c6" };
-
-/** 고객 사이트 글꼴: SUIT 가변 폰트 하나(100~900)를 저장소에서 직접 내려 준다. 라이선스는 fonts/OFL.txt */
-const suit = localFont({ src: "./fonts/SUIT-Variable.woff2", weight: "100 900", variable: "--f-suit", display: "swap" });
 
 /**
  * 고객 사이트 공통 틀: 관리자 설정의 공개 스위치·사이트 상태(정상/점검/비공개)와 연락처·사업자 정보를 따른다.

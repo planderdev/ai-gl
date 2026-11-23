@@ -13,7 +13,7 @@ body:has(.vip) { background: #06140d; }
   --on-dark-2: rgba(243, 244, 236, 0.72);
   --line-dark: rgba(243, 244, 236, 0.16);
   --danger: #c5301c;
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family: var(--f-suit), "SUIT Variable", "SUIT", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   font-size: 16px;
   line-height: 1.6;
   color: var(--paper);
@@ -49,10 +49,10 @@ body:has(.vip) { background: #06140d; }
 .vip-hero { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 100svh; background: var(--ink); overflow: clip; }
 .vip-top { position: absolute; inset: 0 0 auto; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; }
 .vip-top__logo { display: block; width: 74px; height: auto; color: #fff; }
-.vip-top__dday { padding: 5px 13px; border: 1px solid var(--neon); border-radius: 999px; background: rgba(6, 20, 13, 0.6); color: var(--neon); font-family: var(--vip-display); font-weight: 700; font-size: 14px; font-stretch: 112%; font-variant-numeric: tabular-nums; backdrop-filter: blur(6px); }
+.vip-top__dday { padding: 5px 13px; border: 1px solid var(--neon); border-radius: 999px; background: rgba(6, 20, 13, 0.6); color: var(--neon); font-weight: 800; font-size: 14px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; backdrop-filter: blur(6px); }
 .vip-hero__copy { position: relative; z-index: 2; padding: 88px 20px 0; }
 .vip-hero__eyebrow { color: var(--paper); font-size: 15px; font-weight: 600; letter-spacing: -0.02em; animation: vip-up 0.6s 0.05s ease both; }
-.vip-hero__date { display: block; margin: 8px 0 10px -0.035em; color: var(--neon); font-family: var(--vip-display); font-size: clamp(92px, 28.5vw, 216px); font-weight: 800; font-stretch: 125%; line-height: 0.9; letter-spacing: -0.055em; animation: vip-up 0.7s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.vip-hero__date { display: block; margin: 8px 0 10px -0.035em; color: var(--neon); font-size: clamp(108px, 35vw, 260px); font-weight: 900; line-height: 0.9; letter-spacing: -0.045em; animation: vip-up 0.7s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .vip-hero__title { display: block; font-size: clamp(34px, 9.4vw, 60px); font-weight: 800; line-height: 1.1; letter-spacing: -0.04em; color: #fff; animation: vip-up 0.7s 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .vip-hero__lead { margin-top: 14px; color: var(--on-dark-2); font-size: clamp(16px, 4.3vw, 20px); line-height: 1.5; letter-spacing: -0.02em; text-wrap: balance; animation: vip-up 0.7s 0.24s ease both; }
 .vip-facts { display: grid; grid-template-columns: auto 1fr; gap: 0 26px; margin: 20px 0 22px; padding-top: 16px; border-top: 1px solid var(--line-dark); animation: vip-up 0.7s 0.3s ease both; }
@@ -107,7 +107,7 @@ body:has(.vip) { background: #06140d; }
 .vip-lock__copy p:last-child { margin-top: 8px; color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.5; }
 .vip-count { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .vip-count__cell { padding: 12px 0 9px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; background: rgba(6, 20, 13, 0.46); text-align: center; backdrop-filter: blur(6px); }
-.vip-count__cell b { display: block; color: var(--neon); font-family: var(--vip-display); font-size: clamp(26px, 8vw, 40px); font-stretch: 110%; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.vip-count__cell b { display: block; color: var(--neon); font-size: clamp(26px, 8vw, 40px); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .vip-count__cell span { color: rgba(255, 255, 255, 0.72); font-size: 12px; }
 .vip-count__soon { color: var(--neon); font-size: 17px; font-weight: 700; }
 
@@ -237,7 +237,7 @@ html[data-vip-applied] .vip-sticky { display: none; }
   .vip-top { padding: 28px max(40px, calc((100vw - 1180px) / 2)); }
   .vip-top__logo { width: 92px; }
   .vip-hero__copy { align-self: center; width: min(620px, 50%); margin-left: max(40px, calc((100vw - 1180px) / 2)); padding: 96px 0 40px; }
-  .vip-hero__date { font-size: clamp(120px, 12.4vw, 188px); }
+  .vip-hero__date { font-size: clamp(140px, 15vw, 224px); }
   .vip-hero .vip-btn { display: flex; width: fit-content; min-width: 280px; }
   .vip-hero__foot { text-align: left; }
   .vip-facts { width: fit-content; padding-right: 26px; }
