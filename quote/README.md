@@ -50,6 +50,25 @@ npm run export:costsheet -- out.xlsx        # 전체 상품 원가표 파일 생
 현지착 양식은 요금표 시트의 "출발일별 1~N박 단가" 블록을 호텔 일자별 요금으로, 오른쪽 위 기준표(골프장·주중·주말)를 골프장 요금 구간으로 바꾼다. 달력상 평일인데 모든 라운드가 주말 요금으로 잡힌 날은 특별요금일(연말연시 등)로 등록한다.
 호텔·골프장은 기존 단가와 이름을 맞춰(`matchByName`: 정규화 일치 → 지역명만 다른 포함 관계 → 자모 편집 거리 1) 중복 등록하지 않는다. 규칙으로 재현되지 않는 셀만 수동조정으로 남는다.
 
+## 원가표 입력표 (`src/lib/excel/input-*.ts`)
+원가표를 만드는 데 필요한 값을 한 파일에 적는 엑셀 양식. `GET /api/input-template` 은 빈 양식, `?group=<상품군 id>` 는 그 상품군의 현재 값으로 채운 양식을 준다. 올리는 곳은 기존 원가표와 같은 `/api/import` 이고, A1 이 `원가표 입력표` 로 시작하는 시트가 있으면 입력표로 읽는다.
+
+| 시트 | 내용 |
+|---|---|
+| 1 원가표 | 세로 양식. 상품군(이름·국가·지역) + 열 하나가 원가표 하나: 판매 유형·항공편·박수·일자별 홀수·출발일·환율·마진·숙박 구성·골프 구성·차량 규칙·기타 원가·머리글 문구 |
+| 2 호텔 | 요일별 1인 1박 요금(엔) |
+| 3 호텔 일자별 요금 | 가로 양식(숙박일 · 요일 · 호텔명…). 적힌 날은 `dateRates` 로 들어간다 |
+| 4 골프장 요금 | 기간·스타일별 주중/주말/연휴. 적은 골프장은 요금 구간 전체를 교체(위 줄 우선) |
+| 5 차량 | 출발 요일별 1인 금액(원) |
+| 6 날짜별 입력 | 판매가·그룹가·유택·직접 넣을 운임/금액·강조/마감/숨김. 줄이 있는 원가표는 날짜별 값을 통째로 교체, 없으면 기존 값 유지 |
+| 참고 등록된 단가 | 등록된 호텔·골프장·차량 이름과 요금(읽지 않음) |
+
+- 양식 정의는 `input-sheet.ts` 한 곳(쓰기 `input-export.ts`, 읽기 `input-import.ts` 공용). 읽을 때 시트·열은 머리글 문구로 찾으므로 문구를 바꾸면 양쪽이 함께 바뀐다.
+- 숙박 구성 `호텔명 N박 + …`, 골프 구성 `골프장명(스타일) + …`, 기타 원가 `항목 40000원 + 항목 3000엔` 은 `+` 로 잇는 글이다. 이름은 2·4·5 시트나 같은 지역의 등록 단가와 맞춘다(글자 그대로 → 업종어를 뺀 이름).
+- 이름이 같은 상품군·원가표·호텔·골프장·차량은 새로 만들지 않고 고친다. 고칠 곳이 하나라도 있으면 `InputIssues` 로 전부 모아 422 로 돌려주고 아무것도 저장하지 않는다.
+- 입력표의 운임(직접) 칸은 공용 운임이 아니라 그 원가표의 수동조정(`outboundFare`/`inboundFare`)으로 들어간다.
+- 채운 양식을 그대로 다시 올리면 금액이 달라지지 않아야 한다(상품군 전체 왕복 검증으로 확인).
+
 ## 크롤러 연동 API
 인증: `x-api-key: <CRAWLER_API_KEY>` (로컬에서 미설정이면 생략 가능, 운영은 필수)
 
@@ -67,7 +86,7 @@ npm run export:costsheet -- out.xlsx        # 전체 상품 원가표 파일 생
 ## 그 밖의 API
 `/api/product-groups`(GET/POST), `/api/product-groups/:id`(GET/PATCH/DELETE — 삭제해도 하위 원가표는 미분류로 남는다), `/api/product-groups/:id/export`(묶음 xlsx), `/api/product-groups/auto`(POST, 미분류 원가표를 지역·호텔·항공편 기준으로 묶기),
 `/api/products`, `/api/products/:id`(GET/PATCH/DELETE), `/api/products/:id/quote`(계산 JSON), `/api/products/:id/export`(xlsx), `/api/products/:id/overrides`(PATCH `{date, patch}`),
-`/api/hotels`, `/api/golf-courses`, `/api/vehicle-rules`(GET/POST, `/:id` DELETE), `/api/settings`(GET/PUT), `/api/export`(전체 xlsx), `/api/import`(원가표 업로드).
+`/api/hotels`, `/api/golf-courses`, `/api/vehicle-rules`(GET/POST, `/:id` DELETE), `/api/settings`(GET/PUT), `/api/export`(전체 xlsx), `/api/import`(원가표 입력표·기존 원가표 업로드), `/api/input-template`(입력표 양식, `?group=` 로 채운 양식).
 
 ## 구조
 ```

@@ -72,6 +72,7 @@ export default async function ProductsPage() {
           <td colSpan={2} className="num !py-3">
             <span className="inline-flex justify-end gap-1.5 whitespace-nowrap">
               <GroupEditor group={grp} regions={masterRegions} childCount={children.length} />
+              {children.length > 0 && <a className="admin-btn admin-btn--light admin-btn--xs" href={`/api/input-template?group=${encodeURIComponent(grp.id)}`} title="이 상품군의 설정·단가·날짜별 값을 채운 입력표. 고쳐서 엑셀 가져오기로 다시 올리면 반영됩니다"><i className="ri-edit-box-line" /> 입력표</a>}
               {children.length > 0 && <a className="admin-btn admin-btn--light admin-btn--xs" href={`/api/product-groups/${encodeURIComponent(grp.id)}/export`} title="하위 원가표를 시트로 묶은 엑셀 파일"><i className="ri-file-excel-2-line" /> 묶음 .xlsx</a>}
             </span>
           </td>

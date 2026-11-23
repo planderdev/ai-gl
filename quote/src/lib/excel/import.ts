@@ -6,6 +6,7 @@ import { JP_HOLIDAYS_DEFAULT } from "@/lib/masters/holidays";
 import { airlineName } from "@/lib/format";
 import { argb, dateOf, fontArgb, isFormula, label, matchByName, mode, normName, num, slug, str } from "./import-util";
 import { importLandSheet } from "./import-land";
+import { importInputWorkbook, isInputWorkbook } from "./input-import";
 
 /**
  * 기존 수작업 원가표(.xlsx) → 시스템 데이터로 변환. 파일 1개 = 상품군, 시트 1장 = 원가표(상품).
@@ -27,12 +28,14 @@ export interface ImportResult {
   exchangeRate: number;
   margins: number[];
   log: string[];
+  /** input = 원가표 입력표(상품군을 파일 내용대로 고친다) / sheet = 기존 원가표(이미 있는 상품군은 파일명만 갱신) */
+  kind: "input" | "sheet";
 }
 export interface ImportOptions {
   region?: string;
   holidays?: string[];
   fileName?: string;
-  existing?: { hotels?: Hotel[]; courses?: GolfCourse[]; vehicles?: VehicleRule[] };
+  existing?: { hotels?: Hotel[]; courses?: GolfCourse[]; vehicles?: VehicleRule[]; groups?: ProductGroup[]; products?: Product[] };
 }
 
 function parseSchedule(s: string): { out: FlightLeg; in: FlightLeg } | null {
@@ -65,13 +68,20 @@ export async function importCostWorkbook(buf: ArrayBuffer | Buffer, opts: Import
   const now = new Date().toISOString();
   const log: string[] = [];
 
+  // 원가표 입력표(직접 채우는 양식)는 별도 규칙으로 읽는다 — input-import.ts
+  if (isInputWorkbook(wb)) {
+    const r = importInputWorkbook(wb, { holidays, now, fileName: opts.fileName, existing: { groups: opts.existing?.groups ?? [], products: opts.existing?.products ?? [], hotels: opts.existing?.hotels ?? [], courses: opts.existing?.courses ?? [], vehicles: opts.existing?.vehicles ?? [] } });
+    const last = r.products.at(-1);
+    return { groups: [r.group], hotels: r.hotels, vehicles: r.vehicles, courses: r.courses, products: r.products, fares: [], exchangeRate: last?.exchangeRate ?? 9.2, margins: last?.margins ?? [0.15, 0.2], log: r.log, kind: "input" };
+  }
+
   const costSheets = wb.worksheets.filter((ws) => str(ws.getCell("A5").value).trim() === "날짜");
   const golfSheet = wb.worksheets.find((ws) => /골프장.*요금표/.test(str(ws.getCell("A1").value)));
-  if (!costSheets.length) throw new Error("원가표 시트를 찾지 못했습니다(A5='날짜' 인 시트 필요).");
+  if (!costSheets.length) throw new Error("원가표 시트를 찾지 못했습니다. 원가표 입력표 양식이거나, A5 가 '날짜' 인 기존 원가표 시트가 있어야 합니다.");
   const airSheets = costSheets.filter(hasGroupColumn);
   const landSheets = costSheets.filter((ws) => !hasGroupColumn(ws));
 
-  const res: ImportResult = { groups: [], hotels: [], vehicles: [], courses: [], products: [], fares: [], exchangeRate: 9.2, margins: [0.15, 0.2], log };
+  const res: ImportResult = { groups: [], hotels: [], vehicles: [], courses: [], products: [], fares: [], exchangeRate: 9.2, margins: [0.15, 0.2], log, kind: "sheet" };
   const fares = new Map<string, FlightFare>();
   const knownHotels = [...(opts.existing?.hotels ?? [])], knownCourses = [...(opts.existing?.courses ?? [])], knownVehicles = [...(opts.existing?.vehicles ?? [])];
   const touched = { hotels: new Map<string, Hotel>(), courses: new Map<string, GolfCourse>(), vehicles: new Map<string, VehicleRule>() };

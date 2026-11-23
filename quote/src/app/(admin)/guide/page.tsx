@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** 상품관리(원가표) 사용 가이드. 내용은 고정 문서이고, 숫자와 예시 링크만 현재 데이터에서 가져온다 */
 const SECTIONS = [
-  ["structure", "구조 한눈에 보기"], ["menu", "메뉴 안내"], ["types", "원가표 유형 두 가지"], ["import", "엑셀 가져오기"], ["sheet", "원가표 보기·고치기"], ["settings", "원가표 설정"],
+  ["structure", "구조 한눈에 보기"], ["menu", "메뉴 안내"], ["types", "원가표 유형 두 가지"], ["input", "입력표로 만들기"], ["import", "기존 원가표 가져오기"], ["sheet", "원가표 보기·고치기"], ["settings", "원가표 설정"],
   ["rates", "단가 고치기"], ["export", "엑셀 받기"], ["groups", "상품군 관리"], ["fares", "항공 운임"], ["rules", "계산 규칙"], ["faq", "자주 묻는 질문"],
 ] as const;
 
@@ -84,7 +84,8 @@ export default async function GuidePage() {
             <tbody>
               <tr><td className="whitespace-nowrap"><Go href="/products">상품 구조 · 원가표</Go></td><td>지역 › 상품군 › 원가표를 트리로 봅니다. 원가표 이름을 누르면 날짜별 표가 열립니다.</td></tr>
               <tr><td className="whitespace-nowrap"><Go href="/products/new">새 원가표 만들기</Go></td><td>엑셀 없이 화면에서 항공편·숙박·골프·차량을 골라 원가표를 만듭니다.</td></tr>
-              <tr><td className="whitespace-nowrap"><Go href="/products/new#import">원가표 엑셀 가져오기</Go></td><td>기존에 쓰던 원가표 파일을 올려 상품군·원가표·단가를 한 번에 만듭니다.</td></tr>
+              <tr><td className="whitespace-nowrap"><Go href="/products/new#import">원가표 엑셀 가져오기</Go></td><td>입력표(채워서 올리는 양식)나 기존에 쓰던 원가표 파일을 올려 상품군·원가표·단가를 한 번에 만듭니다.</td></tr>
+              <tr><td className="whitespace-nowrap"><a href="/api/input-template" className="font-bold text-[var(--admin-primary)] hover:underline">입력표 빈 양식 받기</a></td><td>원가표를 만드는 데 필요한 값을 적는 엑셀 양식을 내려받습니다.</td></tr>
               <tr><td className="whitespace-nowrap"><Go href="/masters">호텔·골프장·차량 단가</Go></td><td>지역별 호텔 1박 단가, 골프장 그린피, 차량비와 환율·마진·일본 공휴일을 고칩니다.</td></tr>
               <tr><td className="whitespace-nowrap"><Go href="/fares">항공 운임·크롤러</Go></td><td>항공사에서 수집한 날짜별 운임을 보고, 직접 입력하거나 수집을 요청합니다.</td></tr>
               <tr><td className="whitespace-nowrap"><Go href="/vehicles">차량 요금표(MK택시)</Go></td><td>MK택시 공항 송영 요금표를 도시별로 봅니다.</td></tr>
@@ -113,7 +114,39 @@ export default async function GuidePage() {
         <p>두 유형 모두 판매가는 <b>원가합 ÷ (1 − 마진)</b> 으로 계산합니다. 마진이 15%면 원가를 0.85로 나눈 값입니다.</p>
       </Section>
 
-      <Section id="import" icon="ri-upload-2-line" title="엑셀 가져오기">
+      <Section id="input" icon="ri-edit-box-line" title="입력표로 만들기">
+        <p><b>원가표 입력표</b>는 원가표를 만드는 데 필요한 값을 한 파일에 적는 엑셀 양식입니다. 채워서 올리면 상품군·원가표와 호텔·골프장·차량 단가가 한 번에 만들어집니다.</p>
+        <Steps items={[
+          <><a href="/api/input-template" className="font-bold text-[var(--admin-primary)] hover:underline">입력표 빈 양식</a>을 받습니다. 이미 있는 상품군을 고치거나 비슷한 상품을 만들 때는 <Go href="/products">상품 구조</Go>의 상품군 줄에서 <b>입력표</b>를 누르면 지금 값이 채워진 파일을 받습니다.</>,
+          <><b>1 원가표</b> 시트에 상품군 이름·지역과 원가표를 적습니다. 열 하나가 원가표 하나이고, 항목 설명과 예시는 B열에 있습니다.</>,
+          <>새 호텔·골프장·차량이거나 요금이 바뀌었으면 <b>2 호텔 · 3 호텔 일자별 요금 · 4 골프장 요금 · 5 차량</b> 시트에 적습니다. 등록된 단가를 그대로 쓸 거면 비워 둡니다(등록된 이름은 <b>참고</b> 시트에 있습니다).</>,
+          <>날짜마다 다른 값(판매가, 그룹가·유택, 직접 넣을 금액, 출발 없는 날)이 있으면 <b>6 날짜별 입력</b> 시트에 적습니다.</>,
+          <><Go href="/products/new#import">원가표 엑셀 가져오기</Go>에서 올립니다. 결과에 원가표별 구성과 첫 출발일 원가가 나오니 맞는지 확인합니다.</>,
+        ]} />
+        <div className="overflow-x-auto rounded-xl border border-[var(--admin-border)]">
+          <table className="admin-table">
+            <thead><tr><th>시트</th><th>적는 내용</th><th>꼭 필요한가</th></tr></thead>
+            <tbody>
+              <tr><td className="whitespace-nowrap font-bold">1 원가표</td><td>상품군 이름·지역, 원가표별 판매 유형·항공편·박수·일자별 홀수·출발일·환율·마진·숙박 구성·골프 구성·차량 규칙·기타 원가</td><td>필수</td></tr>
+              <tr><td className="whitespace-nowrap font-bold">2 호텔</td><td>호텔의 요일별 1인 1박 요금(엔)</td><td>새 호텔이거나 요금이 바뀔 때</td></tr>
+              <tr><td className="whitespace-nowrap font-bold">3 호텔 일자별 요금</td><td>날짜마다 요금이 다른 호텔의 숙박일별 요금(엔)</td><td>해당 호텔만</td></tr>
+              <tr><td className="whitespace-nowrap font-bold">4 골프장 요금</td><td>기간·스타일별 주중/주말/연휴 그린피(엔)</td><td>새 골프장이거나 요금이 바뀔 때</td></tr>
+              <tr><td className="whitespace-nowrap font-bold">5 차량</td><td>출발 요일별 1인 차량+지원비(원)</td><td>새 규칙이거나 금액이 바뀔 때</td></tr>
+              <tr><td className="whitespace-nowrap font-bold">6 날짜별 입력</td><td>출발일별 판매가, 그룹가·유택, 직접 넣을 운임·금액, 강조·마감·숨김</td><td>있을 때만</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul className="list-disc space-y-1 pl-5 text-[var(--admin-text-muted)]">
+          <li>노란색 머리글(* 표시)은 꼭 채웁니다. 빠지거나 이름이 맞지 않으면 <b>아무것도 저장하지 않고</b> 고칠 곳을 줄 단위로 알려 줍니다.</li>
+          <li>숙박 구성은 <code className="rounded bg-[var(--admin-surface-muted)] px-1">쥬라쿠 스파&amp;리조트 1박 + 넘버원 2박</code>, 골프 구성은 <code className="rounded bg-[var(--admin-surface-muted)] px-1">썬셋힐즈컨트리클럽(셀프플레이) + 오쿠도고골프클럽(셀프플레이)</code>, 기타 원가는 <code className="rounded bg-[var(--admin-surface-muted)] px-1">철판구이 석식 40000원 + 가이드비 3000엔</code> 처럼 + 로 이어 적습니다.</li>
+          <li>원가표·상품군 이름이 이미 있는 것과 같으면 그것을 고치고, 다르면 새로 만듭니다.</li>
+          <li>4 골프장 요금에 적은 골프장은 요금 구간 전체가 표 내용으로 바뀝니다. 6 날짜별 입력에 줄이 있는 원가표는 날짜별 값이 표 내용으로 통째로 바뀌고, 줄이 없으면 기존 값을 그대로 둡니다.</li>
+        </ul>
+        <Tip>단가를 바꾸면 같은 호텔·골프장·차량을 쓰는 다른 원가표도 함께 바뀝니다. 한 원가표의 특정 날짜만 다르게 하려면 6 날짜별 입력의 “(직접)” 칸을 쓰세요.</Tip>
+      </Section>
+
+      <Section id="import" icon="ri-upload-2-line" title="기존 원가표 가져오기">
+        <p className="text-[var(--admin-text-muted)]">입력표가 아니라 지금까지 쓰던 원가표 파일을 그대로 올리는 방법입니다.</p>
         <Steps items={[
           <><Go href="/products/new#import">원가표 엑셀 가져오기</Go>에서 파일(.xlsx)을 고릅니다. 지역 칸은 비워 두면 시트 이름에서 알아서 찾습니다.</>,
           <><b>가져오기</b>를 누릅니다. 파일은 상품군 1개, 날짜 표가 있는 시트는 각각 원가표 1개가 됩니다.</>,

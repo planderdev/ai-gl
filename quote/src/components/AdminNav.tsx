@@ -11,7 +11,7 @@ const MENU: Group[] = [
   { key: "guide", label: "사용 가이드", icon: "ri-book-open-line", href: "/guide" },
   // 상품관리 = 원가표 기준 구조(국가 › 지역 › 상품군 › 원가표)와 그 단가·운임
   { key: "product", label: "상품관리", icon: "ri-golf-ball-line", children: [
-    { label: "상품 구조 · 원가표", href: "/products" }, { label: "새 원가표 만들기", href: "/products/new" }, { label: "원가표 엑셀 가져오기", href: "/products/new#import" },
+    { label: "상품 구조 · 원가표", href: "/products" }, { label: "새 원가표 만들기", href: "/products/new" }, { label: "원가표 엑셀 가져오기", href: "/products/new#import" }, { label: "입력표 빈 양식 받기", href: "/api/input-template", external: true },
     { label: "호텔·골프장·차량 단가", href: "/masters" }, { label: "항공 운임·크롤러", href: "/fares" }, { label: "차량 요금표(MK택시)", href: "/vehicles" },
     { label: "전체 원가표 다운로드", href: "/api/export", external: true },
   ] },

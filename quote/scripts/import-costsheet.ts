@@ -11,8 +11,8 @@ const [file, ...rest] = process.argv.slice(2);
 if (!file) { console.error("xlsx 경로를 지정하세요"); process.exit(1); }
 const region = rest.includes("--region") ? rest[rest.indexOf("--region") + 1] : undefined;
 async function main() {
-const [settings, h, g, v] = await Promise.all([getSettings(), hotels().list(), golfCourses().list(), vehicleRules().list()]);
-const res = await importCostWorkbook(readFileSync(file), { region, holidays: settings.holidays, fileName: path.basename(file), existing: { hotels: h, courses: g, vehicles: v } });
+const [settings, h, g, v, groups, prods] = await Promise.all([getSettings(), hotels().list(), golfCourses().list(), vehicleRules().list(), productGroups().list(), products().list()]);
+const res = await importCostWorkbook(readFileSync(file), { region, holidays: settings.holidays, fileName: path.basename(file), existing: { hotels: h, courses: g, vehicles: v, groups, products: prods } });
 await productGroups().upsertMany(res.groups);
 await hotels().upsertMany(res.hotels);
 await vehicleRules().upsertMany(res.vehicles);
