@@ -1,15 +1,18 @@
 import type { FareRequest, FlightFare } from "@/types";
 import { collection, newId, nowIso } from "@/lib/store/collection";
 import { fareKey } from "@/lib/pricing/engine";
+import { isApproxFare, keepHumanFares } from "./protect";
 
 export const fares = () => collection<FlightFare>("fares");
 export const fareRequests = () => collection<FareRequest>("fare-requests");
 
 export type FareInput = Omit<FlightFare, "id" | "capturedAt" | "status" | "airline" | "fareKrw" | "source"> & Partial<Pick<FlightFare, "status" | "airline" | "capturedAt" | "fareKrw" | "source">>;
 
-/** 크롤러/수동 입력 공통 업서트. 같은 편명·날짜는 최신값으로 덮어씀. */
+/** 크롤러/수동 입력 공통 업서트. 같은 편명·날짜는 최신값으로 덮어씀. 단 편 미구분 최저가는 가져오거나 직접 넣은 편별 운임을 덮어쓰지 않는다(keepHumanFares). */
 export async function upsertFares(inputs: FareInput[]): Promise<FlightFare[]> {
   const now = nowIso();
+  if (inputs.some(isApproxFare)) inputs = keepHumanFares(inputs, await fares().list()).keep;
+  if (!inputs.length) return [];
   const rows = inputs.map<FlightFare>((f) => ({
     id: fareKey(f.flightNo, f.date),
     airline: f.airline ?? f.flightNo.replace(/\d+$/, ""),

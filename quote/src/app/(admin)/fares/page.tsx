@@ -19,6 +19,9 @@ export default async function FaresPage({ searchParams }: PageProps<"/fares">) {
   for (const f of items) { if (!byDate.has(f.date)) byDate.set(f.date, {}); byDate.get(f.date)![f.flightNo] = f; }
   const base = process.env.SITE_URL ?? "http://localhost:3000";
   const paxOf = (f: { meta?: Record<string, unknown> }) => (typeof f.meta?.pax === "number" ? `${f.meta.pax}인` : f.meta?.provider ? "1인" : "");
+  // 편이 여럿인 노선의 달력 최저가(제주항공)는 어느 편 값인지 몰라 운임으로 저장하지 않는다 — "미정" 옆에 참고값으로만 보여 준다
+  const dayLowest = (f?: { meta?: Record<string, unknown> }) => (typeof f?.meta?.dayLowestKrw === "number" ? f.meta.dayLowestKrw : null);
+  const hasDayLowest = items.some((f) => f.status === "unknown" && dayLowest(f) != null);
   const paxSet = [...new Set(items.filter((f) => f.source === "crawler").map((f) => `${f.flightNo} ${paxOf(f)}`).filter(Boolean))].sort();
   return (
     <>
@@ -42,7 +45,7 @@ export default async function FaresPage({ searchParams }: PageProps<"/fares">) {
               {[...byDate.entries()].sort().map(([d, m]) => (
                 <tr key={d} className="hover:bg-neutral-50">
                   <td className="td text-center">{d}</td><td className="td text-center">{weekdayLabel(d)}</td>
-                  {flights.map((f) => { const x = m[f]; return <td key={f} className={`td ${x?.status === "ok" ? "" : "text-neutral-400"}`}>{x ? (x.status === "ok" ? krw(x.fareKrw) : STATUS[x.status]) : "·"}</td>; })}
+                  {flights.map((f) => { const x = m[f]; return <td key={f} className={`td ${x?.status === "ok" ? "" : "text-neutral-400"}`}>{x ? (x.status === "ok" ? krw(x.fareKrw) : STATUS[x.status]) : "·"}{x?.status === "unknown" && dayLowest(x) != null && <span className="ml-1 text-[11px]" title={typeof x.meta?.note === "string" ? x.meta.note : undefined}>최저 {krw(dayLowest(x))}~</span>}</td>; })}
                   <td className="td text-center text-[11px] text-neutral-400">{Object.values(m).map((x) => `${x.source}${paxOf(x) ? `(${paxOf(x)})` : ""}`).filter((v, i, a) => a.indexOf(v) === i).join(",")}</td>
                 </tr>
               ))}
@@ -50,11 +53,12 @@ export default async function FaresPage({ searchParams }: PageProps<"/fares">) {
             </tbody>
           </table>
         </div>
+        {hasDayLowest && <p className="text-xs text-neutral-500">“미정 · 최저 N~”: 항공사 달력은 그날 노선 최저가만 알려 주고 편을 구분하지 않습니다. 같은 노선에 편이 둘 이상이면(제주항공 마쓰야마 오후편·조조편) 어느 편 값인지 알 수 없어 운임으로 쓰지 않고 참고로만 보여 줍니다. 그 편의 실제 운임은 이보다 비싸거나 마감일 수 있으니 편별 운임은 직접 입력하세요(직접 넣거나 가져온 값은 크롤러가 덮어쓰지 않습니다).</p>}
       </div>
       <aside className="space-y-4">
         <div className="card space-y-2">
           <h2 className="font-bold">항공 운임 크롤러</h2>
-          <p className="text-xs text-neutral-500">에어서울(RS741/742 다카마쓰)과 제주항공(7C1704/1703 마쓰야마)의 최저가 달력에서 날짜별 편도 총액을 수집합니다. 봇 차단 때문에 Chrome 창이 잠깐 열립니다. CLI: <code>npm run crawl -- --all</code></p>
+          <p className="text-xs text-neutral-500">에어서울(RS741/742 다카마쓰)과 제주항공(마쓰야마 오후편 7C1703/1704·조조편 7C1721/1722)의 최저가 달력에서 날짜별 편도 총액(세금 포함, 원)을 수집합니다. 제주항공 달력은 노선 하루 최저가라, 하루 2편인 마쓰야마는 금액을 참고값으로만 남깁니다. 봇 차단 때문에 Chrome 창이 잠깐 열립니다. CLI: <code>npm run crawl -- --all</code></p>
           <CrawlButton pendingCount={reqs.filter((r) => r.status === "pending").length} />
         </div>
         <div className="card" id="requests">
