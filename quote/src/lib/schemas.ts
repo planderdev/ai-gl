@@ -184,3 +184,22 @@ export const sglPaymentSchema = z.object({
   depositor: z.string().trim().max(30).default(""),
 });
 export const sglLookupSchema = z.object({ no: z.string().trim().min(6).max(30), phone: mobile });
+
+/** 문의관리. 수정(PATCH)에 기본값이 끼어들지 않도록 어느 칸에도 .default() 를 두지 않는다 */
+const inquiryBase = z.object({
+  channel: z.enum(["instagram", "kakao", "direct", "web", "etc"]),
+  receivedDate: z.union([date, z.literal("")]),
+  name: z.string().trim().min(1, "이름을 입력하세요").max(60),
+  phone: z.string().trim().max(30).nullable(),
+  departText: z.string().trim().max(100),
+  departDate: z.union([date, z.literal("")]).nullable(),
+  productText: z.string().trim().max(300),
+  route: z.string().trim().max(100),
+  people: z.number().int().min(1).max(999).nullable(),
+  status: z.enum(["new", "in_progress", "confirmed", "closed"]),
+  confirmText: z.string().trim().max(200).nullable(),
+  revisit: z.boolean().nullable(),
+  memo: z.string().max(4000),
+});
+export const inquiryPatchSchema = inquiryBase.partial();
+export const inquiryCreateSchema = inquiryBase.partial().extend({ name: inquiryBase.shape.name });

@@ -98,13 +98,13 @@ export const COLLECTIONS: CollectionDef[] = [
   },
   {
     id: "inquiries", label: "상담 문의", singular: "상담 문의", titleField: "name", searchFields: ["name", "phone", "product_title", "message"],
-    desc: "고객 사이트(/sgl)에서 접수된 상담 신청입니다. 연락을 마치면 상태를 바꿔 두세요.",
-    statusField: "status", statusOptions: [["new", "신규"], ["in_progress", "상담중"], ["done", "상담완료"], ["closed", "종료"]],
+    desc: "고객 사이트(/sgl)에서 접수된 상담 신청입니다. 문의관리(/inquiries)에서 다른 채널의 문의와 함께 볼 수 있습니다.",
+    statusField: "status", statusOptions: [["new", "신규"], ["in_progress", "상담중"], ["confirmed", "출발 확정"], ["closed", "종료"], ["done", "상담완료(이전 값)"]],
     columns: [{ key: "name", label: "이름" }, { key: "phone", label: "휴대폰" }, { key: "contact_method", label: "연락 방법" }, { key: "region", label: "지역" }, { key: "product_title", label: "관심 상품" }, { key: "depart_date", label: "희망 출발일", type: "date" }, { key: "people", label: "인원", type: "number" }, { key: "status", label: "상태", type: "status" }, { key: "created_at", label: "접수", type: "date" }],
     defaults: { status: "new", contact_method: "phone" }, sortBy: { key: "created_at", dir: "desc" }, perRecord: true, exportable: true,
     sections: [
-      { title: "문의자", fields: [t("name", "이름"), t("phone", "휴대폰"), sel("contact_method", "연락 방법", [["phone", "전화"], ["kakao", "카카오톡"]]), sel("status", "상태", [["new", "신규"], ["in_progress", "상담중"], ["done", "상담완료"], ["closed", "종료"]])] },
-      { title: "문의 내용", fields: [t("region", "지역"), t("product_title", "관심 상품"), t("product_id", "상품(원가표) ID"), { name: "depart_date", label: "희망 출발일", type: "date" }, n("people", "인원"), ta("message", "문의 내용"), ta("admin_memo", "상담 메모")] },
+      { title: "문의자", fields: [t("name", "이름"), t("phone", "휴대폰"), sel("contact_method", "연락 방법", [["phone", "전화"], ["kakao", "카카오톡"]]), sel("status", "상태", [["new", "신규"], ["in_progress", "상담중"], ["confirmed", "출발 확정"], ["closed", "종료"], ["done", "상담완료(이전 값)"]])] },
+      { title: "문의 내용", fields: [t("region", "지역"), t("product_title", "관심 상품"), t("product_id", "상품(원가표) ID"), { name: "depart_date", label: "희망 출발일", type: "date" }, t("depart_text", "출발날짜(글)"), n("people", "인원"), ta("message", "문의 내용"), t("confirm_text", "출발 확정 내용"), b("revisit", "재방문 고객"), ta("admin_memo", "상담 메모")] },
       { title: "동의 / 유입 경로", fields: [t("created_at", "접수 일시", { readonly: true }), t("privacy_consent_at", "개인정보 동의 일시", { readonly: true }), b("marketing_consent", "마케팅 수신 동의"), t("consent_version", "동의 문구 버전", { readonly: true }), t("utm_source", "utm_source", { readonly: true }), t("utm_medium", "utm_medium", { readonly: true }), t("utm_campaign", "utm_campaign", { readonly: true }), t("referrer", "유입 페이지", { readonly: true, full: true })] },
     ],
   },

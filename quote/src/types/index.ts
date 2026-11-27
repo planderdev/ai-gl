@@ -282,3 +282,35 @@ export interface VipBenefit {
   image?: string;
   image_alt?: string;
 }
+
+/** 문의 접수 채널: 인스타(플러그인) · 카카오 채널 · 직판 · 홈페이지(/sgl 상담 폼) · 기타 */
+export type InquiryChannel = "instagram" | "kakao" | "direct" | "web" | "etc";
+/** 문의 진행 단계: 신규 → 상담중 → 출발 확정 | 종료 */
+export type InquiryStatus = "new" | "in_progress" | "confirmed" | "closed";
+/**
+ * 문의 한 건(문의관리). 엑셀 '문의관리현황 목록' 한 줄에 해당한다.
+ * 출발날짜·지역은 담당자가 적은 글 그대로 두고, 날짜·출발지·목적지·인원은 읽을 때 풀어낸다(src/lib/inquiries/parse.ts).
+ */
+export interface Inquiry {
+  id: string;
+  channel: InquiryChannel;
+  receivedDate: string; // 접수일 YYYY-MM-DD, 모르면 ""
+  /** 같은 고객이 다른 채널로도 문의한 경우(엑셀에서 채널 칸이 둘 이상 채워진 줄) */
+  extraChannels?: { channel: InquiryChannel; date: string }[];
+  name: string;
+  phone?: string;
+  departText: string; // 출발날짜 원문(12월4일 · 10월하순 · 날짜미정)
+  departDate?: string; // 폼에서 날짜로 받은 경우 YYYY-MM-DD
+  productText: string; // 상품내용(인천-벳부 3박4일 2명)
+  route: string; // 고객이 원하는 지역(인천-가고시마)
+  people?: number | null;
+  status: InquiryStatus;
+  confirmText?: string; // 출발 확정 내용(12월20일 출발 2명 확정)
+  revisit?: boolean; // 재방문 고객
+  memo: string; // 비고(상담 경과)
+  message?: string; // 고객이 폼에 직접 적은 문의 내용
+  source: "sheet" | "manual" | "sgl-web" | "api";
+  sheetRow?: number; // 엑셀에서 가져온 줄 번호(같은 날 접수된 문의의 순서 유지용)
+  createdAt: string;
+  updatedAt: string;
+}

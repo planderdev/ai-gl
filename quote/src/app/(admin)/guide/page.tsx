@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 /** 상품관리(원가표) 사용 가이드. 내용은 고정 문서이고, 숫자와 예시 링크만 현재 데이터에서 가져온다 */
 const SECTIONS = [
   ["structure", "구조 한눈에 보기"], ["menu", "메뉴 안내"], ["types", "원가표 유형 두 가지"], ["input", "입력표로 만들기"], ["import", "기존 원가표 가져오기"], ["sheet", "원가표 보기·고치기"], ["settings", "원가표 설정"],
-  ["rates", "단가 고치기"], ["export", "엑셀 받기"], ["groups", "상품군 관리"], ["fares", "항공 운임"], ["rules", "계산 규칙"], ["faq", "자주 묻는 질문"],
+  ["rates", "단가 고치기"], ["export", "엑셀 받기"], ["groups", "상품군 관리"], ["fares", "항공 운임"], ["rules", "계산 규칙"], ["inquiries", "문의관리"], ["faq", "자주 묻는 질문"],
 ] as const;
 
 function Section({ id, icon, title, children }: { id: string; icon: string; title: string; children: ReactNode }) {
@@ -256,6 +256,18 @@ export default async function GuidePage() {
           </table>
         </div>
         <p className="text-[var(--admin-text-muted)]">모든 금액은 1인 기준입니다.</p>
+      </Section>
+
+      <Section id="inquiries" icon="ri-customer-service-2-line" title="문의관리">
+        <p><Go href="/inquiries">문의관리</Go>는 인스타(플러그인)·카카오 채널·직판·홈페이지로 들어온 문의와 상담 경과를 한곳에서 보는 화면입니다. 쓰시던 ‘문의관리현황 목록’ 엑셀과 같은 칸으로 되어 있습니다.</p>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li><b>요약</b> — 접수 채널·목적지·출발 희망 달별 문의 수와 출발 확정 수(확정률)입니다. 줄을 누르면 그 조건으로 목록이 좁혀지고, 다시 누르면 풀립니다.</li>
+          <li><b>목록</b> — 최근 접수순입니다. 상태(신규 · 상담중 · 출발 확정 · 종료)는 목록에서 바로 바꾸고, 이름이나 <b>수정</b>을 누르면 나머지 칸을 고칩니다. 출발 확정 내용을 적으면 상태가 출발 확정으로 바뀝니다.</li>
+          <li><b>문의 등록</b> — 새 문의를 직접 넣습니다. 출발날짜와 지역은 엑셀에 적던 그대로(12월4일, 1월 하순, 인천-가고시마) 적으면 날짜·출발지·목적지를 알아서 읽습니다.</li>
+          <li><b>엑셀 가져오기</b> — ‘문의관리현황 목록’ 파일을 그대로 올립니다. 이름·채널·접수일이 같은 문의는 건너뛰므로 같은 파일을 다시 올려도 두 번 들어가지 않습니다. 엑셀에서 고친 비고·확정 내용까지 반영하려면 “이미 있는 문의도 고치기”를 켭니다.</li>
+          <li><b>엑셀 내려받기</b> — 같은 열 배치(직판문의 … 비고)로 받습니다. 뒤에 홈페이지 문의·연락처·상태 칸이 붙습니다.</li>
+          <li>고객 사이트의 상담 폼으로 들어온 문의는 채널이 <b>홈페이지</b>로 표시되어 같은 목록에 자동으로 들어옵니다.</li>
+        </ul>
       </Section>
 
       <Section id="faq" icon="ri-question-line" title="자주 묻는 질문">

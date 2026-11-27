@@ -6,6 +6,7 @@ import { golfCourses, hotels, vehicleRules } from "@/lib/masters/service";
 import { golfPlanLabel } from "@/lib/pricing/engine";
 import { collectionById } from "@/lib/cms/schema";
 import { listItems } from "@/lib/cms/service";
+import { listInquiries } from "@/lib/inquiries/service";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,10 @@ export default async function Dashboard() {
   const quotes = (await Promise.all(list.map((p) => quoteProduct(p.id)))).filter((q): q is NonNullable<typeof q> => !!q);
   const pending = reqs.filter((r) => r.status === "pending" || r.status === "in_progress");
   const [cmsProducts, cmsBookings, cmsCustomers, cmsEvents] = await Promise.all(["products", "bookings", "customers", "events"].map((id) => listItems(collectionById(id)!)));
+  const inquiries = await listInquiries().catch(() => []);
   const cmsCards = [
     { label: "상품", value: cmsProducts.length, sub: `공개 ${cmsProducts.filter((x) => x.status === "publish").length}`, href: "/cms/products", icon: "ri-golf-ball-line" },
+    { label: "문의", value: inquiries.length, sub: `상담중 ${inquiries.filter((x) => x.status === "new" || x.status === "in_progress").length} · 출발 확정 ${inquiries.filter((x) => x.status === "confirmed").length}`, href: "/inquiries", icon: "ri-customer-service-2-line" },
     { label: "예약", value: cmsBookings.length, sub: `확정 ${cmsBookings.filter((x) => x.status === "confirmed").length} · 대기 ${cmsBookings.filter((x) => x.status === "pending").length}`, href: "/cms/bookings", icon: "ri-calendar-check-line" },
     { label: "고객", value: cmsCustomers.length, sub: `VIP ${cmsCustomers.filter((x) => x.grade === "vip").length}`, href: "/cms/customers", icon: "ri-user-3-line" },
     { label: "이벤트", value: cmsEvents.length, sub: `공개 ${cmsEvents.filter((x) => x.status === "publish").length}`, href: "/cms/events", icon: "ri-megaphone-line" },
@@ -38,7 +41,7 @@ export default async function Dashboard() {
         ]}
         actions={<><Link href="/products/new" className="admin-btn admin-btn--primary"><i className="ri-add-line" /> 새 원가표</Link><a href="/api/export" className="admin-btn admin-btn--light"><i className="ri-file-excel-2-line" /> 전체 원가표</a></>}
       />
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         {cmsCards.map((c) => (
           <Link key={c.label} href={c.href} className="admin-card flex items-start gap-3 p-5 transition hover:-translate-y-0.5">
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--admin-primary-soft)] text-xl text-[var(--admin-primary)]"><i className={c.icon} /></span>

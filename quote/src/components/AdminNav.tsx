@@ -21,7 +21,9 @@ const MENU: Group[] = [
     { label: "호텔 관리", href: "/cms/hotels" }, { label: "국가 관리", href: "/cms/taxonomy-countries" }, { label: "지역 관리", href: "/cms/taxonomy-regions" }, { label: "테마 관리", href: "/cms/taxonomy-themes" }, { label: "배지 관리", href: "/cms/taxonomy-badges" },
   ] },
   { key: "event", label: "이벤트관리", icon: "ri-megaphone-line", children: [{ label: "이벤트 목록", href: "/cms/events" }, { label: "이벤트 등록", href: "/cms/events/new" }, { label: "VIP 사전신청", href: "/cms/vip-applications" }, { label: "VIP 혜택 공개", href: "/cms/vip-benefits" }, { label: "VIP 랜딩페이지", href: "/sgl-vip", external: true, newTab: true }] },
-  { key: "booking", label: "예약관리", icon: "ri-calendar-check-line", children: [{ label: "예약 목록", href: "/cms/bookings" }, { label: "상담 문의", href: "/cms/inquiries" }, { label: "예약 캘린더", href: "/cms/bookings/calendar" }, { label: "예약 등록", href: "/cms/bookings/new" }, { label: "고객 사이트", href: "/sgl", external: true, newTab: true }] },
+  // 인스타·카카오 채널·직판·홈페이지 상담 폼으로 들어온 문의와 상담 경과
+  { key: "inquiry", label: "문의관리", icon: "ri-customer-service-2-line", href: "/inquiries" },
+  { key: "booking", label: "예약관리", icon: "ri-calendar-check-line", children: [{ label: "예약 목록", href: "/cms/bookings" }, { label: "예약 캘린더", href: "/cms/bookings/calendar" }, { label: "예약 등록", href: "/cms/bookings/new" }, { label: "고객 사이트", href: "/sgl", external: true, newTab: true }] },
   { key: "customer", label: "고객관리", icon: "ri-user-3-line", children: [{ label: "고객 목록", href: "/cms/customers" }, { label: "고객 등록", href: "/cms/customers/new" }] },
   { key: "content", label: "콘텐츠관리", icon: "ri-file-list-3-line", children: [{ label: "공지사항", href: "/cms/notices" }, { label: "FAQ", href: "/cms/faqs" }, { label: "배너관리", href: "/cms/banners" }] },
   { key: "setting", label: "설정", icon: "ri-settings-3-line", children: [{ label: "기본 설정", href: "/cms/settings/general" }, { label: "결제 설정", href: "/cms/settings/payment" }, { label: "취소/환불 설정", href: "/cms/settings/cancellation" }, { label: "고객 사이트", href: "/cms/settings/sgl" }, { label: "API 설정", href: "/cms/settings/api" }] },
