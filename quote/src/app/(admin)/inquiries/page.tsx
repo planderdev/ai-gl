@@ -17,7 +17,7 @@ export default async function InquiriesPage() {
       <PageHead
         crumb="문의관리"
         title="문의관리"
-        desc="인스타(플러그인)·카카오 채널·직판·홈페이지로 들어온 문의와 상담 경과를 한곳에서 관리합니다. 요약 표의 줄을 누르면 그 조건으로 좁혀지고, 상태는 목록에서 바로 바꿀 수 있습니다."
+        desc="인스타(플러그인)·카카오 채널·직판·홈페이지로 들어온 문의와 상담 경과를 한곳에서 관리합니다. 요약 표의 줄을 누르면 그 조건으로 좁혀지고, 상태는 목록에서 바로 바꿀 수 있습니다. 달력 보기에서는 문의일·출발일 기준으로 날짜별 문의를 봅니다."
         stats={[
           { label: "전체 문의", value: items.length.toLocaleString() },
           { label: "이번 달 접수", value: items.filter((q) => q.receivedDate.startsWith(month)).length.toLocaleString() },

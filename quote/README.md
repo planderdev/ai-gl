@@ -75,6 +75,7 @@ npm run export:costsheet -- out.xlsx        # 전체 상품 원가표 파일 생
 - 저장: 관리 문의(엑셀·직접 등록)는 컬렉션 `inquiries`(한 파일), 고객 사이트 상담 폼 접수분은 기존 `cms-inquiries`(건별). `listInquiries()` 가 둘을 같은 모양(`Inquiry`)으로 합치고, 상담 폼 접수분을 고치면 그쪽에 다시 쓴다.
 - 출발날짜·지역은 적힌 글 그대로 저장하고, 날짜·출발지·목적지·인원·확정 인원은 읽을 때 풀어낸다(`parse.ts` 의 `viewOf`). 지역 오타(마스야마 → 마쓰야마)는 `DESTINATIONS` 표로 맞춘다. 연도는 접수일 기준(출발 달이 접수 달보다 앞이면 다음 해).
 - 상태: `new` 신규 · `in_progress` 상담중 · `confirmed` 출발 확정 · `closed` 종료. 엑셀의 출발 확정·재방문 확정 칸이 채워진 줄은 `confirmed`.
+- 달력(`calendar.ts`, `InquiryCalendar.tsx`): 화면 오른쪽 위에서 목록·달력을 바꾼다. 기준은 문의일(접수일)과 출발일. 출발일은 `tripDateOf` — 출발이 확정된 문의는 확정 문구의 날짜, 아니면 희망 출발일 — 이고, 요약의 출발 달·출발 달 조건도 같은 값(`tripMonthOf`)을 쓴다. 달력 보기에서는 달력의 달이 그 기준의 달 조건을 대신하고 고른 날이 조건에 더해지므로, 요약·목록·건수가 모두 달력에 보이는 달(또는 고른 날)을 가리킨다. 달만 적힌 문의는 달력 아래 묶음으로, 날짜를 모르는 문의는 건수만 보인다.
 - 엑셀 가져오기(`POST /api/inquiries/import`)는 머리글 문구로 열을 찾고, 이름·채널·접수일이 같은 문의는 이미 있는 것으로 보아 건너뛴다(`overwrite=1` 이면 엑셀 내용으로 고침). 내려받기(`GET /api/inquiries/export`)는 같은 열 뒤에 홈페이지 문의·연락처·상태를 붙인다.
 - API: `/api/inquiries`(GET/POST), `/api/inquiries/:id`(GET/PATCH/DELETE). 외부 자동화가 `x-api-key` 로 POST 하면 `source: "api"` 로 등록된다.
 - 이름·연락처·상담 내용은 개인정보다. 로그에 남기지 않고, 고객 화면·공개 API 로 내보내지 않는다.

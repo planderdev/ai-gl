@@ -3,10 +3,27 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import type { Inquiry, InquiryChannel, InquiryStatus } from "@/types";
 import { CHANNEL_LABEL, CHANNELS, STATUS_LABEL, STATUSES, mdLabel, type InquiryView } from "@/lib/inquiries/parse";
+import { dayOf, isMonth, tripDateOf, tripMonthOf, weekdayOf, type CalendarBasis } from "@/lib/inquiries/calendar";
+import InquiryCalendar, { NO_DAY, Segmented } from "./InquiryCalendar";
 
-/** 문의관리 화면: 요약(채널·목적지·출발 달) + 조건 + 목록 + 등록/수정/엑셀 가져오기 */
+/** 문의관리 화면: 요약(채널·목적지·출발 달) + 달력(문의일·출발일 기준) + 조건 + 목록 + 등록/수정/엑셀 가져오기 */
 type Filters = { q: string; channel: string; status: string; origin: string; dest: string; depart: string; received: string };
 const NONE: Filters = { q: "", channel: "", status: "", origin: "", dest: "", depart: "", received: "" };
+/** 달력에서 고른 날(달은 Filters 의 depart·received 로 넘긴다). NO_DAY 는 날짜 없이 달만 적힌 문의 */
+type DaySel = { basis: CalendarBasis; day: string } | null;
+function match(q: InquiryView, x: Filters, sel: DaySel): boolean {
+  if (x.channel && q.channel !== x.channel) return false;
+  if (x.status && q.status !== x.status) return false;
+  if (x.origin && !q.origins.includes(x.origin)) return false;
+  if (x.dest && !q.destinations.includes(x.dest)) return false;
+  if (x.depart) { const m = tripMonthOf(q); if (x.depart === "none" ? !!m : m !== x.depart) return false; }
+  if (x.received && (x.received === "none" ? !!q.receivedDate : q.receivedDate.slice(0, 7) !== x.received)) return false;
+  if (sel?.day) { const d = dayOf(q, sel.basis); if (sel.day === NO_DAY ? !!d : d !== sel.day) return false; }
+  if (x.q) { const s = x.q.trim().toLowerCase(); if (s && ![q.name, q.productText, q.route, q.memo, q.confirmText ?? "", q.departText, q.phone ?? "", q.message ?? ""].some((v) => v.toLowerCase().includes(s))) return false; }
+  return true;
+}
+/** 출발일이 이른 순(날짜를 모르는 문의는 뒤) */
+const byTrip = (a: InquiryView, b: InquiryView) => (tripDateOf(a) || "9999").localeCompare(tripDateOf(b) || "9999");
 const STATUS_CHIP: Record<InquiryStatus, string> = { new: "admin-chip", in_progress: "admin-chip admin-chip--warning", confirmed: "admin-chip admin-chip--success", closed: "admin-chip admin-chip--gray" };
 const PAGE = 100;
 const monthLabel = (ym: string) => `${ym.slice(2, 4)}년 ${Number(ym.slice(5, 7))}월`;
@@ -43,6 +60,8 @@ export default function InquiryBoard({ items, today }: { items: InquiryView[]; t
   const router = useRouter();
   const [pending, start] = useTransition();
   const [f, setF] = useState<Filters>(NONE);
+  const [view, setView] = useState<"list" | "calendar">("list");
+  const [cal, setCal] = useState<{ basis: CalendarBasis; month: string; day: string }>({ basis: "received", month: today.slice(0, 7), day: "" });
   const [limit, setLimit] = useState(PAGE);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [importing, setImporting] = useState(false);
@@ -56,32 +75,44 @@ export default function InquiryBoard({ items, today }: { items: InquiryView[]; t
   const options = useMemo(() => {
     const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))];
     const byCount = (xs: string[]) => { const m = new Map<string, number>(); xs.forEach((x) => m.set(x, (m.get(x) ?? 0) + 1)); return [...m].sort((a, b) => b[1] - a[1]).map(([k]) => k); };
-    return { origins: byCount(rows.flatMap((q) => q.origins)), dests: byCount(rows.flatMap((q) => q.destinations)), departs: uniq(rows.map((q) => q.departMonth)).sort(), receiveds: uniq(rows.map((q) => q.receivedDate.slice(0, 7))).sort().reverse() };
+    return { origins: byCount(rows.flatMap((q) => q.origins)), dests: byCount(rows.flatMap((q) => q.destinations)), departs: uniq(rows.map(tripMonthOf)).sort(), receiveds: uniq(rows.map((q) => q.receivedDate.slice(0, 7))).sort().reverse() };
   }, [rows]);
 
-  const match = (q: InquiryView, x: Filters) => {
-    if (x.channel && q.channel !== x.channel) return false;
-    if (x.status && q.status !== x.status) return false;
-    if (x.origin && !q.origins.includes(x.origin)) return false;
-    if (x.dest && !q.destinations.includes(x.dest)) return false;
-    if (x.depart && (x.depart === "none" ? !!q.departMonth : q.departMonth !== x.depart)) return false;
-    if (x.received && (x.received === "none" ? !!q.receivedDate : q.receivedDate.slice(0, 7) !== x.received)) return false;
-    if (x.q) { const s = x.q.trim().toLowerCase(); if (s && ![q.name, q.productText, q.route, q.memo, q.confirmText ?? "", q.departText, q.phone ?? "", q.message ?? ""].some((v) => v.toLowerCase().includes(s))) return false; }
-    return true;
-  };
-  const shown = useMemo(() => rows.filter((q) => match(q, f)), [rows, f]);
+  /**
+   * 달력 보기에서는 달력의 달이 그 기준의 달 조건(접수 달·출발 달)을 대신하고, 고른 날이 조건에 더해진다.
+   * → 요약·목록·건수가 모두 달력에 보이는 달(또는 고른 날)의 문의를 가리킨다.
+   */
+  const calOn = view === "calendar";
+  const eff = useMemo<Filters>(() => (calOn ? { ...f, [cal.basis]: cal.month } : f), [calOn, f, cal.basis, cal.month]);
+  const sel = useMemo<DaySel>(() => (calOn && cal.day ? { basis: cal.basis, day: cal.day } : null), [calOn, cal.basis, cal.day]);
+  const shown = useMemo(() => { const xs = rows.filter((q) => match(q, eff, sel)); return calOn && cal.basis === "depart" ? xs.sort(byTrip) : xs; }, [rows, eff, sel, calOn, cal.basis]);
+  /** 달력에 넘길 문의: 다른 조건은 그대로, 달력의 달·날만 뺀 것 */
+  const calItems = useMemo(() => (calOn ? rows.filter((q) => match(q, { ...f, [cal.basis]: "" }, null)) : []), [rows, f, calOn, cal.basis]);
   /** 요약의 각 표는 자기 조건만 뺀 나머지 조건으로 센다 → 줄을 눌러 바꿔 가며 비교할 수 있다 */
   const tally = (without: keyof Filters, keyOf: (q: InquiryView) => string[]) => {
     const m = new Map<string, { count: number; confirmed: number }>();
-    for (const q of rows) { if (!match(q, { ...f, [without]: "" })) continue; for (const k of keyOf(q)) { const v = m.get(k) ?? { count: 0, confirmed: 0 }; v.count++; if (q.status === "confirmed") v.confirmed++; m.set(k, v); } }
+    for (const q of rows) { if (!match(q, { ...eff, [without]: "" }, without === sel?.basis ? null : sel)) continue; for (const k of keyOf(q)) { const v = m.get(k) ?? { count: 0, confirmed: 0 }; v.count++; if (q.status === "confirmed") v.confirmed++; m.set(k, v); } }
     return m;
   };
   const byChannel = tally("channel", (q) => [q.channel]);
   const byDest = [...tally("dest", (q) => q.destinations)].sort((a, b) => b[1].count - a[1].count).slice(0, 8);
-  const byDepart = [...tally("depart", (q) => [q.departMonth || "none"])].sort((a, b) => (a[0] === "none" ? 1 : b[0] === "none" ? -1 : a[0].localeCompare(b[0])));
-  const set = (k: keyof Filters, v: string) => { setF((p) => ({ ...p, [k]: p[k] === v ? "" : v })); setLimit(PAGE); };
+  const byDepart = [...tally("depart", (q) => [tripMonthOf(q) || "none"])].sort((a, b) => (a[0] === "none" ? 1 : b[0] === "none" ? -1 : a[0].localeCompare(b[0])));
+  /** 조건을 켜고 끈다. 달력 보기에서 달력 기준과 같은 달 조건을 누르면 달력이 그 달로 옮겨 간다 */
+  const set = (k: keyof Filters, v: string) => {
+    setLimit(PAGE);
+    if (calOn && k === cal.basis) { if (isMonth(v)) setCal((c) => ({ ...c, month: v, day: "" })); return; }
+    setF((p) => ({ ...p, [k]: p[k] === v ? "" : v }));
+  };
+  const openView = (v: "list" | "calendar") => {
+    setView(v); setLimit(PAGE);
+    // 목록에서 이미 달을 골라 두었으면 달력도 그 달에서 시작한다
+    if (v === "calendar") setCal((c) => ({ ...c, month: isMonth(f[c.basis]) ? f[c.basis] : c.month, day: "" }));
+  };
+  const moveCal = (next: Partial<typeof cal>) => { setCal((c) => ({ ...c, day: "", ...next })); setLimit(PAGE); };
   const confirmedShown = shown.filter((q) => q.status === "confirmed");
-  const filtered = Object.values(f).some(Boolean);
+  /** 달력이 대신하고 있는 달 조건은 화면에 보이지 않으므로 "조건 지우기"의 대상으로 세지 않는다 */
+  const filtered = (Object.keys(f) as (keyof Filters)[]).some((k) => f[k] && !(calOn && k === cal.basis));
+  const calNoun = cal.basis === "received" ? "접수" : "출발";
 
   async function patch(id: string, body: Partial<Inquiry>) {
     setLocal((p) => ({ ...p, [id]: { ...p[id], ...body } }));
@@ -124,6 +155,7 @@ export default function InquiryBoard({ items, today }: { items: InquiryView[]; t
         <button type="button" className="admin-btn admin-btn--light" onClick={() => { setImportLog(null); setImporting(true); }}><i className="ri-upload-2-line" /> 엑셀 가져오기</button>
         <a href="/api/inquiries/export" download className="admin-btn admin-btn--light"><i className="ri-file-excel-2-line" /> 엑셀 내려받기</a>
         {pending && <span className="text-xs text-[var(--admin-text-soft)]">새로 고치는 중…</span>}
+        <span className="ml-auto"><Segmented label="보기 방식" value={view} onChange={openView} options={[["list", "목록", "ri-list-check"], ["calendar", "달력", "ri-calendar-line"]]} /></span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -135,11 +167,13 @@ export default function InquiryBoard({ items, today }: { items: InquiryView[]; t
           {byDest.map(([k, v]) => <BarRow key={k} label={k} count={v.count} confirmed={v.confirmed} max={byDest[0][1].count} active={f.dest === k} onClick={() => set("dest", k)} />)}
           {!byDest.length && <p className="px-2 py-3 text-sm text-[var(--admin-text-soft)]">조건에 맞는 문의가 없습니다.</p>}
         </Panel>
-        <Panel title="출발 희망 달" hint="달만 적힌 문의 포함">
-          {byDepart.map(([k, v]) => <BarRow key={k} label={k === "none" ? "미정" : monthLabel(k)} count={v.count} confirmed={v.confirmed} max={Math.max(...byDepart.map(([, x]) => x.count))} active={f.depart === k} onClick={() => set("depart", k)} />)}
+        <Panel title="출발 달" hint="확정 건은 확정된 출발일">
+          {byDepart.map(([k, v]) => <BarRow key={k} label={k === "none" ? "미정" : monthLabel(k)} count={v.count} confirmed={v.confirmed} max={Math.max(...byDepart.map(([, x]) => x.count))} active={eff.depart === k} onClick={() => set("depart", k)} />)}
           {!byDepart.length && <p className="px-2 py-3 text-sm text-[var(--admin-text-soft)]">조건에 맞는 문의가 없습니다.</p>}
         </Panel>
       </div>
+
+      {calOn && <InquiryCalendar items={calItems} basis={cal.basis} month={cal.month} day={cal.day} today={today} onBasis={(basis) => moveCal({ basis })} onMonth={(month) => moveCal({ month })} onDay={(day) => moveCal({ day })} />}
 
       <section className="admin-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-[var(--admin-border)] p-3">
@@ -148,10 +182,14 @@ export default function InquiryBoard({ items, today }: { items: InquiryView[]; t
           <select value={f.status} onChange={(e) => set("status", e.target.value)} aria-label="상태"><option value="">상태 전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select>
           <select value={f.origin} onChange={(e) => set("origin", e.target.value)} aria-label="출발지"><option value="">출발지 전체</option>{options.origins.map((o) => <option key={o} value={o}>{o} 출발</option>)}</select>
           <select value={f.dest} onChange={(e) => set("dest", e.target.value)} aria-label="목적지"><option value="">목적지 전체</option>{options.dests.map((o) => <option key={o} value={o}>{o}</option>)}</select>
-          <select value={f.depart} onChange={(e) => set("depart", e.target.value)} aria-label="출발 달"><option value="">출발 달 전체</option>{options.departs.map((m) => <option key={m} value={m}>{monthLabel(m)} 출발</option>)}<option value="none">출발 미정</option></select>
-          <select value={f.received} onChange={(e) => set("received", e.target.value)} aria-label="접수 달"><option value="">접수 달 전체</option>{options.receiveds.map((m) => <option key={m} value={m}>{monthLabel(m)} 접수</option>)}<option value="none">접수일 없음</option></select>
+          {/* 달력 보기에서는 달력이 그 기준의 달을 정하므로 같은 달 조건은 숨긴다 */}
+          {!(calOn && cal.basis === "depart") && <select value={f.depart} onChange={(e) => set("depart", e.target.value)} aria-label="출발 달"><option value="">출발 달 전체</option>{options.departs.map((m) => <option key={m} value={m}>{monthLabel(m)} 출발</option>)}<option value="none">출발 미정</option></select>}
+          {!(calOn && cal.basis === "received") && <select value={f.received} onChange={(e) => set("received", e.target.value)} aria-label="접수 달"><option value="">접수 달 전체</option>{options.receiveds.map((m) => <option key={m} value={m}>{monthLabel(m)} 접수</option>)}<option value="none">접수일 없음</option></select>}
+          {calOn && (cal.day
+            ? <button type="button" className="admin-chip" title="고른 날짜 풀기" onClick={() => moveCal({ day: "" })}>{cal.day === NO_DAY ? `${monthLabel(cal.month)} ${calNoun} · 날짜 미정` : `${mdLabel(cal.day)}(${weekdayOf(cal.day)}) ${calNoun}`} <i className="ri-close-line" /></button>
+            : <span className="admin-chip admin-chip--gray">{monthLabel(cal.month)} {calNoun}</span>)}
           {filtered && <button type="button" className="btn-ghost" onClick={() => { setF(NONE); setLimit(PAGE); }}><i className="ri-close-line" /> 조건 지우기</button>}
-          <span className="ml-auto text-sm text-[var(--admin-text-muted)]"><b className="text-[var(--admin-text-strong)]">{shown.length.toLocaleString()}</b>건{filtered ? ` / 전체 ${rows.length.toLocaleString()}건` : ""} · 출발 확정 {confirmedShown.length}건{confirmedShown.some((q) => q.confirmPeople) ? ` (${confirmedShown.reduce((a, q) => a + (q.confirmPeople ?? 0), 0)}명 이상)` : ""}</span>
+          <span className="ml-auto text-sm text-[var(--admin-text-muted)]"><b className="text-[var(--admin-text-strong)]">{shown.length.toLocaleString()}</b>건{filtered || calOn ? ` / 전체 ${rows.length.toLocaleString()}건` : ""} · 출발 확정 {confirmedShown.length}건{confirmedShown.some((q) => q.confirmPeople) ? ` (${confirmedShown.reduce((a, q) => a + (q.confirmPeople ?? 0), 0)}명 이상)` : ""}</span>
         </div>
         <div className="max-h-[72vh] overflow-auto">
           <table className="admin-table min-w-[1060px]">
