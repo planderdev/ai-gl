@@ -233,15 +233,16 @@ html[data-vip-applied] .vip-sticky { display: none; }
 }
 
 @media (min-width: 960px) {
-  .vip-hero { flex-direction: row; min-height: max(700px, 100vh); }
-  .vip-top { padding: 28px max(40px, calc((100vw - 1180px) / 2)); }
+  .vip-hero { --vip-hero-left: max(40px, calc((100vw - 1180px) / 2)); --vip-date-size: clamp(140px, 15vw, 224px); flex-direction: row; min-height: max(700px, 100vh); }
+  .vip-top { padding: 28px var(--vip-hero-left); }
   .vip-top__logo { width: 92px; }
-  .vip-hero__copy { align-self: center; width: min(620px, 50%); margin-left: max(40px, calc((100vw - 1180px) / 2)); padding: 96px 0 40px; }
-  .vip-hero__date { font-size: clamp(140px, 15vw, 224px); }
+  .vip-hero__copy { align-self: center; width: min(620px, 50%); margin-left: var(--vip-hero-left); padding: 96px 0 40px; }
+  .vip-hero__date { font-size: var(--vip-date-size); }
   .vip-hero .vip-btn { display: flex; width: fit-content; min-width: 280px; }
   .vip-hero__foot { text-align: left; }
   .vip-facts { width: fit-content; padding-right: 26px; }
-  .vip-hero__media { position: absolute; inset: 0 0 0 42%; z-index: 1; width: auto; min-height: 0; margin: 0; }
+  /* 사진은 화면 42% 지점에서 시작하되 큰 날짜("12.26", SUIT 900 기준 폭 약 2.34em)의 오른쪽 끝보다 왼쪽으로 오지 않게 한다 */
+  .vip-hero__media { position: absolute; inset: 0 0 0 max(42%, calc(var(--vip-hero-left) + var(--vip-date-size) * 2.45)); z-index: 1; width: auto; min-height: 0; margin: 0; }
   .vip-hero__media::before { inset: 0 auto 0 0; width: 34%; height: auto; background: linear-gradient(90deg, var(--ink), transparent); }
   .vip-hero__video { object-position: 34% 50%; }
 }
